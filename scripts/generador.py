@@ -18,12 +18,12 @@ PRINCIPIO
 ---------
 El generador NO escribe explicaciones. Usa, en este orden:
 
-  1. resumen_humano   -> lo que vos escribiste, si lo escribiste
+  1. resumen_humano   -> lo que tú escribiste, si lo escribiste
   2. contenido        -> la descripcion literal de la DIAN
 
 Nunca inventa el "que significa". Si no hay resumen humano, se manda lo
-que dice la DIAN y punto. Es preferible un correo escueto a uno que suene
-seguro sobre algo que nadie verifico.
+que dice la DIAN y punto. Es preferible un correo escueto a uno que
+suene seguro sobre algo que nadie verifico.
 
 Cada documento va con su numero, su fecha real y su enlace oficial. El
 lector siempre puede ir a la fuente.
