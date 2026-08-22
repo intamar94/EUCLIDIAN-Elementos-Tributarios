@@ -182,12 +182,44 @@ class Scraper:
                 log.error("Faltan SUPABASE_URL o SUPABASE_SERVICE_KEY")
                 sys.exit(1)
             self.db = create_client(SUPABASE_URL, SUPABASE_KEY)
+            self._verificar_escritura()
 
         self.documentos = {}        # numero_resolucion -> registro
         self.referencias = []       # cadenas de doctrina detectadas
         self.stats = Counter()
 
     # ==================================================================
+
+    def _verificar_escritura(self):
+        """
+        Prueba escribir ANTES de recorrer todo el sitio.
+        Sin esto, el scraper trabaja 3 minutos para descubrir al final
+        que no tenia permisos.
+        """
+        try:
+            self.db.table("logs_scraping").insert({
+                "fuente": "verificacion_permisos",
+                "url_objetivo": "test",
+                "estado": "exitoso",
+            }).execute()
+            log.info("Permisos de escritura: OK")
+        except Exception as e:
+            msg = str(e)
+            log.error("=" * 60)
+            log.error("SIN PERMISO DE ESCRITURA EN SUPABASE")
+            log.error("=" * 60)
+            if "401" in msg or "JWT" in msg or "policy" in msg.lower():
+                log.error("La clave puede leer pero no escribir.")
+                log.error("Estas usando la clave 'anon'. Necesitas la")
+                log.error("'service_role', que esta debajo de la anon en")
+                log.error("Supabase > Settings > API Keys > pestana Legacy.")
+            else:
+                log.error("Detalle: %s", msg[:300])
+            log.error("")
+            log.error("No sigo: seria trabajar 3 minutos para nada.")
+            sys.exit(1)
+
+    # ------------------------------------------------------------------
 
     def correr(self):
         inicio = datetime.now(timezone.utc)
@@ -210,6 +242,26 @@ class Scraper:
 
         self._registrar_corrida(inicio)
         self._resumen()
+
+        # Salir con error si la escritura fallo. Un fallo silencioso en
+        # verde es peor que un fallo ruidoso en rojo: hace creer que hay
+        # datos cuando no los hay.
+        if not self.dry_run:
+            guardados = self.stats["documentos_guardados"]
+            fallidos = self.stats["lotes_fallidos"]
+            if guardados == 0 and self.documentos:
+                log.error("")
+                log.error("NO SE GUARDO NINGUN DOCUMENTO.")
+                log.error("Se recolectaron %d pero la base rechazo todo.",
+                          len(self.documentos))
+                log.error("Causa mas probable: SUPABASE_SERVICE_KEY es la")
+                log.error("clave 'anon' en vez de 'service_role'. Con RLS")
+                log.error("activo, anon puede leer pero no escribir (401).")
+                sys.exit(1)
+            if fallidos:
+                log.error("")
+                log.error("%d lotes fallaron al guardar.", fallidos)
+                sys.exit(1)
 
     # ==================================================================
 
