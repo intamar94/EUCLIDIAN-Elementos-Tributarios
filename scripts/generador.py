@@ -21,8 +21,8 @@ El generador NO escribe explicaciones. Usa, en este orden:
   1. resumen_humano   -> lo que tú escribiste, si lo escribiste
   2. contenido        -> la descripcion literal de la DIAN
 
-Nunca inventa el "que significa". Si no hay resumen humano, se manda lo
-que dice la DIAN y punto. Es preferible un correo escueto a uno que
+Nunca inventa el "que significa". Si no hay resumen humano, se manda
+lo que dice la DIAN y punto. Es preferible un correo escueto a uno que
 suene seguro sobre algo que nadie verifico.
 
 Cada documento va con su numero, su fecha real y su enlace oficial. El
@@ -146,6 +146,7 @@ class Generador:
         try:
             r = self.db.table("documentos_tributarios").select(
                 "id,numero_resolucion,tipo_documento,subtipo,titulo,contenido,"
+                "materia,descripcion_limpia,"
                 "resumen_humano,enlace_oficial,fecha_publicacion,fecha_es_real,"
                 "diario_oficial,entidad_emisora,estado_vigencia,"
                 "clasificacion_obligatoriedad,tiene_efectos_retroactivos,"
@@ -227,7 +228,10 @@ class Generador:
         """El resumen humano manda. Si no hay, va lo literal de la DIAN."""
         if d.get("resumen_humano"):
             return d["resumen_humano"], False
-        texto = re.sub(r"^\([^)]{0,40}\)\s*", "", d.get("contenido") or "")
+        # descripcion_limpia ya viene sin los prefijos (Tributario)(Int 1621)
+        # y con los simbolos reparados por el clasificador.
+        texto = d.get("descripcion_limpia") or d.get("contenido") or ""
+        texto = re.sub(r"^\([^)]{0,40}\)\s*", "", texto)
         texto = re.sub(r"^\(Int \d+\)\s*", "", texto).strip()
         return texto[:600], True
 
