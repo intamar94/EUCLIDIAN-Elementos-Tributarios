@@ -25,12 +25,14 @@ export default async function handler(req, res) {
     'contenido', 'enlace_oficial', 'estado_vigencia', 'temas',
     'clasificacion_obligatoriedad', 'tiene_efectos_retroactivos',
     'revisado_por_humano', 'aprobado_para_email', 'resumen_humano',
+    'materia', 'descripcion_limpia', 'fecha_publicacion', 'fecha_es_real',
+    'diario_oficial', 'zonas_afectadas', 'plazos_mencionados', 'anos_afectados',
   ].join(',');
 
   const url =
     `${SUPABASE_URL}/rest/v1/documentos_tributarios` +
     `?select=${campos}&${filtro}` +
-    `&order=numero_resolucion.desc&limit=60`;
+    `&order=fecha_publicacion.desc,numero_resolucion.desc&limit=60`;
 
   try {
     const r = await fetch(url, {
