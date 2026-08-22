@@ -53,3 +53,4 @@ jobs:
           if [ -n "${{ inputs.anio }}" ]; then ARGS="$ARGS --anio ${{ inputs.anio }}"; fi
           if [ "${{ inputs.rehacer }}" = "si" ]; then ARGS="$ARGS --rehacer"; fi
           python redactor_reglas.py $ARGS
+
