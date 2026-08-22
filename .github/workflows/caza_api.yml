@@ -1,0 +1,32 @@
+
+name: Caza de API DIAN
+
+# Manual desde Actions. Funciona desde el celular.
+on:
+  workflow_dispatch:
+
+jobs:
+  cazar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Instalar dependencias
+        run: pip install -r scripts/requirements.txt
+
+      - name: Cazar la API
+        run: |
+          cd scripts
+          python mapeador_api.py
+
+      - name: Publicar reporte
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reporte-api
+          path: scripts/reporte_api/
+          retention-days: 30
