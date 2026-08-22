@@ -152,18 +152,30 @@ class Reclasificador:
         if self.dry_run:
             return
 
-        for i in range(0, len(cambios), 100):
-            trozo = cambios[i:i + 100]
-            for c in trozo:
-                try:
-                    fila = dict(c)
-                    ident = fila.pop("id")
-                    self.db.table("documentos_tributarios").update(fila).eq(
-                        "id", ident).execute()
-                    self.stats["actualizados"] += 1
-                except Exception as e:
-                    log.error("  fallo %s: %s", ident, str(e)[:140])
-                    self.stats["errores"] += 1
+        # Una fila a la vez tardaba mas de una hora para 17.595 documentos.
+        # La funcion aplicar_clasificacion recibe el lote entero en JSON y
+        # lo resuelve en una sola sentencia UPDATE.
+        for i in range(0, len(cambios), 250):
+            trozo = cambios[i:i + 250]
+            try:
+                r = self.db.rpc("aplicar_clasificacion",
+                                {"lote": trozo}).execute()
+                self.stats["actualizados"] += r.data if isinstance(r.data, int) else len(trozo)
+            except Exception as e:
+                log.warning("  lote por RPC fallo (%s); voy fila por fila",
+                            str(e)[:110])
+                for c in trozo:
+                    try:
+                        fila = dict(c)
+                        ident = fila.pop("id")
+                        fila.pop("clasificado_en", None)
+                        fila["clasificado_en"] = datetime.now(timezone.utc).isoformat()
+                        self.db.table("documentos_tributarios").update(fila).eq(
+                            "id", ident).execute()
+                        self.stats["actualizados"] += 1
+                    except Exception as e2:
+                        log.error("  fallo %s: %s", c["id"], str(e2)[:120])
+                        self.stats["errores"] += 1
 
     # ------------------------------------------------------------------
 
