@@ -1,0 +1,35 @@
+name: Extraer partes DIAN
+
+on:
+  workflow_dispatch:
+    inputs:
+      max_partes:
+        description: 'Maximo de partes a probar por indice'
+        required: false
+        default: '15'
+
+jobs:
+  extraer:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Instalar dependencias
+        run: pip install -r scripts/requirements.txt
+
+      - name: Extraer partes
+        run: |
+          cd scripts
+          python extractor_partes.py --max-partes ${{ inputs.max_partes }}
+
+      - name: Publicar reporte
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reporte-partes
+          path: scripts/reporte_partes/
+          retention-days: 30
