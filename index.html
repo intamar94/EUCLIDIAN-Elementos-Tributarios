@@ -115,6 +115,39 @@ h2{
 .marcas .fuerte{border-color:var(--azul);color:var(--azul)}
 .marcas .alerta{border-color:var(--regla);color:var(--regla)}
 
+/* ---------- editor del resumen humano ---------- */
+.escribir{
+  margin-top:13px;padding-top:13px;border-top:1px dashed var(--linea);
+}
+.escribir label{
+  display:block;font-family:'IBM Plex Mono',monospace;
+  font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--tenue);margin-bottom:5px;
+}
+.escribir textarea{
+  width:100%;min-height:74px;resize:vertical;
+  padding:10px 11px;border:1px solid var(--linea);
+  background:#fff;color:var(--tinta);border-radius:2px;
+  font-family:'Spectral',Georgia,serif;font-size:15px;line-height:1.5;
+}
+.escribir textarea:focus{outline:2px solid var(--azul);outline-offset:1px}
+.escribir textarea::placeholder{color:#9AA79E;font-style:italic}
+.pista{
+  font-family:'IBM Plex Sans',sans-serif;font-size:11.5px;
+  color:var(--tenue);margin-top:5px;line-height:1.45;
+}
+.pista b{color:var(--tinta);font-weight:600}
+.contador{float:right;font-family:'IBM Plex Mono',monospace;font-size:10.5px}
+.contador.largo{color:var(--regla)}
+.escrito{
+  border-left-color:var(--azul) !important;
+}
+.sello{
+  font-family:'IBM Plex Mono',monospace;font-size:9.5px;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--azul);
+  margin-top:6px;
+}
+
 /* ---------- acciones ---------- */
 .acciones{display:flex;gap:8px;margin-top:14px}
 .acciones button{
@@ -237,7 +270,7 @@ function ficha(d){
     d.tiene_efectos_retroactivos ? '<span class="alerta">retroactivo</span>' : '',
   ].join('');
 
-  return `<article data-id="${d.id}">
+  return `<article data-id="${d.id}"${d.resumen_humano?' class="escrito"':''}>
     <div class="fila-id">
       ${glifo(d)}
       <a class="codigo" href="${d.enlace_oficial}" target="_blank" rel="noopener">${d.numero_resolucion}</a>
@@ -246,11 +279,54 @@ function ficha(d){
     <div class="fuente">Lo que dice la DIAN</div>
     <p class="dice">${esc(d.contenido||'').slice(0,420)}</p>
     <div class="marcas">${marcas}</div>
+    <div class="escribir">
+      <label for="r-${d.id}">En palabras simples
+        <span class="contador" id="c-${d.id}">${(d.resumen_humano||'').length||0}</span></label>
+      <textarea id="r-${d.id}"
+        placeholder="Qué cambió, a quién le toca y qué hay que hacer."
+        oninput="contar('${d.id}')"
+        onblur="guardarResumen('${d.id}')">${esc(d.resumen_humano||'')}</textarea>
+      <div class="pista">Si lo dejas vacío, el correo sale con el texto de la DIAN tal cual.
+        <b>Lo que escribas aquí es lo que hace este boletín distinto.</b></div>
+      ${d.resumen_humano?'<div class="sello">✓ redactado</div>':''}
+    </div>
     <div class="acciones">
       <button class="si" onclick="decidir('${d.id}','aprobar')">Aprobar</button>
       <button onclick="decidir('${d.id}','descartar')">Descartar</button>
     </div>
   </article>`;
+}
+
+/* El contador empuja hacia lo breve: un contador ocupado no lee párrafos. */
+function contar(id){
+  const t = document.getElementById('r-'+id);
+  const c = document.getElementById('c-'+id);
+  if(!t||!c) return;
+  const n = t.value.trim().length;
+  c.textContent = n ? n+' / 320' : '0';
+  c.className = 'contador' + (n>320 ? ' largo' : '');
+}
+
+/* Se guarda al salir del campo, para que no se pierda lo escrito. */
+async function guardarResumen(id){
+  const t = document.getElementById('r-'+id);
+  if(!t) return;
+  const valor = t.value.trim();
+  if (t.dataset.guardado === valor) return;
+  try{
+    const r = await fetch('/api/decidir', {
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-clave':CLAVE},
+      body: JSON.stringify({id:id, decision:'devolver', resumen:valor}),
+    });
+    if(!r.ok) throw new Error('no se guardó');
+    t.dataset.guardado = valor;
+    t.style.borderColor = '';
+    const art = t.closest('article');
+    if(art) art.classList.toggle('escrito', !!valor);
+  }catch(e){
+    t.style.borderColor = 'var(--regla)';
+  }
 }
 
 function esc(s){
@@ -283,7 +359,7 @@ async function cargar(primeraVez){
     if (!data.documentos.length){
       lista.innerHTML = FILTRO==='pendientes'
         ? '<div class="aviso"><b>Todo revisado</b>No queda nada por decidir. Vuelve cuando el scraper traiga cambios nuevos.</div>'
-        : '<div class="aviso"><b>Nada aquí todavía</b>Aprueba documentos en «Por revisar» y aparecerán acá.</div>';
+        : '<div class="aviso"><b>Nada aquí todavía</b>Aprueba documentos en «Por revisar» y aparecerán aquí.</div>';
       return;
     }
     lista.innerHTML = data.documentos.map(ficha).join('');
@@ -295,12 +371,14 @@ async function cargar(primeraVez){
 
 async function decidir(id, decision){
   const art = document.querySelector(`article[data-id="${id}"]`);
+  const t = document.getElementById('r-'+id);
+  const resumen = t ? t.value.trim() : undefined;
   if (art) art.style.opacity = '.4';
   try{
     const r = await fetch('/api/decidir', {
       method:'POST',
       headers:{'Content-Type':'application/json','x-clave':CLAVE},
-      body: JSON.stringify({id, decision}),
+      body: JSON.stringify({id, decision, resumen}),
     });
     if (!r.ok) throw new Error((await r.json()).detalle || 'falló');
     if (art) art.remove();
