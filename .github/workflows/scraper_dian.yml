@@ -1,0 +1,44 @@
+name: Scraper DIAN
+
+on:
+  # Cada 3 dias a las 6:00 Colombia (11:00 UTC).
+  # El sitio declara meta-Revisit-After: 3 days.
+  schedule:
+    - cron: '0 11 */3 * *'
+
+  workflow_dispatch:
+    inputs:
+      modo:
+        description: 'Modo de ejecucion'
+        required: true
+        default: 'incremental'
+        type: choice
+        options:
+          - incremental
+          - historico
+          - dry-run
+
+jobs:
+  scrapear:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Instalar dependencias
+        run: pip install -r scripts/requirements.txt
+
+      - name: Ejecutar scraper
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: |
+          cd scripts
+          case "${{ inputs.modo || 'incremental' }}" in
+            historico)  python scraper.py --historico ;;
+            dry-run)    python scraper.py --dry-run ;;
+            *)          python scraper.py ;;
+          esac
