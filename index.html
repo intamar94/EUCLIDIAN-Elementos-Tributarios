@@ -91,6 +91,10 @@ article{
   text-decoration:none;border-bottom:1px solid var(--linea);
 }
 .codigo:hover,.codigo:focus-visible{color:var(--azul);border-color:var(--azul)}
+.fecha{
+  font-family:'IBM Plex Mono',monospace;font-size:10.5px;
+  color:var(--tenue);margin-left:auto;white-space:nowrap;
+}
 
 h2{
   font-family:'Spectral',Georgia,serif;
@@ -114,6 +118,10 @@ h2{
 }
 .marcas .fuerte{border-color:var(--azul);color:var(--azul)}
 .marcas .alerta{border-color:var(--regla);color:var(--regla)}
+.marcas .materia{
+  background:var(--tinta);color:var(--papel);border-color:var(--tinta);
+  letter-spacing:.08em;text-transform:uppercase;font-size:9px;
+}
 
 /* ---------- editor del resumen humano ---------- */
 .escribir{
@@ -262,11 +270,45 @@ function leyenda(d){
     ? 'obliga al contribuyente' : 'criterio de la DIAN';
 }
 
+/* Nombres legibles de los temas. Debe coincidir con clasificador.py */
+const ETIQUETAS = {
+  renta:'Renta', ganancia_ocasional:'Ganancia ocasional', iva:'IVA',
+  consumo:'Impuesto al consumo', timbre:'Timbre', patrimonio:'Patrimonio',
+  gmf:'GMF (4x1000)', simple:'Régimen SIMPLE', carbono:'Impuesto al carbono',
+  plasticos:'Plásticos de un solo uso', saludables:'Impuestos saludables',
+  licores_tabaco:'Licores y tabaco', normalizacion:'Normalización',
+  retencion:'Retención en la fuente', retencion_iva:'ReteIVA',
+  facturacion:'Facturación electrónica', nomina_electronica:'Nómina electrónica',
+  exogena:'Información exógena', rut:'RUT', rub:'Beneficiario final',
+  contabilidad:'Contabilidad y NIIF', devoluciones:'Devoluciones',
+  firmeza:'Firmeza y prescripción', sanciones:'Sanciones',
+  fiscalizacion:'Fiscalización', cobro:'Cobro y acuerdos de pago',
+  beneficios:'Beneficios y conciliación', recursos:'Recursos y defensa',
+  notificaciones:'Notificaciones', precios_transferencia:'Precios de transferencia',
+  convenios:'Doble imposición', ece:'Entidades del exterior',
+  aduanero:'Aduanero', cambiario:'Cambiario', comercio_exterior:'Comercio exterior',
+  transporte:'Transporte de carga', zonas_francas:'Zonas francas',
+  esal:'ESAL y donaciones', salud:'Salud', agropecuario:'Agropecuario',
+  turismo:'Turismo', criptoactivos:'Criptoactivos', financiero:'Sector financiero',
+  economia_naranja:'Economía naranja', formularios:'Formularios y recibos',
+  calendario:'Calendario tributario', uvt:'UVT',
+};
+
+function nombreTema(t){ return ETIQUETAS[t] || t.replace(/_/g,' '); }
+
+const MESES=['','ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+function fechaCorta(f){
+  if(!f) return '';
+  const p=String(f).slice(0,10).split('-');
+  return p.length===3 ? `${+p[2]} ${MESES[+p[1]]} ${p[0]}` : '';
+}
+
 function ficha(d){
   const temas = (d.temas||[]).filter(t=>!t.startsWith('dian:')&&t!=='boletin_mensual');
   const marcas = [
     `<span class="${d.estado_vigencia!=='vigente'?'alerta':'fuerte'}">${leyenda(d)}</span>`,
-    ...temas.slice(0,4).map(t=>`<span>${t}</span>`),
+    d.materia ? `<span class="materia">${d.materia}</span>` : '',
+    ...temas.slice(0,6).map(t=>`<span>${nombreTema(t)}</span>`),
     d.tiene_efectos_retroactivos ? '<span class="alerta">retroactivo</span>' : '',
   ].join('');
 
@@ -274,10 +316,11 @@ function ficha(d){
     <div class="fila-id">
       ${glifo(d)}
       <a class="codigo" href="${d.enlace_oficial}" target="_blank" rel="noopener">${d.numero_resolucion}</a>
+      ${d.fecha_es_real?`<span class="fecha">${fechaCorta(d.fecha_publicacion)}</span>`:''}
     </div>
     <h2>${esc(d.titulo)}</h2>
     <div class="fuente">Lo que dice la DIAN</div>
-    <p class="dice">${esc(d.contenido||'').slice(0,420)}</p>
+    <p class="dice">${esc(d.descripcion_limpia||d.contenido||'').slice(0,460)}</p>
     <div class="marcas">${marcas}</div>
     <div class="escribir">
       <label for="r-${d.id}">En palabras simples
