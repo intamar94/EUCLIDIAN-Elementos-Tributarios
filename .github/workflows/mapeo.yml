@@ -1,0 +1,32 @@
+name: Mapeo del normograma DIAN
+
+# Se dispara a mano desde la pestaña Actions de GitHub.
+# Funciona desde el celular: Actions > Mapeo del normograma DIAN > Run workflow
+on:
+  workflow_dispatch:
+
+jobs:
+  mapear:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Instalar dependencias
+        run: pip install -r scripts/requirements.txt
+
+      - name: Correr mapeador
+        run: |
+          cd scripts
+          python mapeador.py --guardar-html
+
+      - name: Publicar reporte
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reporte-mapeo
+          path: scripts/reporte_mapeo/
+          retention-days: 30
