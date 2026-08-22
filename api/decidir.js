@@ -18,12 +18,18 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'peticion_invalida' });
   }
 
-  const cambios = {
-    revisado_por_humano: decision !== 'devolver',
-    aprobado_para_email: decision === 'aprobar',
-  };
+  // 'devolver' se usa para guardar solo el resumen mientras escribes:
+  // no marca el documento como revisado ni lo saca de la bandeja.
+  const cambios = {};
+  if (decision !== 'devolver') {
+    cambios.revisado_por_humano = true;
+    cambios.aprobado_para_email = decision === 'aprobar';
+  }
   if (typeof resumen === 'string') {
     cambios.resumen_humano = resumen.slice(0, 4000) || null;
+  }
+  if (Object.keys(cambios).length === 0) {
+    return res.status(200).json({ ok: true, sin_cambios: true });
   }
 
   try {
