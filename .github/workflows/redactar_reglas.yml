@@ -1,0 +1,55 @@
+name: Redactar por reglas
+
+on:
+  # Diario, despues del scraper y del enriquecedor. Sin costo: son
+  # reglas, no un modelo de lenguaje.
+  schedule:
+    - cron: '30 13 * * *'
+
+  workflow_dispatch:
+    inputs:
+      modo:
+        description: 'dry-run muestra las fichas sin guardar'
+        required: true
+        default: 'dry-run'
+        type: choice
+        options: ['dry-run', 'aplicar']
+      anio:
+        description: 'Solo un año (vacio = los mas recientes)'
+        required: false
+        default: ''
+      limite:
+        description: 'Cuantos documentos'
+        required: false
+        default: '300'
+      rehacer:
+        description: 'Rehacer los que ya tienen borrador'
+        required: false
+        default: 'no'
+        type: choice
+        options: ['no', 'si']
+
+jobs:
+  redactar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Instalar dependencias
+        run: pip install -r scripts/requirements.txt
+
+      - name: Redactar
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: |
+          cd scripts
+          ARGS="--limite ${{ inputs.limite || '300' }}"
+          if [ "${{ inputs.modo }}" = "dry-run" ]; then ARGS="$ARGS --dry-run"; fi
+          if [ -n "${{ inputs.anio }}" ]; then ARGS="$ARGS --anio ${{ inputs.anio }}"; fi
+          if [ "${{ inputs.rehacer }}" = "si" ]; then ARGS="$ARGS --rehacer"; fi
+          python redactor_reglas.py $ARGS
