@@ -1,0 +1,67 @@
+name: Enviar boletín
+
+# Sin cron a proposito. El envio es la unica accion irreversible del
+# sistema: un correo mandado no se recoge. Se dispara a mano y siempre
+# despues de haber mirado la prueba.
+on:
+  workflow_dispatch:
+    inputs:
+      accion:
+        description: 'Que hacer'
+        required: true
+        default: 'ver'
+        type: choice
+        options:
+          - ver          # muestra a quien iria, sin enviar
+          - prueba       # solo al correo de abajo
+          - enviar       # de verdad, a todos los suscriptores
+      correo_prueba:
+        description: 'Correo para la prueba'
+        required: false
+        default: ''
+
+jobs:
+  enviar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Instalar dependencias
+        run: pip install -r scripts/requirements.txt
+
+      - name: Generar el borrador
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: |
+          cd scripts
+          python generador.py --guardar
+
+      - name: Enviar
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          EUCLIDIAN_REMITENTE: ${{ secrets.EUCLIDIAN_REMITENTE }}
+          EUCLIDIAN_BASE_URL: ${{ secrets.EUCLIDIAN_BASE_URL }}
+        run: |
+          cd scripts
+          case "${{ inputs.accion }}" in
+            prueba)
+              if [ -z "${{ inputs.correo_prueba }}" ]; then
+                echo "Falta el correo de prueba."
+                exit 1
+              fi
+              python enviador.py --prueba "${{ inputs.correo_prueba }}"
+              ;;
+            enviar)
+              python enviador.py --confirmar
+              ;;
+            *)
+              python enviador.py
+              ;;
+          esac
