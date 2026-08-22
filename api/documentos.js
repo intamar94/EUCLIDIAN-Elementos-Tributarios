@@ -27,6 +27,7 @@ export default async function handler(req, res) {
     'revisado_por_humano', 'aprobado_para_email', 'resumen_humano',
     'materia', 'descripcion_limpia', 'fecha_publicacion', 'fecha_es_real',
     'diario_oficial', 'zonas_afectadas', 'plazos_mencionados', 'anos_afectados',
+    'resumen_borrador', 'borrador_confianza', 'borrador_advertencias',
   ].join(',');
 
   const url =
