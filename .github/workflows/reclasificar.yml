@@ -1,0 +1,39 @@
+name: Reclasificar documentos
+
+on:
+  workflow_dispatch:
+    inputs:
+      modo:
+        description: 'dry-run muestra el antes y despues sin tocar nada'
+        required: true
+        default: 'dry-run'
+        type: choice
+        options: ['dry-run', 'aplicar']
+      anio:
+        description: 'Solo un año (vacio = todos)'
+        required: false
+        default: ''
+
+jobs:
+  reclasificar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Instalar dependencias
+        run: pip install -r scripts/requirements.txt
+
+      - name: Reclasificar
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: |
+          cd scripts
+          ARGS=""
+          if [ "${{ inputs.modo }}" = "dry-run" ]; then ARGS="--dry-run"; fi
+          if [ -n "${{ inputs.anio }}" ]; then ARGS="$ARGS --anio ${{ inputs.anio }}"; fi
+          python reclasificar.py $ARGS
