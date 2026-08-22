@@ -150,6 +150,38 @@ h2{
 .escrito{
   border-left-color:var(--azul) !important;
 }
+.borrador{
+  margin-top:13px;padding:11px 12px;
+  background:#F3F0E4;border-left:3px solid var(--ocre);border-radius:2px;
+}
+.borrador.baja{background:#FBEAE9;border-left-color:var(--regla)}
+.borrador-cab{
+  display:flex;align-items:center;gap:7px;margin-bottom:6px;
+  font-family:'IBM Plex Mono',monospace;font-size:9.5px;
+  letter-spacing:.11em;text-transform:uppercase;color:var(--tenue);
+}
+.confianza{
+  padding:1px 6px;border:1px solid currentColor;border-radius:2px;
+  font-size:9px;
+}
+.confianza.alta{color:#2F6B4F}
+.confianza.media{color:var(--ocre)}
+.confianza.baja{color:var(--regla)}
+.borrador p{
+  font-family:'Spectral',Georgia,serif;font-size:14.5px;
+  line-height:1.5;color:#28332C;margin:0;
+}
+.borrador .ojo{
+  margin-top:7px;font-family:'IBM Plex Sans',sans-serif;font-size:11.5px;
+  color:var(--regla);line-height:1.45;
+}
+.usar{
+  margin-top:9px;width:100%;padding:8px;
+  border:1px solid var(--tinta);background:transparent;color:var(--tinta);
+  font-family:'IBM Plex Sans',sans-serif;font-size:13px;
+  border-radius:2px;cursor:pointer;
+}
+.usar:active{transform:translateY(1px)}
 .sello{
   font-family:'IBM Plex Mono',monospace;font-size:9.5px;
   letter-spacing:.1em;text-transform:uppercase;color:var(--azul);
@@ -303,6 +335,36 @@ function fechaCorta(f){
   return p.length===3 ? `${+p[2]} ${MESES[+p[1]]} ${p[0]}` : '';
 }
 
+/* El borrador se muestra aparte del campo de redaccion, nunca dentro.
+   Debe quedar siempre claro cual texto paso por ojo humano y cual no. */
+function bloqueBorrador(d){
+  if(!d.resumen_borrador || d.resumen_humano) return '';
+  const c = d.borrador_confianza || 'baja';
+  const ojo = (d.borrador_advertencias||[]).length
+    ? `<div class="ojo">Verifica: ${(d.borrador_advertencias||[]).map(esc).join(' · ')}</div>`
+    : '';
+  return `<div class="borrador ${c==='baja'?'baja':''}">
+    <div class="borrador-cab">
+      <span>Borrador automático</span>
+      <span class="confianza ${c}">confianza ${c}</span>
+    </div>
+    <p>${esc(d.resumen_borrador)}</p>
+    ${ojo}
+    <button class="usar" onclick="usarBorrador('${d.id}')">Usar este texto y editarlo</button>
+  </div>`;
+}
+
+/* Copia el borrador al campo editable. No lo guarda: eso lo decide
+   el revisor al salir del campo o al aprobar. */
+function usarBorrador(id){
+  const t = document.getElementById('r-'+id);
+  const b = document.querySelector(`article[data-id="${id}"] .borrador p`);
+  if(!t||!b) return;
+  t.value = b.textContent.trim();
+  contar(id);
+  t.focus();
+}
+
 function ficha(d){
   const temas = (d.temas||[]).filter(t=>!t.startsWith('dian:')&&t!=='boletin_mensual');
   const marcas = [
@@ -322,6 +384,7 @@ function ficha(d){
     <div class="fuente">Lo que dice la DIAN</div>
     <p class="dice">${esc(d.descripcion_limpia||d.contenido||'').slice(0,460)}</p>
     <div class="marcas">${marcas}</div>
+    ${bloqueBorrador(d)}
     <div class="escribir">
       <label for="r-${d.id}">En palabras simples
         <span class="contador" id="c-${d.id}">${(d.resumen_humano||'').length||0}</span></label>
