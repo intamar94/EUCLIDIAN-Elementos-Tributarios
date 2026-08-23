@@ -68,27 +68,6 @@ log = logging.getLogger("euclidian")
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_KEY")
 
-# Encabezados que cierran una seccion. Sirven de tope para no arrastrar
-# texto de la seccion siguiente.
-CIERRES = (
-    r"Fundamentaci[oó]n|Fuentes Formales|Descriptores|Problema Jur[ií]dico|"
-    r"Tesis Jur[ií]dica|Extracto|Banco de Datos|[AÁ]rea del Derecho|"
-    r"Atentamente|Cordialmente|Proyect[oó]|Aprob[oó]|"
-    r"En los anteriores t[eé]rminos"
-)
-
-
-def limpiar(t):
-    """El HTML del normograma parte los numeros en lineas propias porque
-    son enlaces. Hay que volver a unirlos antes de leer."""
-    if not t:
-        return ""
-    t = re.sub(r"[ \t\xa0]+", " ", t)
-    t = re.sub(r"\n(?=\s*\d{1,4}\s*\n)", " ", t)   # numero suelto
-    t = re.sub(r"\n(?=\s*(?:del|de la|de|y)\s)", " ", t)
-    t = re.sub(r"\s*\n\s*", "\n", t)
-    return t.strip()
-
 
 class ExtractorEstructura(Lectores):
     def __init__(self, limite=500, anio=None, dry_run=False):
@@ -176,6 +155,30 @@ class ExtractorEstructura(Lectores):
         t = limpiar(texto)
         campos = {}
 
+        interno = self._numero_interno(t)
+        if interno:
+            campos["numero_interno"] = interno[:20]
+
+        fweb = self._fecha_web(t)
+        if fweb:
+            campos["fecha_publicacion_web"] = fweb.isoformat()
+
+        banco = self._banco_datos(t)
+        if banco:
+            campos["banco_datos"] = banco[:200]
+
+        dep = self._dependencia(t)
+        if dep:
+            campos["dependencia_emisora"] = dep[:160]
+
+        citada = self._doctrina_citada(t, campos.get("numero_interno"))
+        if citada:
+            campos["doctrina_citada"] = citada[:20]
+
+        juris = self._jurisprudencia(t)
+        if juris:
+            campos["jurisprudencia_citada"] = juris[:15]
+
         area = self._area(t)
         if area:
             campos["area_derecho"] = area[:60]
@@ -201,105 +204,6 @@ class ExtractorEstructura(Lectores):
         return campos or None
 
     # ------------------------------------------------------------------
-
-    def _area(self, t):
-        m = re.search(r"[AÁ]rea del Derecho\s*\n\s*([A-Za-zÁÉÍÓÚáéíóúñ ]{4,40})", t)
-        return m.group(1).strip() if m else None
-
-    def _bloque(self, t, encabezado):
-        """
-        Devuelve las lineas de una seccion, SIN aplanarlas. Aplanar fue el
-        primer error: los saltos de linea son lo que separa una fuente de
-        la siguiente, y al quitarlos quedaban pegadas.
-        """
-        m = re.search(rf"^{encabezado}\s*\n(.{{5,1200}}?)(?=\n\s*(?:{CIERRES})\s*\n)",
-                      t, re.DOTALL | re.IGNORECASE | re.MULTILINE)
-        if not m:
-            m = re.search(rf"^{encabezado}\s*\n(.{{5,1200}}?)(?=\n\s*\n)",
-                          t, re.DOTALL | re.IGNORECASE | re.MULTILINE)
-        if not m:
-            return []
-        return [re.sub(r"\s+", " ", l).strip(" .,;·-")
-                for l in m.group(1).split("\n") if l.strip()]
-
-    def _descriptores(self, t):
-        """
-        Vienen de dos formas segun el concepto:
-            Descriptores          |  Descriptores
-            Tema: GMF             |  Empresas de transporte
-            Descriptores: Traslados  Agente de retencion
-        """
-        salida = []
-        for linea in self._bloque(t, r"Descriptores"):
-            linea = re.sub(r"^(?:Tema|Descriptores)\s*:\s*", "", linea,
-                           flags=re.IGNORECASE)
-            for parte in re.split(r"\s+[-–]\s+|;", linea):
-                parte = parte.strip(" .·")
-                if 3 < len(parte) < 90 and parte not in salida:
-                    salida.append(parte)
-        # Formato antiguo, con la etiqueta en la misma linea
-        for etiqueta in ("Tema", "Descriptores"):
-            for m in re.finditer(rf"^{etiqueta}\s*:\s*(.+)$", t, re.MULTILINE):
-                for parte in re.split(r"\s+[-–]\s+|;", m.group(1)):
-                    parte = parte.strip(" .·")
-                    if 3 < len(parte) < 90 and parte not in salida:
-                        salida.append(parte)
-        return salida
-
-    def _fuentes(self, t):
-        """
-        Los articulos que el documento interpreta, uno por linea.
-        Permite despues buscar "todo lo que toca el articulo 911".
-        """
-        salida = []
-        for linea in self._bloque(t, r"Fuentes Formales"):
-            if len(linea) < 6 or len(linea) > 160:
-                continue
-            if not re.search(r"art[ií]culo|ley|decreto|resoluci[oó]n|"
-                             r"estatuto|c[oó]digo|constituci[oó]n|sentencia",
-                             linea, re.IGNORECASE):
-                continue
-            if linea not in salida:
-                salida.append(linea)
-        return salida
-
-    def _problema(self, t):
-        m = re.search(rf"Problema Jur[ií]dico\s*\n(.{{15,1400}}?)(?=\n(?:{CIERRES}))",
-                      t, re.DOTALL | re.IGNORECASE)
-        if not m:
-            return None
-        p = re.sub(r"\s+", " ", m.group(1)).strip()
-        p = re.sub(r"^(?:PROBLEMA JUR[IÍ]DICO\s*(?:No\.?\s*\d+)?\s*[:.]?\s*)", "", p,
-                   flags=re.IGNORECASE)
-        return p if len(p) > 15 else None
-
-    def _tesis(self, t):
-        """
-        La conclusion. Suele empezar con Si o No, a veces precedida de
-        "TESIS JURIDICA No. 1" cuando el concepto responde varias cosas.
-        """
-        m = re.search(rf"Tesis Jur[ií]dica\s*\n(.{{15,2600}}?)(?=\n(?:{CIERRES}))",
-                      t, re.DOTALL | re.IGNORECASE)
-        if not m:
-            return None, None
-
-        cuerpo = re.sub(r"\s+", " ", m.group(1)).strip()
-        cuerpo = re.sub(r"^(?:TESIS JUR[IÍ]DICA\s*(?:No\.?\s*\d+)?\s*[:.]?\s*)", "",
-                        cuerpo, flags=re.IGNORECASE).strip()
-
-        respuesta = None
-        mr = re.match(r"^(S[ií]|No)\b.?,?\s*", cuerpo, re.IGNORECASE)
-        if mr:
-            crudo = mr.group(1).lower()
-            respuesta = "si" if crudo.startswith("s") else "no"
-        elif re.match(r"^(Depende|En principio|Parcialmente|Solo|S[oó]lo)\b",
-                      cuerpo, re.IGNORECASE):
-            respuesta = "matizada"
-
-        return (cuerpo, respuesta) if len(cuerpo) > 15 else (None, None)
-
-    # ==================================================================
-
     def _guardar(self, ident, campos):
         campos = dict(campos)
         campos["estructura_extraida_en"] = datetime.now(timezone.utc).isoformat()
