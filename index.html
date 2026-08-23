@@ -131,22 +131,29 @@ body{background:#f3f0e8}
 
   <details class="mas">
     <summary>Más filtros</summary>
-    <div class="grupo tiras" id="gEstado">
-      <button data-v="pendientes" aria-pressed="true">Por revisar <b></b></button>
-      <button data-v="obligatorias" aria-pressed="false">Obligatorias <b></b></button>
-      <button data-v="urgentes" aria-pressed="false">Plazo o retroactivas <b></b></button>
-      <button data-v="conceptos" aria-pressed="false">Conceptos <b></b></button>
-      <button data-v="aprobados" aria-pressed="false">Aprobados <b></b></button>
-    </div>
-    <div class="selectores">
-      <select id="selTema" aria-label="Filtrar por tema">
-        <option value="">Todos los temas</option>
-      </select>
-      <select id="selOrden" aria-label="Ordenar">
-        <option value="recientes">Más recientes primero</option>
-        <option value="prioridad">Lo urgente primero</option>
-        <option value="antiguos">Más antiguos primero</option>
-      </select>
+    <div class="panel">
+      <span class="rotulo">Bandeja</span>
+      <div class="tiras" id="gEstado">
+        <button data-v="pendientes" aria-pressed="true">Por revisar <b></b></button>
+        <button data-v="obligatorias" aria-pressed="false">Obligatorias <b></b></button>
+        <button data-v="urgentes" aria-pressed="false">Plazo o retroactivas <b></b></button>
+        <button data-v="conceptos" aria-pressed="false">Conceptos <b></b></button>
+        <button data-v="aprobados" aria-pressed="false">Aprobados <b></b></button>
+      </div>
+      <div class="selectores">
+        <label>Tema
+          <select id="selTema">
+            <option value="">Todos los temas</option>
+          </select>
+        </label>
+        <label>Orden
+          <select id="selOrden">
+            <option value="recientes">Más recientes primero</option>
+            <option value="prioridad">Lo urgente primero</option>
+            <option value="antiguos">Más antiguos primero</option>
+          </select>
+        </label>
+      </div>
     </div>
   </details>
 </div>
