@@ -115,11 +115,15 @@ header{
 .selectores select:focus{outline:2px solid var(--azul);outline-offset:1px}
 
 /* ══════════════ pantallas grandes ══════════════
-   Todo estaba calibrado para el telefono, y en un monitor quedaba
-   diminuto: letra de 16px y un ancho de 1180px en una pantalla de 2000
-   se ve perdido. Aqui se escala el conjunto en vez de retocar pieza por
-   pieza, para que las proporciones se conserven. */
-@media (min-width:1100px){
+   Todo estaba calibrado para el telefono y en un monitor quedaba
+   diminuto. Se escala el conjunto, no pieza por pieza, para que las
+   proporciones se conserven.
+
+   El corte esta en 900px y no en 1100 a proposito: cuando alguien pide
+   "sitio de escritorio" en el navegador del telefono, este finge una
+   pantalla de unos 980px. Con el umbral en 1100 esos estilos no se
+   activaban y todo se veia todavia mas pequeño. */
+@media (min-width:900px){
   html{font-size:17px}
   body{font-size:17px}
   :root{--ancho:1280px}
