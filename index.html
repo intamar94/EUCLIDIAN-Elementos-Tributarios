@@ -42,31 +42,36 @@
 </header>
 
 <div class="controles marco" hidden id="controles">
-  <div class="grupo" id="gEstado">
-    <span class="rotulo">Bandeja</span>
-    <button data-v="pendientes" aria-pressed="true">Por revisar <b></b></button>
-    <button data-v="obligatorias" aria-pressed="false">Obligatorias <b></b></button>
-    <button data-v="urgentes" aria-pressed="false">Plazo o retroactivas <b></b></button>
-    <button data-v="conceptos" aria-pressed="false">Conceptos <b></b></button>
-    <button data-v="aprobados" aria-pressed="false">Aprobados <b></b></button>
-  </div>
-  <div class="grupo" id="gPrioridad">
-    <span class="rotulo">Prioridad</span>
-    <button data-v="" aria-pressed="true">Todas</button>
+  <!-- Lo primero y unico siempre visible: por donde empieza el trabajo.
+       El resto se despliega solo si hace falta. Antes los tres grupos
+       ocupaban la pantalla entera antes de mostrar un documento. -->
+  <div class="grupo tiras" id="gPrioridad">
+    <button data-v="" aria-pressed="true">Todas <b></b></button>
     <button class="pri-accion" data-v="accion" aria-pressed="false">Acción requerida <b></b></button>
     <button class="pri-importante" data-v="importante" aria-pressed="false">Importantes <b></b></button>
     <button data-v="informativa" aria-pressed="false">Informativas <b></b></button>
   </div>
-  <div class="grupo">
-    <span class="rotulo">Tema</span>
-    <select id="selTema"><option value="">Todos los temas</option></select>
-    <span class="rotulo" style="min-width:auto;margin-left:8px">Orden</span>
-    <select id="selOrden">
-      <option value="recientes">Más recientes</option>
-      <option value="prioridad">Por prioridad</option>
-      <option value="antiguos">Más antiguos</option>
-    </select>
-  </div>
+
+  <details class="mas">
+    <summary>Más filtros</summary>
+    <div class="grupo tiras" id="gEstado">
+      <button data-v="pendientes" aria-pressed="true">Por revisar <b></b></button>
+      <button data-v="obligatorias" aria-pressed="false">Obligatorias <b></b></button>
+      <button data-v="urgentes" aria-pressed="false">Plazo o retroactivas <b></b></button>
+      <button data-v="conceptos" aria-pressed="false">Conceptos <b></b></button>
+      <button data-v="aprobados" aria-pressed="false">Aprobados <b></b></button>
+    </div>
+    <div class="selectores">
+      <select id="selTema" aria-label="Filtrar por tema">
+        <option value="">Todos los temas</option>
+      </select>
+      <select id="selOrden" aria-label="Ordenar">
+        <option value="recientes">Más recientes primero</option>
+        <option value="prioridad">Lo urgente primero</option>
+        <option value="antiguos">Más antiguos primero</option>
+      </select>
+    </div>
+  </details>
 </div>
 
 <main class="marco" id="lista"></main>
