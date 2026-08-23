@@ -96,7 +96,7 @@ main{padding:10px 18px 40px;display:flex;flex-direction:column;gap:14px}
 article{
   background:var(--ficha);
   border:1px solid var(--linea);
-  border-left:3px solid var(--regla);
+  border-left:3px solid var(--linea);
   padding:15px 16px 13px;
   animation:entra .22s ease-out both;
 }
@@ -170,6 +170,50 @@ h2{
 .escrito{
   border-left-color:var(--azul) !important;
 }
+/* ---------- prioridad ----------
+   Con 390 fichas iguales el ojo no sabe donde parar. El nivel se
+   deriva de datos verificados: alerta, vigencia, plazo, retroactividad.
+   Nunca se inventa. */
+.cinta{
+  display:inline-block;margin-bottom:9px;padding:3px 9px;border-radius:2px;
+  font-family:'IBM Plex Mono',monospace;font-size:9.5px;
+  letter-spacing:.13em;text-transform:uppercase;font-weight:600;
+}
+article.p-accion  { border-left-color:var(--regla) }
+article.p-accion   .cinta{ background:#FBEAE9;color:#8C2620 }
+article.p-importante{ border-left-color:var(--ocre) }
+article.p-importante .cinta{ background:#FDF4E3;color:#8A6415 }
+article.p-info    { border-left-color:#8FA396 }
+article.p-info     .cinta{ background:#EDF2EE;color:#4A5C50 }
+
+/* ---------- texto oficial, plegado ----------
+   La descripcion de la DIAN es la parte mas densa. Antes abria la
+   ficha; ahora queda debajo y cerrada, para quien quiera verificar. */
+.oficial{margin-top:12px;border-top:1px dashed var(--linea);padding-top:10px}
+.oficial summary{
+  cursor:pointer;list-style:none;
+  font-family:'IBM Plex Mono',monospace;font-size:10px;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--tenue);
+  padding:3px 0;
+}
+.oficial summary::-webkit-details-marker{display:none}
+.oficial summary::before{content:'▸ ';color:var(--tenue)}
+.oficial[open] summary::before{content:'▾ '}
+.oficial summary:hover{color:var(--tinta)}
+.oficial p{
+  font-family:'Spectral',Georgia,serif;font-size:14px;line-height:1.5;
+  color:#4A5650;margin:8px 0 0;
+}
+
+/* ---------- vencimiento con cuenta regresiva ---------- */
+.cuenta{
+  font-family:'IBM Plex Mono',monospace;font-size:10px;
+  letter-spacing:.08em;text-transform:uppercase;
+  padding:2px 7px;border-radius:2px;white-space:nowrap;
+  background:var(--regla);color:#fff;margin-left:auto;
+}
+.cuenta.lejos{background:var(--ocre)}
+
 /* El plazo va arriba de todo: en temporada es lo unico que no puede
    pasar desapercibido. */
 .plazo{
@@ -337,7 +381,7 @@ header[hidden]{display:none}
 </nav>
 
 <div hidden id="temas">
-  <label for="selTema">Tema</label>
+  <label for="selTema">Filtrar por</label>
   <select id="selTema">
     <option value="">todos los temas</option>
   </select>
@@ -447,9 +491,23 @@ function usarBorrador(id){
 function bloquePlazo(d){
   const p = (d.plazos_mencionados||[])[0];
   if(!p) return '';
+  const f = fechaDePlazo(p);
+  let marca = '';
+  if (f){
+    const n = diasHasta(f);
+    // Solo se cuenta hacia adelante. Un contador negativo confunde mas
+    // de lo que informa, y algunas fechas del texto ya pasaron.
+    if (n >= 0) {
+      marca = `<span class="cuenta ${n>30?'lejos':''}">${
+        n===0 ? 'hoy' : n===1 ? 'mañana' : 'faltan '+n+' días'}</span>`;
+    } else {
+      marca = `<span class="cuenta lejos" style="background:var(--tenue)">ya pasó</span>`;
+    }
+  }
   return `<div class="plazo">
     <span class="plazo-icono">PLAZO</span>
     <span class="plazo-texto">${esc(p).slice(0,240)}</span>
+    ${marca}
   </div>`;
 }
 
@@ -485,6 +543,44 @@ function bloqueRelaciones(d){
   return html + '</div>';
 }
 
+const MESNUM = {enero:1,febrero:2,marzo:3,abril:4,mayo:5,junio:6,julio:7,
+  agosto:8,septiembre:9,setiembre:9,octubre:10,noviembre:11,diciembre:12};
+
+/* Saca la fecha de un plazo escrito en prosa. Devuelve null si no hay
+   una fecha clara: preferible no mostrar cuenta regresiva a mostrarla mal. */
+function fechaDePlazo(texto){
+  if(!texto) return null;
+  const m = texto.match(/(?:hasta el|a más tardar el|el)\s+(\d{1,2})\s+de\s+([a-záéíóú]+)\s+de\s+(20\d{2})/i);
+  if(!m) return null;
+  const mes = MESNUM[m[2].toLowerCase()];
+  if(!mes) return null;
+  const f = new Date(+m[3], mes-1, +m[1]);
+  return isNaN(f) ? null : f;
+}
+
+function diasHasta(f){
+  const hoy = new Date(); hoy.setHours(0,0,0,0);
+  return Math.round((f - hoy) / 86400000);
+}
+
+/* Nivel de prioridad. Cada regla se apoya en un dato del documento. */
+function prioridad(d){
+  const plazo = fechaDePlazo((d.plazos_mencionados||[])[0]);
+  const dias = plazo ? diasHasta(plazo) : null;
+
+  if (d.estado_vigencia !== 'vigente') return ['p-accion','No la apliques'];
+  if (d.nivel_alerta === 'critica')     return ['p-accion','Acción requerida'];
+  if (dias !== null && dias >= 0 && dias <= 30)
+                                        return ['p-accion','Vence pronto'];
+  if (d.tiene_efectos_retroactivos)     return ['p-importante','Puede tocar años pasados'];
+  if ((d.modificado_por||[]).length)    return ['p-importante','Hay norma posterior'];
+  if (d.nivel_alerta === 'alta')        return ['p-importante','Importante'];
+  if (dias !== null && dias >= 0)       return ['p-importante','Tiene plazo'];
+  if (d.clasificacion_obligatoriedad === 'obligatorio_dian_y_contribuyentes')
+                                        return ['p-importante','Obligatoria'];
+  return ['p-info','Informativa'];
+}
+
 function ficha(d){
   const temas = (d.temas||[]).filter(t=>!t.startsWith('dian:')&&t!=='boletin_mensual');
   const marcas = [
@@ -494,19 +590,26 @@ function ficha(d){
     d.tiene_efectos_retroactivos ? '<span class="alerta">retroactivo</span>' : '',
   ].join('');
 
-  return `<article data-id="${d.id}" data-temas="${temas.join('|')}"${d.resumen_humano?' class="escrito"':''}>
+  const [nivel, etiqueta] = prioridad(d);
+  const oficial = esc(d.descripcion_limpia||d.contenido||'');
+
+  return `<article data-id="${d.id}" data-temas="${temas.join('|')}"
+      class="${nivel}${d.resumen_humano?' escrito':''}">
+    <div class="cinta">${etiqueta}</div>
     <div class="fila-id">
       ${glifo(d)}
       <a class="codigo" href="${d.enlace_oficial}" target="_blank" rel="noopener">${d.numero_resolucion}</a>
       ${d.fecha_es_real?`<span class="fecha">${fechaCorta(d.fecha_publicacion)}</span>`:''}
     </div>
     <h2>${esc(d.titulo)}</h2>
-    <div class="fuente">Lo que dice la DIAN</div>
-    <p class="dice">${esc(d.descripcion_limpia||d.contenido||'').slice(0,460)}</p>
-    <div class="marcas">${marcas}</div>
     ${bloquePlazo(d)}
-    ${bloqueRelaciones(d)}
     ${bloqueBorrador(d)}
+    ${bloqueRelaciones(d)}
+    <details class="oficial">
+      <summary>Ver el texto de la DIAN</summary>
+      <p>${oficial.slice(0,900)}</p>
+    </details>
+    <div class="marcas">${marcas}</div>
     <div class="escribir">
       <label for="r-${d.id}">En palabras simples
         <span class="contador" id="c-${d.id}">${(d.resumen_humano||'').length||0}</span></label>
@@ -587,6 +690,7 @@ async function cargar(primeraVez){
     document.getElementById('nPend').textContent = data.pendientes;
     document.getElementById('nApr').textContent = data.aprobados;
     pintarConteos(data.conteos || {});
+    poblarTemas(data.documentos);
     const act = document.getElementById('actualizado');
     if (act && data.actualizado){
       const f = new Date(data.actualizado);
@@ -594,7 +698,6 @@ async function cargar(primeraVez){
         {day:'numeric', month:'long'}) + ', ' +
         f.toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'});
     }
-    poblarTemas();
 
     if (!data.documentos.length){
       lista.innerHTML = FILTRO==='pendientes'
@@ -649,14 +752,19 @@ function pintarConteos(c){
 /* El selector de temas se arma con lo que hay en pantalla, no con una
    lista fija: asi nunca ofrece un tema que no devuelva nada. */
 let TEMAS_VISTOS = new Set();
-function poblarTemas(){
-  document.querySelectorAll('article').forEach(a=>{
-    (a.dataset.temas || '').split('|').filter(Boolean).forEach(t=>TEMAS_VISTOS.add(t));
+function poblarTemas(documentos){
+  // Antes se leia del DOM, pero esta funcion corre antes de que las
+  // fichas se dibujen: la lista salia siempre vacia. Ahora se arma con
+  // los datos, que llegan primero.
+  (documentos || []).forEach(d=>{
+    (d.temas || []).forEach(t=>{
+      if(!t.startsWith('dian:') && t !== 'boletin_mensual') TEMAS_VISTOS.add(t);
+    });
   });
   const sel = document.getElementById('selTema');
   const actual = sel.value;
   const orden = [...TEMAS_VISTOS].sort((a,b)=>nombreTema(a).localeCompare(nombreTema(b),'es'));
-  sel.innerHTML = '<option value="">todos los temas</option>' +
+  sel.innerHTML = '<option value="">Todos los temas</option>' +
     orden.map(t=>`<option value="${t}">${nombreTema(t)}</option>`).join('');
   sel.value = actual;
 }
