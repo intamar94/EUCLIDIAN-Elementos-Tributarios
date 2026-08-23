@@ -238,7 +238,8 @@ class RedactorReglas:
                 "estado_vigencia,clasificacion_obligatoriedad,temas,"
                 "tiene_efectos_retroactivos,anos_afectados,zonas_afectadas,"
                 "plazos_mencionados,anotaciones_vigencia,fecha_entrada_vigencia,"
-                "diario_oficial,resumen_humano"
+                "diario_oficial,resumen_humano,tesis_juridica,tesis_respuesta,"
+                "problema_juridico,fuentes_formales,descriptores"
             ).is_("resumen_humano", "null")
             if not self.rehacer:
                 q = q.is_("resumen_borrador", "null")
@@ -279,16 +280,24 @@ class RedactorReglas:
                     "advertencias": [], "interno": True,
                     "obligatoriedad": "orientativo"}
 
-        # Cambio de criterio: merece su propia redaccion.
+        # La tesis juridica es la conclusion del documento: dice que
+        # respondio la DIAN, no de que trataba. Cuando existe, es lo
+        # primero que debe leerse.
+        tesis = self._tesis(d)
         recon = self._reconsideracion(desc)
-        if recon:
+
+        if tesis:
+            frases.append(tesis)
+            puntos += 3
+            asunto = None
+        elif recon:
             frases.append(recon["frase"])
             puntos += 3
             asunto = None
         elif asunto:
             frases.append(asunto.rstrip(".") + ".")
             puntos += 1
-        elif not recon:
+        elif not recon and not tesis:
             advertencias.append("La descripción de la DIAN solo dice a qué norma "
                                 "remite, no qué cambia")
 
@@ -327,6 +336,36 @@ class RedactorReglas:
                 "obligatoriedad": None}
 
     # ------------------------------------------------------------------
+
+    def _tesis(self, d):
+        """
+        Devuelve la conclusion del concepto en una frase, encabezada por
+        la respuesta que dio la DIAN. Es texto literal del documento: no
+        se resume ni se interpreta, solo se recorta si es muy largo.
+        """
+        t = (d.get("tesis_juridica") or "").strip()
+        if len(t) < 25:
+            return None
+
+        # Quitar el "Si." o "No." inicial: se recupera como prefijo propio
+        cuerpo = re.sub(r"^(?:S[ií]|No)\b\.?,?\s*", "", t).strip()
+        respuesta = d.get("tesis_respuesta")
+
+        prefijo = ""
+        if respuesta == "si":
+            prefijo = "Sí: "
+        elif respuesta == "no":
+            prefijo = "No: "
+        elif respuesta == "matizada":
+            prefijo = "Depende: "
+
+        if len(cuerpo) > 420:
+            corte = cuerpo[:420].rsplit(" ", 1)[0]
+            cuerpo = corte + "…"
+
+        if cuerpo and not cuerpo.endswith((".", "…")):
+            cuerpo += "."
+        return prefijo + cuerpo[0].upper() + cuerpo[1:] if prefijo == "" else prefijo + cuerpo
 
     def _reconsideracion(self, desc):
         """
@@ -516,6 +555,14 @@ class RedactorReglas:
             frases.append(f"Anota este plazo: {p[:190]}.")
             puntos += 2
 
+        fuentes = d.get("fuentes_formales") or []
+        if fuentes:
+            # Saber que articulo del Estatuto toca es lo que permite a un
+            # contador decidir en dos segundos si le concierne.
+            frases.append("Interpreta " + self._enumerar(
+                [f.rstrip(".") for f in fuentes[:2]]) + ".")
+            puntos += 1
+
         vig = fecha_simple(d.get("fecha_entrada_vigencia"))
         pub = fecha_simple(d.get("fecha_publicacion"))
         if vig and d.get("fecha_es_real") and vig != pub:
@@ -576,3 +623,4 @@ if __name__ == "__main__":
 
     RedactorReglas(limite=args.limite, anio=args.anio,
                    dry_run=args.dry_run, rehacer=args.rehacer).correr()
+
