@@ -354,5 +354,3 @@ class Composicion:
             puntos += 1
 
         return frases, puntos, avisos
-
-    # ==================================================================
