@@ -115,10 +115,17 @@ ETIQUETAS_TEMA = {
 
 
 def fecha_simple(f):
+    """
+    Fecha en palabras: "17 de julio de 2026".
+
+    El except atrapa solo lo esperable —una fecha mal formada— y no
+    cualquier error. Antes decia "except Exception" y por eso un import
+    faltante se convirtio en None silencioso durante toda una corrida.
+    """
     if not f:
         return None
     try:
-        d = datetime.fromisoformat(str(f)[:10]).date()
-        return f"{d.day} de {MESES[d.month]} de {d.year}"
-    except Exception:
+        d = date.fromisoformat(str(f)[:10])
+    except (ValueError, TypeError):
         return None
+    return f"{d.day} de {MESES[d.month]} de {d.year}"
