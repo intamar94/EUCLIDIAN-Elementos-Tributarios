@@ -9,25 +9,32 @@
 main{padding:10px 0 40px;display:flex;flex-direction:column;gap:14px}
 article{
   background:var(--ficha);border:1px solid var(--linea);
-  border-left:3px solid var(--linea);padding:15px 16px 14px;
+  border-left:6px solid #B6C0B8;padding:15px 16px 14px;
   animation:entra .2s ease-out both;
 }
 @keyframes entra{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){article{animation:none}}
 
-article.p-accion{border-left-color:var(--regla)}
-article.p-importante{border-left-color:var(--ocre)}
-article.p-informativa{border-left-color:#8FA396}
-article.escrito{border-left-color:var(--azul)}
+/* El tono lo decide el MOTIVO, no el nivel: asi el mismo color
+   significa lo mismo en la cinta, el borde y el fondo, y el ojo
+   lo aprende sin leer la palabra. */
+article.t-alerta{border-left-color:var(--alerta);background:#FDF7F6}
+article.t-obliga{border-left-color:var(--obliga);background:#F7F9FC}
+article.t-orienta{border-left-color:var(--orienta);background:#F6FAFC}
+article.t-neutro{border-left-color:#B6C0B8}
+/* Redactado por una persona: el verde gana sobre el motivo, porque es
+   informacion sobre el trabajo hecho, no sobre el documento. */
+article.escrito{border-left-color:var(--humano);background:var(--humano-suave)}
 
 .cinta{
   display:inline-block;margin-bottom:9px;padding:3px 9px;border-radius:2px;
   font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.12em;
   text-transform:uppercase;font-weight:600;
 }
-.p-accion .cinta{background:#FBEAE9;color:#8C2620}
-.p-importante .cinta{background:#FDF4E3;color:#8A6415}
-.p-informativa .cinta{background:#EDF2EE;color:#4A5C50}
+.t-alerta  .cinta{background:var(--alerta);color:#fff}
+.t-obliga  .cinta{background:var(--obliga);color:#fff}
+.t-orienta .cinta{background:var(--orienta);color:#fff}
+.t-neutro  .cinta{background:#E4EAE4;color:#4A5C50}
 
 .fila-id{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:8px}
 .codigo{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.03em;
@@ -48,20 +55,21 @@ h2{font-family:'Spectral',Georgia,serif;font-size:17px;font-weight:600;
 }
 
 /* ── respuesta de la DIAN ── */
+/* La respuesta de la DIAN no es una alarma: que haya dicho que no, no
+   obliga a nadie a correr. Va en azul claro, que es el color de lo que
+   orienta. El marcador Si/No/Depende se distingue por peso, no por
+   tono. */
 .respuesta{
-  padding:12px 13px;border-left:3px solid var(--verde);
-  background:#EEF4EF;border-radius:2px;
+  padding:12px 13px;border-left:3px solid var(--orienta);
+  background:var(--orienta-suave);border-radius:2px;
 }
-.respuesta.no{border-left-color:var(--regla);background:#FBEAE9}
-.respuesta.matizada{border-left-color:var(--ocre);background:#FDF4E3}
 .resp-cab{
   font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.12em;
   text-transform:uppercase;color:var(--tenue);margin-bottom:5px;
   display:flex;align-items:center;gap:7px;
 }
-.resp-marca{padding:2px 7px;border-radius:2px;font-weight:600;color:#fff;background:var(--verde)}
-.respuesta.no .resp-marca{background:var(--regla)}
-.respuesta.matizada .resp-marca{background:var(--ocre)}
+.resp-marca{padding:2px 7px;border-radius:2px;font-weight:600;color:#fff;
+  background:var(--orienta)}
 .respuesta p{font-family:'Spectral',Georgia,serif;font-size:15px;line-height:1.55;color:#28332C}
 .pregunta{
   font-family:'Spectral',Georgia,serif;font-size:13.5px;font-style:italic;
@@ -69,41 +77,50 @@ h2{font-family:'Spectral',Georgia,serif;font-size:17px;font-weight:600;
 }
 
 /* ── borrador ── */
-.borrador{padding:11px 12px;background:#F3F0E4;border-left:3px solid var(--ocre);border-radius:2px}
-.borrador.baja{background:#FBEAE9;border-left-color:var(--regla)}
+/* El borrador automatico comparte color con la doctrina de la DIAN, y
+   no por capricho: los dos orientan sin obligar. Solo cuando su
+   confianza es baja pasa a rojo, porque ahi si hay que revisar. */
+.borrador{padding:11px 12px;background:var(--orienta-suave);
+  border-left:3px solid var(--orienta);border-radius:2px}
+.borrador.baja{background:var(--alerta-suave);border-left-color:var(--alerta)}
 .borrador-cab{display:flex;align-items:center;gap:7px;margin-bottom:6px;flex-wrap:wrap;
   font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.11em;
   text-transform:uppercase;color:var(--tenue)}
 .confianza{padding:1px 6px;border:1px solid currentColor;border-radius:2px;font-size:9px}
-.confianza.alta{color:var(--verde)}
-.confianza.media{color:var(--ocre)}
-.confianza.baja{color:var(--regla)}
+/* Solo la confianza baja lleva color: es la unica que pide algo. */
+.confianza.alta{color:var(--tenue)}
+.confianza.media{color:var(--tenue)}
+.confianza.baja{color:var(--alerta)}
 .borrador p{font-family:'Spectral',Georgia,serif;font-size:14.5px;line-height:1.5;color:#28332C}
-.borrador .ojo{margin-top:7px;font-size:11.5px;color:var(--regla);line-height:1.4}
+.borrador .ojo{margin-top:7px;font-size:11.5px;color:var(--alerta);line-height:1.4}
 .usar{margin-top:9px;width:100%;padding:8px;border:1px solid var(--tinta);
   background:transparent;color:var(--tinta);font-size:13px;border-radius:2px;cursor:pointer}
 .usar:hover{background:var(--tinta);color:var(--papel)}
 
 /* ── plazo ── */
-.plazo{padding:11px 12px;background:#FBEAE9;border-left:3px solid var(--regla);
-  border-radius:2px;margin-bottom:11px}
+.plazo{padding:11px 12px;background:var(--alerta-suave);
+  border-left:3px solid var(--alerta);border-radius:2px;margin-bottom:11px}
 .plazo-cab{display:flex;align-items:center;gap:8px;margin-bottom:5px;
   font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.12em;
-  text-transform:uppercase;color:var(--regla);font-weight:600}
-.restan{padding:2px 7px;border-radius:2px;background:var(--regla);color:#fff;
+  text-transform:uppercase;color:var(--alerta);font-weight:600}
+/* Rojo solo cuando falta poco. Un plazo a cinco meses es informacion,
+   no urgencia, y darle color gastaria la alarma. */
+.restan{padding:2px 7px;border-radius:2px;background:var(--alerta);color:#fff;
   font-size:9px;letter-spacing:.06em;white-space:nowrap}
-.restan.lejos{background:var(--ocre)}
-.restan.pasado{background:var(--tenue)}
+.restan.lejos{background:var(--tenue)}
+.restan.pasado{background:#9AA79E}
 .plazo p{font-family:'Spectral',Georgia,serif;font-size:14px;line-height:1.45;color:var(--tinta)}
 
 /* ── relaciones ── */
 .rel{padding:9px 11px;margin-bottom:8px;border-radius:2px;font-size:12.5px;line-height:1.45}
-.rel.despues{background:#FDF4E3;border-left:3px solid var(--ocre)}
-.rel.antes{background:#EEF1F7;border-left:3px solid var(--azul)}
+/* Que una norma posterior la haya tocado orienta a revisar: azul
+   claro. Que esta toque a otras es clasificacion: azul oscuro. */
+.rel.despues{background:var(--orienta-suave);border-left:3px solid var(--orienta)}
+.rel.antes{background:var(--obliga-suave);border-left:3px solid var(--obliga)}
 .rel b{font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.1em;
   text-transform:uppercase;display:block;margin-bottom:4px;font-weight:600}
-.rel.despues b{color:#8A6415}
-.rel.antes b{color:var(--azul)}
+.rel.despues b{color:#1F5C87}
+.rel.antes b{color:var(--obliga)}
 .rel a{color:var(--tinta);font-family:'IBM Plex Mono',monospace;font-size:11px;
   text-decoration:none;border-bottom:1px solid var(--linea)}
 .rel a:hover{border-color:var(--tinta)}
@@ -117,10 +134,12 @@ h2{font-family:'Spectral',Georgia,serif;font-size:17px;font-weight:600;
 .marcas{display:flex;flex-wrap:wrap;gap:6px;margin-top:11px}
 .marcas span{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.04em;
   padding:3px 7px;border:1px solid var(--linea);color:var(--tenue);border-radius:2px}
-.marcas .fuerte{border-color:var(--azul);color:var(--azul)}
-.marcas .alerta{border-color:var(--regla);color:var(--regla)}
-.marcas .materia{background:var(--tinta);color:var(--papel);border-color:var(--tinta);
-  text-transform:uppercase;font-size:9px;letter-spacing:.08em}
+.marcas .obliga{border-color:var(--obliga);color:var(--obliga)}
+.marcas .orienta{border-color:var(--orienta);color:var(--orienta)}
+.marcas .alerta{border-color:var(--alerta);color:var(--alerta)}
+/* La materia era negro relleno y llamaba mas que un plazo vencido.
+   Es una etiqueta de clasificacion: gris. */
+.marcas .materia{text-transform:uppercase;font-size:9px;letter-spacing:.08em}
 
 /* ── texto oficial plegado ── */
 .oficial{margin-top:12px;border-top:1px dashed var(--linea);padding-top:10px}
@@ -147,15 +166,17 @@ h2{font-family:'Spectral',Georgia,serif;font-size:17px;font-weight:600;
 .escribir textarea::placeholder{color:#9AA79E;font-style:italic}
 .pista{font-size:11.5px;color:var(--tenue);margin-top:5px;line-height:1.4}
 .pista b{color:var(--tinta);font-weight:600}
+/* Verde: aqui intervino una persona. Es el unico lugar de la ficha
+   donde algo dejo de ser automatico. */
 .redactado{font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.1em;
-  text-transform:uppercase;color:var(--azul);margin-top:6px}
+  text-transform:uppercase;color:var(--humano);margin-top:6px}
 
 /* ── acciones ── */
 .acciones{display:flex;gap:8px;margin-top:14px}
 .acciones button{flex:1;font-size:14px;font-weight:500;padding:11px;
   border:1px solid var(--tinta);background:transparent;color:var(--tinta);
   border-radius:2px;cursor:pointer}
-.acciones .si{background:var(--tinta);color:var(--papel)}
+.acciones .si{background:var(--humano);color:#fff;border-color:var(--humano)}
 .acciones button:active{transform:translateY(1px)}
 .acciones button:focus-visible{outline:2px solid var(--azul);outline-offset:2px}
 
