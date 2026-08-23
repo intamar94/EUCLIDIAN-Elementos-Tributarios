@@ -3,10 +3,16 @@
 // La clave de servicio vive solo aca, en el servidor. Nunca llega al
 // navegador.
 //
-// La version anterior hacia once consultas por carga: una por cada
-// contador, mas los temas. Eso agotaba el tiempo de la funcion y devolvia
-// 502. Ahora son dos: la pagina de documentos, y una llamada a
-// conteos_bandeja que resuelve todos los contadores de un golpe.
+// Los filtros son tres ejes que no se pisan:
+//
+//   estado      en que va el trabajo   por revisar / aprobados / todos
+//   prioridad   que tan urgente es     accion / importante / informativa
+//   naturaleza  que clase de documento obligatorias / conceptos
+//
+// Antes habia una sola lista donde "Plazo o retroactivas" y "Accion
+// requerida" eran casi el mismo grupo por dos caminos distintos, y
+// "Obligatorias" se cruzaba con "Importantes". Habia que entender dos
+// sistemas para buscar una cosa.
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY;
@@ -15,18 +21,20 @@ const CLAVE = process.env.EUCLIDIAN_CLAVE;
 const POR_PAGINA = 25;
 
 const ESTADOS = {
-  pendientes:   'revisado_por_humano=eq.false',
-  obligatorias: 'revisado_por_humano=eq.false&clasificacion_obligatoriedad=eq.obligatorio_dian_y_contribuyentes',
-  urgentes:     'revisado_por_humano=eq.false&or=(tiene_efectos_retroactivos.eq.true,estado_vigencia.neq.vigente)',
-  conceptos:    'revisado_por_humano=eq.false&clasificacion_obligatoriedad=eq.obligatorio_dian_solo',
-  aprobados:    'aprobado_para_email=eq.true',
-  todos:        '',
+  pendientes: 'revisado_por_humano=eq.false',
+  aprobados:  'aprobado_para_email=eq.true',
+  todos:      '',
 };
 
 const PRIORIDADES = {
   accion:      'prioridad=eq.accion',
   importante:  'prioridad=eq.importante',
   informativa: 'prioridad=eq.informativa',
+};
+
+const NATURALEZAS = {
+  obligatorias: 'clasificacion_obligatoriedad=eq.obligatorio_dian_y_contribuyentes',
+  conceptos:    'clasificacion_obligatoriedad=eq.obligatorio_dian_solo',
 };
 
 const ORDENES = {
@@ -60,9 +68,10 @@ export default async function handler(req, res) {
   }
 
   const desde = req.query.desde || '2026-01-01';
-  const estado = req.query.estado || 'pendientes';
+  const estado = ESTADOS[req.query.estado] !== undefined ? req.query.estado : 'pendientes';
   const tema = req.query.tema || '';
-  const prioridad = req.query.prioridad || '';
+  const prioridad = PRIORIDADES[req.query.prioridad] ? req.query.prioridad : '';
+  const naturaleza = NATURALEZAS[req.query.naturaleza] ? req.query.naturaleza : '';
   const orden = ORDENES[req.query.orden] || ORDENES.recientes;
   const pagina = Math.max(1, parseInt(req.query.pagina, 10) || 1);
 
@@ -74,11 +83,14 @@ export default async function handler(req, res) {
   let filtro = `fecha_publicacion=gte.${desde}`;
   if (ESTADOS[estado]) filtro += '&' + ESTADOS[estado];
   if (PRIORIDADES[prioridad]) filtro += '&' + PRIORIDADES[prioridad];
+  if (NATURALEZAS[naturaleza]) filtro += '&' + NATURALEZAS[naturaleza];
   if (tema) filtro += `&temas=cs.{${encodeURIComponent(tema)}}`;
 
   const primera = (pagina - 1) * POR_PAGINA;
 
   try {
+    // Dos llamadas: la pagina de documentos, y una sola que resuelve
+    // todos los contadores. Con once, la funcion agotaba su tiempo.
     const [rDocs, rResumen] = await Promise.all([
       fetch(
         `${SUPABASE_URL}/rest/v1/v_bandeja?select=${CAMPOS}&${filtro}&order=${orden}`,
@@ -97,6 +109,8 @@ export default async function handler(req, res) {
           p_desde: desde,
           p_tema: tema || null,
           p_estado: estado,
+          p_prioridad: prioridad || null,
+          p_naturaleza: naturaleza || null,
         }),
       }),
     ]);
@@ -116,9 +130,6 @@ export default async function handler(req, res) {
       resumen = (await rResumen.json()) || {};
     } catch (e) { /* sin contadores */ }
 
-    const conteos = resumen.conteos || {};
-    const porPrioridad = resumen.porPrioridad || {};
-
     res.setHeader('Cache-Control', 'no-store');
     return res.status(200).json({
       documentos,
@@ -126,12 +137,13 @@ export default async function handler(req, res) {
       pagina,
       porPagina: POR_PAGINA,
       paginas: Math.max(1, Math.ceil(total / POR_PAGINA)),
-      conteos,
-      porPrioridad,
+      estado: resumen.estado || {},
+      prioridad: resumen.prioridad || {},
+      naturaleza: resumen.naturaleza || {},
       temas: resumen.temas || [],
       actualizado: resumen.actualizado || null,
-      pendientes: conteos.pendientes ?? 0,
-      aprobados: conteos.aprobados ?? 0,
+      pendientes: (resumen.estado || {}).pendientes ?? 0,
+      aprobados: (resumen.estado || {}).aprobados ?? 0,
     });
   } catch (e) {
     return res.status(500).json({ error: 'fallo_lectura', detalle: String(e).slice(0, 200) });
