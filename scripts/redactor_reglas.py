@@ -126,6 +126,23 @@ RESOLUCION_MADRE = re.compile(
     r'[^"]{0,20}(?:"[^"]{0,120}")?',
     re.IGNORECASE)
 
+# La DIAN escribe sus cambios de criterio con una formula fija:
+#   "[Tema] - Reconsidera la doctrina del Concepto No. 05833 de abril 15
+#    de 2026. Se precisa que la Tesis Juridica No. 3 del Concepto..."
+# Copiar eso entero repite el mismo numero tres veces y no dice lo unico
+# que importa: que la DIAN cambio de opinion y que hay que revisar los
+# casos asesorados con la doctrina vieja.
+RECONSIDERA = re.compile(
+    r"\b(reconsidera|revoca|modifica|aclara)\b[^.]{0,60}?"
+    r"\b(?:concepto|oficio|doctrina|tesis)\b",
+    re.IGNORECASE)
+
+CITADOS = re.compile(
+    r"\b(?:concepto|oficio)\s+(?:general\s+)?(?:unificado\s+)?"
+    r"(?:n[uú]mero\s+|no\.?\s*)?0*(\d{3,9})"
+    r"(?:[^.\d]{0,40}?\b(?:de|del)\s+(?:\w+\s+\d{1,2}\s+de\s+)?((?:19|20)\d{2}))?",
+    re.IGNORECASE)
+
 ETIQUETAS_TEMA = {
     "renta": "renta", "iva": "IVA", "retencion": "retención en la fuente",
     "retencion_iva": "reteIVA", "patrimonio": "impuesto al patrimonio",
@@ -262,10 +279,16 @@ class RedactorReglas:
                     "advertencias": [], "interno": True,
                     "obligatoriedad": "orientativo"}
 
-        if asunto:
+        # Cambio de criterio: merece su propia redaccion.
+        recon = self._reconsideracion(desc)
+        if recon:
+            frases.append(recon["frase"])
+            puntos += 3
+            asunto = None
+        elif asunto:
             frases.append(asunto.rstrip(".") + ".")
             puntos += 1
-        else:
+        elif not recon:
             advertencias.append("La descripción de la DIAN solo dice a qué norma "
                                 "remite, no qué cambia")
 
@@ -304,6 +327,52 @@ class RedactorReglas:
                 "obligatoriedad": None}
 
     # ------------------------------------------------------------------
+
+    def _reconsideracion(self, desc):
+        """
+        Traduce un cambio de criterio a lo que el contador necesita saber:
+        que la DIAN cambio de opinion, sobre que, y que revise los casos
+        que asesoro con la doctrina anterior.
+        """
+        if not desc or not RECONSIDERA.search(desc):
+            return None
+
+        # El tema suele ir antes del guion: "Impuesto a la Gasolina - Reconsidera..."
+        tema = ""
+        m = re.match(r"\s*([^-–]{8,110}?)\s*[-–]\s*\b(?:Reconsidera|Revoca|Modifica|Aclara)",
+                     desc, re.IGNORECASE)
+        if m:
+            tema = m.group(1).strip().rstrip(".")
+
+        # Los documentos que quedan atras
+        citados, vistos = [], set()
+        for c in CITADOS.finditer(desc[:600]):
+            num = c.group(1)
+            if num in vistos:
+                continue
+            vistos.add(num)
+            citados.append(f"Concepto {num}" + (f" de {c.group(2)}" if c.group(2) else ""))
+            if len(citados) >= 3:
+                break
+
+        verbo = "cambió su criterio"
+        if re.search(r"\brevoca\b", desc, re.IGNORECASE):
+            verbo = "revocó su doctrina"
+        elif re.search(r"\baclara\b", desc, re.IGNORECASE) and \
+             not re.search(r"\breconsidera\b", desc, re.IGNORECASE):
+            verbo = "aclaró su doctrina"
+
+        # No se pasa a minusculas: hay siglas (ACPM, IVA, GMF, RUT) que
+        # quedarian irreconocibles.
+        partes = [f"La DIAN {verbo}" + (f" sobre {tema}" if tema else "") + "."]
+        if citados:
+            lista = self._enumerar(citados)
+            partes.append(f"Deja atrás {lista}.")
+            partes.append("Si asesoraste con esa doctrina, revisa esos casos.")
+        else:
+            partes.append("Abre el documento para ver qué doctrina reemplaza.")
+
+        return {"frase": " ".join(partes), "tema": tema, "citados": citados}
 
     def _asunto(self, desc):
         """
