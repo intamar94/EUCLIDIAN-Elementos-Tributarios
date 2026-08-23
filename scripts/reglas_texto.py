@@ -8,7 +8,7 @@ hace falta un tema nuevo. La logica de composicion no se entera.
 """
 
 import re
-from datetime import date
+from datetime import date, datetime
 
 MESES = ["", "enero", "febrero", "marzo", "abril", "mayo", "junio", "julio",
          "agosto", "septiembre", "octubre", "noviembre", "diciembre"]
