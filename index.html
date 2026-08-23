@@ -122,40 +122,59 @@ body{background:#f3f0e8}
 </header>
 
 <div class="controles marco" hidden id="controles">
-  <div class="grupo tiras" id="gPrioridad">
+  <!-- Tres ejes que no se pisan. Solo el primero queda a la vista:
+       es por donde empieza el trabajo. Los otros dos y la busqueda por
+       tema se despliegan, para que la lista no quede empujada al fondo
+       de la pantalla. -->
+  <div class="tiras" id="gPrioridad">
     <button data-v="" aria-pressed="true">Todas <b></b></button>
     <button class="pri-accion" data-v="accion" aria-pressed="false">Acción requerida <b></b></button>
-    <button class="pri-importante" data-v="importante" aria-pressed="false">Importantes <b></b></button>
+    <button data-v="importante" aria-pressed="false">Importantes <b></b></button>
     <button data-v="informativa" aria-pressed="false">Informativas <b></b></button>
   </div>
 
   <details class="mas">
-    <summary>Más filtros</summary>
+    <summary>Más filtros <i id="activos"></i></summary>
     <div class="panel">
-      <span class="rotulo">Bandeja</span>
-      <div class="tiras" id="gEstado">
-        <button data-v="pendientes" aria-pressed="true">Por revisar <b></b></button>
-        <button data-v="obligatorias" aria-pressed="false">Obligatorias <b></b></button>
-        <button data-v="urgentes" aria-pressed="false">Plazo o retroactivas <b></b></button>
-        <button data-v="conceptos" aria-pressed="false">Conceptos <b></b></button>
-        <button data-v="aprobados" aria-pressed="false">Aprobados <b></b></button>
+      <div class="eje">
+        <span class="rotulo">Qué clase de documento</span>
+        <div class="tiras" id="gNaturaleza">
+          <button data-v="" aria-pressed="true">Todos <b></b></button>
+          <button data-v="obligatorias" aria-pressed="false">Obligatorias <b></b></button>
+          <button data-v="conceptos" aria-pressed="false">Conceptos <b></b></button>
+        </div>
       </div>
-      <div class="selectores">
-        <label>Tema
-          <select id="selTema">
-            <option value="">Todos los temas</option>
-          </select>
-        </label>
-        <label>Orden
-          <select id="selOrden">
-            <option value="recientes">Más recientes primero</option>
-            <option value="prioridad">Lo urgente primero</option>
-            <option value="antiguos">Más antiguos primero</option>
-          </select>
-        </label>
+
+      <div class="eje">
+        <span class="rotulo">Ya revisados</span>
+        <div class="tiras" id="gEstado">
+          <button data-v="pendientes" aria-pressed="true">Sin revisar <b></b></button>
+          <button data-v="aprobados" aria-pressed="false">Aprobados <b></b></button>
+          <button data-v="todos" aria-pressed="false">Ver todo <b></b></button>
+        </div>
       </div>
+
+      <div class="eje">
+        <span class="rotulo">Sobre qué trata</span>
+        <select id="selTema">
+          <option value="">Cualquier tema</option>
+        </select>
+      </div>
+
+      <button class="limpiar" id="btnLimpiar" hidden onclick="limpiar()">Quitar filtros</button>
     </div>
   </details>
+</div>
+
+<div class="barra marco" hidden id="barra">
+  <span id="rango"></span>
+  <label>Ordenar
+    <select id="selOrden">
+      <option value="recientes">Lo más reciente</option>
+      <option value="prioridad">Lo más urgente</option>
+      <option value="antiguos">Lo más antiguo</option>
+    </select>
+  </label>
 </div>
 
 <main class="marco" id="lista"></main>
