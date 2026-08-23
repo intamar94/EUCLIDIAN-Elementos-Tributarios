@@ -1,5 +1,12 @@
 // EUCLIDIAN — lista de documentos.
-// La clave de servicio vive solo aca, en el servidor. Nunca llega al navegador.
+//
+// La clave de servicio vive solo aca, en el servidor. Nunca llega al
+// navegador.
+//
+// La version anterior hacia once consultas por carga: una por cada
+// contador, mas los temas. Eso agotaba el tiempo de la funcion y devolvia
+// 502. Ahora son dos: la pagina de documentos, y una llamada a
+// conteos_bandeja que resuelve todos los contadores de un golpe.
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY;
@@ -7,9 +14,6 @@ const CLAVE = process.env.EUCLIDIAN_CLAVE;
 
 const POR_PAGINA = 25;
 
-// Los filtros responden a como trabaja un contador, no a como esta
-// guardada la base. En temporada abre "obligatorias", revisa veinte y
-// cierra. Los conceptos quedan para cuando haya tiempo.
 const ESTADOS = {
   pendientes:   'revisado_por_humano=eq.false',
   obligatorias: 'revisado_por_humano=eq.false&clasificacion_obligatoriedad=eq.obligatorio_dian_y_contribuyentes',
@@ -19,8 +23,6 @@ const ESTADOS = {
   todos:        '',
 };
 
-// La prioridad se calcula en la vista, no en el navegador. Asi el filtro
-// opera sobre los 390 documentos y no sobre la pagina ya descargada.
 const PRIORIDADES = {
   accion:      'prioridad=eq.accion',
   importante:  'prioridad=eq.importante',
@@ -34,18 +36,17 @@ const ORDENES = {
 };
 
 const CAMPOS = [
-  'id', 'numero_resolucion', 'tipo_documento', 'subtipo', 'titulo',
+  'id', 'numero_resolucion', 'numero_interno', 'tipo_documento', 'titulo',
   'contenido', 'descripcion_limpia', 'resumen_humano', 'resumen_borrador',
   'borrador_confianza', 'borrador_advertencias',
-  'enlace_oficial', 'materia', 'temas',
+  'enlace_oficial', 'materia', 'temas', 'banco_datos',
   'fecha_publicacion', 'fecha_es_real', 'fecha_entrada_vigencia',
-  'diario_oficial', 'estado_vigencia', 'motivo_cambio_estado',
-  'clasificacion_obligatoriedad', 'tiene_efectos_retroactivos',
-  'anos_afectados', 'zonas_afectadas', 'plazos_mencionados',
-  'anotaciones_vigencia', 'tesis_juridica', 'tesis_respuesta',
-  'problema_juridico', 'fuentes_formales', 'descriptores',
-  'numero_interno', 'fecha_publicacion_web', 'banco_datos',
-  'dependencia_emisora', 'doctrina_citada', 'jurisprudencia_citada',
+  'fecha_publicacion_web', 'diario_oficial', 'dependencia_emisora',
+  'estado_vigencia', 'motivo_cambio_estado', 'clasificacion_obligatoriedad',
+  'tiene_efectos_retroactivos', 'anos_afectados', 'zonas_afectadas',
+  'plazos_mencionados', 'anotaciones_vigencia',
+  'tesis_juridica', 'tesis_respuesta', 'problema_juridico',
+  'fuentes_formales', 'descriptores', 'doctrina_citada', 'jurisprudencia_citada',
   'modifica_a', 'modificado_por', 'nivel_alerta', 'prioridad',
   'revisado_por_humano', 'aprobado_para_email',
 ].join(',');
@@ -70,89 +71,53 @@ export default async function handler(req, res) {
     Authorization: `Bearer ${SUPABASE_KEY}`,
   };
 
-  const armar = (est, pri) => {
-    let f = `fecha_publicacion=gte.${desde}`;
-    if (ESTADOS[est]) f += '&' + ESTADOS[est];
-    if (pri && PRIORIDADES[pri]) f += '&' + PRIORIDADES[pri];
-    if (tema) f += `&temas=cs.{${encodeURIComponent(tema)}}`;
-    return f;
-  };
+  let filtro = `fecha_publicacion=gte.${desde}`;
+  if (ESTADOS[estado]) filtro += '&' + ESTADOS[estado];
+  if (PRIORIDADES[prioridad]) filtro += '&' + PRIORIDADES[prioridad];
+  if (tema) filtro += `&temas=cs.{${encodeURIComponent(tema)}}`;
 
-  const contar = async (filtro) => {
-    const r = await fetch(
-      `${SUPABASE_URL}/rest/v1/v_bandeja?select=id&${filtro}`,
-      { headers: { ...cabeceras, Prefer: 'count=exact', Range: '0-0' } }
-    );
-    const rango = r.headers.get('content-range') || '*/0';
-    return parseInt(rango.split('/')[1], 10) || 0;
-  };
+  const primera = (pagina - 1) * POR_PAGINA;
 
   try {
-    const filtro = armar(estado, prioridad);
-    const desdeFila = (pagina - 1) * POR_PAGINA;
-
-    // Se pide el total en la misma llamada, para saber cuantas paginas
-    // hay. Antes se traian 60 documentos sin decir que habia mas: quien
-    // llegaba al final creia haberlo visto todo.
-    const r = await fetch(
-      `${SUPABASE_URL}/rest/v1/v_bandeja?select=${CAMPOS}&${filtro}&order=${orden}`,
-      {
-        headers: {
-          ...cabeceras,
-          Prefer: 'count=exact',
-          Range: `${desdeFila}-${desdeFila + POR_PAGINA - 1}`,
-        },
-      }
-    );
-    if (!r.ok) {
-      const detalle = await r.text();
-      return res.status(502).json({ error: 'supabase', detalle: detalle.slice(0, 300) });
-    }
-    const documentos = await r.json();
-    const rango = r.headers.get('content-range') || '*/0';
-    const total = parseInt(rango.split('/')[1], 10) || 0;
-
-    const claves = ['pendientes', 'obligatorias', 'urgentes', 'conceptos', 'aprobados'];
-    const prioridades = ['accion', 'importante', 'informativa'];
-
-    const [valoresEstado, valoresPrioridad] = await Promise.all([
-      Promise.all(claves.map((k) => contar(armar(k, prioridad)))),
-      Promise.all(prioridades.map((p) => contar(armar(estado, p)))),
+    const [rDocs, rResumen] = await Promise.all([
+      fetch(
+        `${SUPABASE_URL}/rest/v1/v_bandeja?select=${CAMPOS}&${filtro}&order=${orden}`,
+        {
+          headers: {
+            ...cabeceras,
+            Prefer: 'count=exact',
+            Range: `${primera}-${primera + POR_PAGINA - 1}`,
+          },
+        }
+      ),
+      fetch(`${SUPABASE_URL}/rest/v1/rpc/conteos_bandeja`, {
+        method: 'POST',
+        headers: { ...cabeceras, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          p_desde: desde,
+          p_tema: tema || null,
+          p_estado: estado,
+        }),
+      }),
     ]);
 
-    const conteos = Object.fromEntries(claves.map((k, i) => [k, valoresEstado[i]]));
-    const porPrioridad = Object.fromEntries(
-      prioridades.map((p, i) => [p, valoresPrioridad[i]])
-    );
+    if (!rDocs.ok) {
+      const detalle = await rDocs.text();
+      return res.status(502).json({ error: 'supabase', detalle: detalle.slice(0, 300) });
+    }
 
-    // Los temas disponibles salen de la seleccion completa, no de la
-    // pagina: si solo se miraran los 25 visibles, el selector cambiaria
-    // de opciones al pasar de pagina.
-    let temas = [];
-    try {
-      const rt = await fetch(
-        `${SUPABASE_URL}/rest/v1/v_bandeja?select=temas&${armar(estado, prioridad)}&limit=600`,
-        { headers: cabeceras }
-      );
-      const filas = await rt.json();
-      const vistos = new Set();
-      (filas || []).forEach((f) =>
-        (f.temas || []).forEach((t) => {
-          if (!t.startsWith('dian:') && t !== 'boletin_mensual') vistos.add(t);
-        })
-      );
-      temas = [...vistos].sort();
-    } catch (e) { /* accesorio */ }
+    const documentos = await rDocs.json();
+    const rango = rDocs.headers.get('content-range') || '*/0';
+    const total = parseInt(rango.split('/')[1], 10) || 0;
 
-    let actualizado = null;
+    // Los contadores son accesorios: si fallan, la lista igual sirve.
+    let resumen = {};
     try {
-      const ra = await fetch(
-        `${SUPABASE_URL}/rest/v1/logs_scraping?select=created_at&order=created_at.desc&limit=1`,
-        { headers: cabeceras }
-      );
-      const filas = await ra.json();
-      if (filas && filas[0]) actualizado = filas[0].created_at;
-    } catch (e) { /* accesorio */ }
+      resumen = (await rResumen.json()) || {};
+    } catch (e) { /* sin contadores */ }
+
+    const conteos = resumen.conteos || {};
+    const porPrioridad = resumen.porPrioridad || {};
 
     res.setHeader('Cache-Control', 'no-store');
     return res.status(200).json({
@@ -163,10 +128,10 @@ export default async function handler(req, res) {
       paginas: Math.max(1, Math.ceil(total / POR_PAGINA)),
       conteos,
       porPrioridad,
-      temas,
-      actualizado,
-      pendientes: conteos.pendientes,
-      aprobados: conteos.aprobados,
+      temas: resumen.temas || [],
+      actualizado: resumen.actualizado || null,
+      pendientes: conteos.pendientes ?? 0,
+      aprobados: conteos.aprobados ?? 0,
     });
   } catch (e) {
     return res.status(500).json({ error: 'fallo_lectura', detalle: String(e).slice(0, 200) });
