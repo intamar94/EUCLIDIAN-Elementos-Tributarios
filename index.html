@@ -170,6 +170,52 @@ h2{
 .escrito{
   border-left-color:var(--azul) !important;
 }
+/* El plazo va arriba de todo: en temporada es lo unico que no puede
+   pasar desapercibido. */
+.plazo{
+  display:flex;gap:9px;align-items:flex-start;
+  margin:11px 0 0;padding:10px 12px;
+  background:#FBEAE9;border-left:3px solid var(--regla);border-radius:2px;
+}
+.plazo-icono{
+  font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.1em;
+  color:var(--regla);white-space:nowrap;padding-top:2px;font-weight:600;
+}
+.plazo-texto{
+  font-family:'Spectral',Georgia,serif;font-size:14.5px;line-height:1.45;
+  color:var(--tinta);
+}
+
+/* Relaciones normativas. La de arriba avisa que una norma posterior
+   toco a esta; es la que evita asesorar con doctrina superada. */
+.relaciones{margin-top:11px}
+.rel{
+  padding:9px 11px;margin-bottom:6px;border-radius:2px;
+  font-family:'IBM Plex Sans',sans-serif;font-size:12.5px;line-height:1.45;
+}
+.rel.despues{background:#FDF4E3;border-left:3px solid var(--ocre)}
+.rel.antes{background:#EEF1F7;border-left:3px solid var(--azul)}
+.rel b{
+  font-family:'IBM Plex Mono',monospace;font-size:10px;
+  letter-spacing:.1em;text-transform:uppercase;display:block;
+  margin-bottom:4px;font-weight:600;
+}
+.rel.despues b{color:#8A6415}
+.rel.antes b{color:var(--azul)}
+.rel a{
+  color:var(--tinta);text-decoration:none;
+  border-bottom:1px solid var(--linea);
+  font-family:'IBM Plex Mono',monospace;font-size:11px;
+}
+.rel a:hover{border-color:var(--tinta)}
+.rel ul{margin:0;padding-left:14px}
+.rel li{margin:3px 0}
+
+.actualizado{
+  font-family:'IBM Plex Mono',monospace;font-size:9.5px;
+  letter-spacing:.1em;color:var(--tenue);margin-top:9px;
+}
+
 .borrador{
   margin-top:13px;padding:11px 12px;
   background:#F3F0E4;border-left:3px solid var(--ocre);border-radius:2px;
@@ -279,6 +325,7 @@ header[hidden]{display:none}
     <div><b id="nPend">·</b><span>por revisar</span></div>
     <div><b id="nApr">·</b><span>aprobados</span></div>
   </div>
+  <div class="actualizado" id="actualizado"></div>
 </header>
 
 <nav hidden id="nav">
@@ -395,6 +442,49 @@ function usarBorrador(id){
   t.focus();
 }
 
+/* Un plazo con fecha es lo mas accionable que trae un documento.
+   Enterrado en un parrafo no sirve; arriba y en rojo, si. */
+function bloquePlazo(d){
+  const p = (d.plazos_mencionados||[])[0];
+  if(!p) return '';
+  return `<div class="plazo">
+    <span class="plazo-icono">PLAZO</span>
+    <span class="plazo-texto">${esc(p).slice(0,240)}</span>
+  </div>`;
+}
+
+function bloqueRelaciones(d){
+  const despues = d.modificado_por || [];
+  const antes = d.modifica_a || [];
+  if(!despues.length && !antes.length) return '';
+  let html = '<div class="relaciones">';
+
+  if(despues.length){
+    const items = despues.slice(0,4).map(r=>
+      `<li>${esc(r.accion||'modificada')} por
+        <a href="${esc(r.enlace||'#')}" target="_blank" rel="noopener">${esc(r.numero||'')}</a>
+        ${r.fecha?`<span style="color:var(--tenue)">(${fechaCorta(r.fecha)})</span>`:''}</li>`
+    ).join('');
+    const mas = despues.length>4 ? `<li style="color:var(--tenue)">y ${despues.length-4} más</li>` : '';
+    html += `<div class="rel despues">
+      <b>Una norma posterior la tocó</b>
+      <ul>${items}${mas}</ul>
+    </div>`;
+  }
+
+  if(antes.length){
+    const items = antes.slice(0,3).map(r=>
+      `<li>${esc(r.accion||'modifica')} a
+        <a href="${esc(r.enlace||'#')}" target="_blank" rel="noopener">${esc(r.numero||'')}</a></li>`
+    ).join('');
+    html += `<div class="rel antes">
+      <b>Esta norma toca a</b>
+      <ul>${items}</ul>
+    </div>`;
+  }
+  return html + '</div>';
+}
+
 function ficha(d){
   const temas = (d.temas||[]).filter(t=>!t.startsWith('dian:')&&t!=='boletin_mensual');
   const marcas = [
@@ -414,6 +504,8 @@ function ficha(d){
     <div class="fuente">Lo que dice la DIAN</div>
     <p class="dice">${esc(d.descripcion_limpia||d.contenido||'').slice(0,460)}</p>
     <div class="marcas">${marcas}</div>
+    ${bloquePlazo(d)}
+    ${bloqueRelaciones(d)}
     ${bloqueBorrador(d)}
     <div class="escribir">
       <label for="r-${d.id}">En palabras simples
@@ -495,6 +587,13 @@ async function cargar(primeraVez){
     document.getElementById('nPend').textContent = data.pendientes;
     document.getElementById('nApr').textContent = data.aprobados;
     pintarConteos(data.conteos || {});
+    const act = document.getElementById('actualizado');
+    if (act && data.actualizado){
+      const f = new Date(data.actualizado);
+      act.textContent = 'Datos al ' + f.toLocaleDateString('es-CO',
+        {day:'numeric', month:'long'}) + ', ' +
+        f.toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'});
+    }
     poblarTemas();
 
     if (!data.documentos.length){
@@ -579,3 +678,4 @@ if (CLAVE) cargar(); else document.getElementById('puerta').hidden = false;
 </script>
 </body>
 </html>
+
