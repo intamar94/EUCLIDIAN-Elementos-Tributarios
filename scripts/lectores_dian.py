@@ -89,7 +89,7 @@ class Lectores:
         salida = []
         patron = re.compile(
             r"\b(?:Concepto|Oficio)\s+(?:General\s+)?(?:Unificado\s+)?"
-            r"(?:DIAN\s+)?(?:N[o°º]\.\?\s*)?0*(\d{3,9})"
+            r"(?:DIAN\s+)?(?:N[o°º]\.?\s*)?0*(\d{3,9})"
             r"(?:\s*[-(]?\s*int\.?\s*0*(\d{1,6})\s*\)?)?"
             r"(?:[^\d\n]{0,30}?((?:19|20)\d{2}))?",
             re.IGNORECASE)
@@ -118,10 +118,10 @@ class Lectores:
         salida = []
         for patron in (
             r"[Ss]entencia\s+([CT]-\d{1,4}\s*(?:de\s*)?(?:19|20)?\d{2,4})",
-            r"C\.?\s*E\.?\,?\s*Sec\.?\s*(?:Cuarta|4)[^\n]{0,40}?"
+            r"C\.?\s*E\.?,?\s*Sec\.?\s*(?:Cuarta|4)[^\n]{0,40}?"
             r"(Sent\.?\s*\d{3,6}[^\n]{0,25})",
             r"[Cc]onsejo de Estado[^\n]{0,60}?(?:[Ee]xpediente|[Rr]adicado)"
-            r"\s*(?:N[o°º]\.\?\s*)?(\d{4,6})",
+            r"\s*(?:N[o°º]\.?\s*)?(\d{4,6})",
             r"[Aa]uto\s+(A-\d{2,4}-\d{2,4})",
         ):
             for m in re.finditer(patron, t):
