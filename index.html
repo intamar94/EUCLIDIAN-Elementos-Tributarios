@@ -205,14 +205,18 @@ article.p-info     .cinta{ background:#EDF2EE;color:#4A5C50 }
   color:#4A5650;margin:8px 0 0;
 }
 
-/* ---------- vencimiento con cuenta regresiva ---------- */
-.cuenta{
+/* ---------- vencimiento con cuenta regresiva ----------
+   Se llama 'restan' y no 'cuenta' a proposito: ya existe una clase
+   .cuenta para los contadores de la cabecera, y al repetir el nombre
+   esta le pintaba el fondo rojo. */
+.restan{
   font-family:'IBM Plex Mono',monospace;font-size:10px;
   letter-spacing:.08em;text-transform:uppercase;
   padding:2px 7px;border-radius:2px;white-space:nowrap;
-  background:var(--regla);color:#fff;margin-left:auto;
+  background:var(--regla);color:#fff;margin-left:auto;align-self:flex-start;
 }
-.cuenta.lejos{background:var(--ocre)}
+.restan.lejos{background:var(--ocre)}
+.restan.pasado{background:var(--tenue)}
 
 /* El plazo va arriba de todo: en temporada es lo unico que no puede
    pasar desapercibido. */
@@ -498,10 +502,10 @@ function bloquePlazo(d){
     // Solo se cuenta hacia adelante. Un contador negativo confunde mas
     // de lo que informa, y algunas fechas del texto ya pasaron.
     if (n >= 0) {
-      marca = `<span class="cuenta ${n>30?'lejos':''}">${
+      marca = `<span class="restan ${n>30?'lejos':''}">${
         n===0 ? 'hoy' : n===1 ? 'mañana' : 'faltan '+n+' días'}</span>`;
     } else {
-      marca = `<span class="cuenta lejos" style="background:var(--tenue)">ya pasó</span>`;
+      marca = `<span class="restan pasado">ya pasó</span>`;
     }
   }
   return `<div class="plazo">
