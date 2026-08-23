@@ -328,12 +328,12 @@ class Composicion:
             frases.append(f"Anota este plazo: {p[:190]}.")
             puntos += 2
 
-        fuentes = d.get("fuentes_formales") or []
-        if fuentes:
-            # Saber que articulo del Estatuto toca es lo que permite a un
-            # contador decidir en dos segundos si le concierne.
-            frases.append("Interpreta " + self._enumerar(
-                [f.rstrip(".") for f in fuentes[:2]]) + ".")
+        # Las fuentes formales NO van en el borrador: la ficha ya las
+        # muestra abajo, con su etiqueta y completas. Repetirlas aqui
+        # alargaba el texto y enterraba lo unico que hay que leer, que
+        # es que cambio y que hacer. Igual suman confianza, porque
+        # significa que sabemos que articulos toca.
+        if d.get("fuentes_formales"):
             puntos += 1
 
         vig = fecha_simple(d.get("fecha_entrada_vigencia"))
@@ -342,15 +342,11 @@ class Composicion:
             frases.append(f"Rige desde el {vig}.")
             puntos += 1
 
-        # Un concepto obliga a los funcionarios desde que se publica en la
-        # web de la DIAN, no desde que se firma. Cuando hay diferencia
-        # apreciable, conviene decirla: entre una fecha y otra la doctrina
-        # todavia no era exigible.
-        web = fecha_simple(d.get("fecha_publicacion_web"))
-        if web and pub and web != pub and \
-           d.get("clasificacion_obligatoriedad") == "obligatorio_dian_solo":
-            frases.append(f"Publicada en la web de la DIAN el {web}: "
-                          f"desde esa fecha obliga a sus funcionarios.")
+        # La fecha de publicacion en la web tampoco va en el borrador: la
+        # ficha la muestra abajo con su explicacion. Sigue sumando
+        # confianza porque es el dato que dice desde cuando la doctrina
+        # es exigible.
+        if d.get("fecha_publicacion_web"):
             puntos += 1
 
         return frases, puntos, avisos
