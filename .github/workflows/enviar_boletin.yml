@@ -19,6 +19,11 @@ on:
         description: 'Correo para la prueba'
         required: false
         default: ''
+      desde:
+        description: 'Fecha inicial (AAAA-MM-DD)'
+        required: false
+        default: ''
+        type: string
 
 jobs:
   enviar:
@@ -39,7 +44,9 @@ jobs:
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
         run: |
           cd scripts
-          python generador.py --guardar --dias ${{ inputs.dias || '7' }}
+          ARGS="--guardar"
+          if [ -n "${{ inputs.desde }}" ]; then ARGS="$ARGS --desde ${{ inputs.desde }}"; fi
+          python generador.py $ARGS
 
       - name: Enviar
         env:
