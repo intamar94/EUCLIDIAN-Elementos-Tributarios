@@ -126,23 +126,52 @@ header{
    filtro que señala algo que hay que atender. */
 .tiras button.pri-accion[aria-pressed="true"]{background:var(--alerta);border-color:var(--alerta)}
 
-.mas{margin-top:9px}
+/* ── el panel de filtros ──
+   Antes "Mas filtros" era una linea de texto suelta: no parecia tocable
+   y habia que adivinarla. Y al abrirse los controles quedaban sueltos,
+   sin nada que dijera que formaban un grupo. Ahora el resumen se ve
+   como un boton y lo que se despliega tiene cuerpo de panel. */
+.mas{margin-top:10px}
 .mas summary{
-  cursor:pointer;list-style:none;display:inline-block;
-  font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.1em;
-  text-transform:uppercase;color:var(--tenue);padding:5px 0;
+  cursor:pointer;list-style:none;display:inline-flex;align-items:center;gap:7px;
+  font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--tenue);
+  padding:7px 13px;border:1px solid var(--linea);border-radius:2px;
+  background:var(--ficha);
 }
 .mas summary::-webkit-details-marker{display:none}
-.mas summary::before{content:'▸ '}
-.mas[open] summary::before{content:'▾ '}
-.mas summary:hover{color:var(--tinta)}
-.mas .tiras{margin-top:7px}
+.mas summary::after{content:'▾';font-size:9px;opacity:.7}
+.mas[open] summary::after{content:'▴'}
+.mas summary:hover{border-color:var(--tenue);color:var(--tinta)}
+.mas[open] summary{background:var(--tinta);color:var(--papel);border-color:var(--tinta)}
 
-.selectores{display:flex;gap:8px;flex-wrap:wrap;margin-top:9px}
+.panel{
+  margin-top:9px;padding:14px 15px 15px;
+  background:var(--ficha);border:1px solid var(--linea);border-radius:2px;
+}
+.panel .rotulo{
+  display:block;font-family:'IBM Plex Mono',monospace;font-size:9.5px;
+  letter-spacing:.13em;text-transform:uppercase;color:var(--tenue);
+  margin:0 0 7px;
+}
+.panel .rotulo + .tiras{margin-bottom:15px}
+
+/* Dentro del panel los botones se acomodan en varios renglones en vez
+   de desplazarse de lado: aqui hay espacio y el corte lateral hacia
+   parecer que faltaba algo. */
+.panel .tiras{flex-wrap:wrap;overflow-x:visible}
+
+.selectores{display:flex;gap:10px;flex-wrap:wrap}
+.selectores label{
+  flex:1;min-width:190px;display:block;
+  font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--tenue);
+}
 .selectores select{
-  flex:1;min-width:170px;padding:7px 10px;border:1px solid var(--linea);
-  background:var(--ficha);color:var(--tinta);border-radius:2px;
-  font-family:'IBM Plex Sans',sans-serif;font-size:13px;
+  display:block;width:100%;margin-top:6px;
+  padding:8px 10px;border:1px solid var(--linea);
+  background:var(--papel);color:var(--tinta);border-radius:2px;
+  font-family:'IBM Plex Sans',sans-serif;font-size:13.5px;
 }
 .selectores select:focus{outline:2px solid var(--azul);outline-offset:1px}
 
