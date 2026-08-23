@@ -15,10 +15,24 @@ export default async function handler(req, res) {
 
   const desde = req.query.desde || '2026-01-01';
   const estado = req.query.estado || 'pendientes';
+  const tema = req.query.tema || '';
+
+  // Los filtros responden a como trabaja un contador, no a como esta
+  // guardada la base. En temporada de renta abre "obligatorias", revisa
+  // veinte y cierra. Los conceptos quedan para cuando haya tiempo.
+  const FILTROS = {
+    pendientes:  'revisado_por_humano=eq.false',
+    obligatorias:'revisado_por_humano=eq.false&clasificacion_obligatoriedad=eq.obligatorio_dian_y_contribuyentes',
+    urgentes:    'revisado_por_humano=eq.false&or=(tiene_efectos_retroactivos.eq.true,estado_vigencia.neq.vigente)',
+    conceptos:   'revisado_por_humano=eq.false&clasificacion_obligatoriedad=eq.obligatorio_dian_solo',
+    aprobados:   'aprobado_para_email=eq.true',
+    todos:       '',
+  };
 
   let filtro = `fecha_publicacion=gte.${desde}`;
-  if (estado === 'pendientes') filtro += '&revisado_por_humano=eq.false';
-  if (estado === 'aprobados') filtro += '&aprobado_para_email=eq.true';
+  const extra = FILTROS[estado];
+  if (extra) filtro += '&' + extra;
+  if (tema) filtro += `&temas=cs.{${encodeURIComponent(tema)}}`;
 
   const campos = [
     'id', 'numero_resolucion', 'tipo_documento', 'subtipo', 'titulo',
@@ -65,13 +79,23 @@ export default async function handler(req, res) {
       return parseInt(rango.split('/')[1], 10) || 0;
     };
 
-    const [pendientes, aprobados] = await Promise.all([
-      contar(`fecha_publicacion=gte.${desde}&revisado_por_humano=eq.false`),
-      contar(`fecha_publicacion=gte.${desde}&aprobado_para_email=eq.true`),
-    ]);
+    // Cada pestana muestra su numero. Saber cuantas hay antes de entrar
+    // evita abrir una lista de trescientas sin querer.
+    const claves = ['pendientes', 'obligatorias', 'urgentes', 'conceptos', 'aprobados'];
+    const valores = await Promise.all(
+      claves.map((k) =>
+        contar(`fecha_publicacion=gte.${desde}` + (FILTROS[k] ? '&' + FILTROS[k] : ''))
+      )
+    );
+    const conteos = Object.fromEntries(claves.map((k, i) => [k, valores[i]]));
 
     res.setHeader('Cache-Control', 'no-store');
-    return res.status(200).json({ documentos, pendientes, aprobados });
+    return res.status(200).json({
+      documentos,
+      conteos,
+      pendientes: conteos.pendientes,
+      aprobados: conteos.aprobados,
+    });
   } catch (e) {
     return res.status(500).json({ error: 'fallo_lectura', detalle: String(e).slice(0, 200) });
   }
