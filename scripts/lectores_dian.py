@@ -118,7 +118,7 @@ class Lectores:
         salida = []
         for patron in (
             r"[Ss]entencia\s+([CT]-\d{1,4}\s*(?:de\s*)?(?:19|20)?\d{2,4})",
-            r"C\.?\s*E\.?\s*,?\s*Sec\.?\s*(?:Cuarta|4)[^\n]{0,40}?"
+            r"C\.?\s*E\.?\,?\s*Sec\.?\s*(?:Cuarta|4)[^\n]{0,40}?"
             r"(Sent\.?\s*\d{3,6}[^\n]{0,25})",
             r"[Cc]onsejo de Estado[^\n]{0,60}?(?:[Ee]xpediente|[Rr]adicado)"
             r"\s*(?:N[o°º]\.\?\s*)?(\d{4,6})",
