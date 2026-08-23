@@ -51,6 +51,9 @@ import sys
 from collections import Counter
 from datetime import datetime, timezone
 
+from lectores_dian import Lectores
+from patrones_dian import limpiar
+
 try:
     from supabase import create_client
 except ImportError:
@@ -87,7 +90,7 @@ def limpiar(t):
     return t.strip()
 
 
-class ExtractorEstructura:
+class ExtractorEstructura(Lectores):
     def __init__(self, limite=500, anio=None, dry_run=False):
         self.limite = limite
         self.anio = anio
