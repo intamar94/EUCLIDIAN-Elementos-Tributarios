@@ -5,41 +5,21 @@
  */
 
 :root{
-  /* ── SISTEMA DE COLOR ──────────────────────────────────────────
-     Un color, un significado. Se repite igual en toda la pagina para
-     que el ojo lo aprenda y deje de leer etiquetas.
-
-       rojo         detente, actua
-       azul oscuro  te obliga
-       azul claro   orienta, no obliga
-       verde        paso por criterio humano
-       gris         informacion verificable
-
-     Los dos azules son el mismo color a distinta intensidad, y eso
-     dice algo: obligar y orientar son grados de lo mismo. El violeta
-     y el ocre se descartaron por confundirse con el rojo en pantalla
-     con poco brillo.
-
-     Regla de desempate: cuando algo es rojo y azul a la vez —una
-     resolucion obligatoria que ademas quedo suspendida— gana el rojo.
-     La accion manda sobre la clasificacion. */
-
-  --alerta:#B23A32;       /* detente, actua */
+  --alerta:#B23A32;
   --alerta-suave:#FBEAE9;
-  --obliga:#2C4C8F;       /* te obliga */
+  --obliga:#2C4C8F;
   --obliga-suave:#EAEFF7;
-  --orienta:#3D82B8;      /* orienta, no obliga */
+  --orienta:#3D82B8;
   --orienta-suave:#E8F1F8;
-  --humano:#2F6B4F;       /* paso por criterio humano */
+  --humano:#2F6B4F;
   --humano-suave:#E9F2EC;
 
-  --papel:#EDF1E9;        /* papel de libro contable */
+  --papel:#EDF1E9;
   --ficha:#FAFBF8;
   --tinta:#17211C;
   --tenue:#5E6B62;
   --linea:#D2DACB;
 
-  /* nombres antiguos, para no romper reglas que aun los usan */
   --regla:var(--alerta);
   --azul:var(--obliga);
   --verde:var(--humano);
@@ -68,9 +48,6 @@ header{
 }
 .cab{display:flex;flex-wrap:wrap;align-items:flex-end;gap:14px;padding:14px 0 11px}
 @media (max-width:700px){
-  /* En telefono: la marca y las cifras comparten renglon, y la fecha
-     con el boton van debajo. Menos alto de cabecera es mas espacio
-     para lo que importa, que son los documentos. */
   .cab{gap:8px 16px;padding:11px 0 9px;align-items:center}
   .marca{font-size:17px}
   .sub{display:none}
@@ -98,13 +75,7 @@ header{
 .recargar[disabled]{opacity:.5;cursor:wait}
 
 /* ══════════════ controles ══════════════ */
-/* Solo la prioridad queda a la vista. Lo demas se despliega, porque
-   antes los tres grupos ocupaban la pantalla entera y habia que
-   desplazarse para ver el primer documento. */
 .controles{padding:10px 0 6px}
-
-/* Una sola tira que se desplaza de lado en pantallas angostas: mas
-   compacto que dejar que los botones salten de renglon. */
 .tiras{
   display:flex;gap:7px;overflow-x:auto;padding-bottom:3px;
   scrollbar-width:none;-webkit-overflow-scrolling:touch;
@@ -122,15 +93,9 @@ header{
 .tiras button[aria-pressed="true"]{background:var(--tinta);color:var(--papel);border-color:var(--tinta)}
 .tiras button[aria-pressed="true"] b{opacity:.9}
 .tiras button:focus-visible{outline:2px solid var(--azul);outline-offset:2px}
-/* Solo "Accion requerida" lleva color al estar activo: es el unico
-   filtro que señala algo que hay que atender. */
 .tiras button.pri-accion[aria-pressed="true"]{background:var(--alerta);border-color:var(--alerta)}
 
-/* ── el panel de filtros ──
-   Antes "Mas filtros" era una linea de texto suelta: no parecia tocable
-   y habia que adivinarla. Y al abrirse los controles quedaban sueltos,
-   sin nada que dijera que formaban un grupo. Ahora el resumen se ve
-   como un boton y lo que se despliega tiene cuerpo de panel. */
+/* ── el panel de filtros ── */
 .mas{margin-top:10px}
 .mas summary{
   cursor:pointer;list-style:none;display:inline-flex;align-items:center;gap:7px;
@@ -155,10 +120,6 @@ header{
   margin:0 0 7px;
 }
 .panel .rotulo + .tiras{margin-bottom:15px}
-
-/* Dentro del panel los botones se acomodan en varios renglones en vez
-   de desplazarse de lado: aqui hay espacio y el corte lateral hacia
-   parecer que faltaba algo. */
 .panel .tiras{flex-wrap:wrap;overflow-x:visible}
 
 .selectores{display:flex;gap:10px;flex-wrap:wrap}
@@ -175,15 +136,7 @@ header{
 }
 .selectores select:focus{outline:2px solid var(--azul);outline-offset:1px}
 
-/* ══════════════ pantallas grandes ══════════════
-   Todo estaba calibrado para el telefono y en un monitor quedaba
-   diminuto. Se escala el conjunto, no pieza por pieza, para que las
-   proporciones se conserven.
-
-   El corte esta en 900px y no en 1100 a proposito: cuando alguien pide
-   "sitio de escritorio" en el navegador del telefono, este finge una
-   pantalla de unos 980px. Con el umbral en 1100 esos estilos no se
-   activaban y todo se veia todavia mas pequeño. */
+/* ══════════════ pantallas grandes ══════════════ */
 @media (min-width:900px){
   html{font-size:17px}
   body{font-size:17px}
