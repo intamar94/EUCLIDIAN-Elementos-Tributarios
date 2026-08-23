@@ -1,34 +1,14 @@
 /* EUCLIDIAN — armado de las fichas.
  *
  * Aqui vive todo lo que convierte un documento en algo legible: las
- * etiquetas de tema, los glifos al modo de Byrne, y los bloques de la ficha. Separado del resto porque cambia por razones distintas: esto se toca cuando cambia como se ve un documento, bandeja.js cuando cambia como se navega.
+ * etiquetas de tema, los glifos al modo de Byrne, y los bloques de la
+ * ficha. Separado del resto porque cambia por razones distintas: esto
+ * se toca cuando cambia como se ve un documento, bandeja.js cuando
+ * cambia como se navega.
  *
  * Se carga antes que bandeja.js. Ambos usan defer, que conserva el orden.
  */
 /* ═══════════ etiquetas ═══════════ */
-const ETIQUETAS = {
-  renta:'Renta', ganancia_ocasional:'Ganancia ocasional', iva:'IVA',
-  consumo:'Impuesto al consumo', timbre:'Timbre', patrimonio:'Patrimonio',
-  gmf:'GMF (4x1000)', simple:'Régimen SIMPLE', carbono:'Impuesto al carbono',
-  plasticos:'Plásticos de un solo uso', saludables:'Impuestos saludables',
-  licores_tabaco:'Licores y tabaco', normalizacion:'Normalización',
-  retencion:'Retención en la fuente', retencion_iva:'ReteIVA',
-  facturacion:'Facturación electrónica', nomina_electronica:'Nómina electrónica',
-  exogena:'Información exógena', rut:'RUT', rub:'Beneficiario final',
-  contabilidad:'Contabilidad y NIIF', devoluciones:'Devoluciones',
-  firmeza:'Firmeza y prescripción', sanciones:'Sanciones',
-  fiscalizacion:'Fiscalización', cobro:'Cobro y acuerdos de pago',
-  beneficios:'Beneficios y conciliación', recursos:'Recursos y defensa',
-  notificaciones:'Notificaciones', precios_transferencia:'Precios de transferencia',
-  convenios:'Doble imposición', ece:'Entidades del exterior',
-  aduanero:'Aduanero', cambiario:'Cambiario', comercio_exterior:'Comercio exterior',
-  transporte:'Transporte de carga', zonas_francas:'Zonas francas',
-  esal:'ESAL y donaciones', salud:'Salud', agropecuario:'Agropecuario',
-  turismo:'Turismo', criptoactivos:'Criptoactivos', financiero:'Sector financiero',
-  economia_naranja:'Economía naranja', formularios:'Formularios y recibos',
-  calendario:'Calendario tributario', uvt:'UVT', interno_dian:'Interno de la DIAN',
-};
-function nombreTema(t){ return ETIQUETAS[t] || t.replace(/_/g,' '); }
 
 const MESES=['','ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
 function fechaCorta(f){
@@ -63,27 +43,47 @@ function esc(s){
 
 /* ═══════════ piezas de la ficha ═══════════ */
 
-const ROTULO_PRI = { accion:'Acción requerida', importante:'Importante', informativa:'Informativa' };
+/* La señal de la ficha: el rotulo y el color salen del MISMO motivo.
+   Antes el color venia del nivel de prioridad y el rotulo del motivo,
+   asi que un mismo tono acababa significando cosas distintas.
 
-/* La cinta afina el rotulo con lo que solo se sabe en el navegador:
-   si el plazo esta cerca. El nivel viene calculado de la base. */
-function rotuloPrioridad(d){
-  if (d.estado_vigencia !== 'vigente') return 'No la apliques';
+   Tonos:  alerta  detente, actua
+           obliga  te obliga
+           orienta orienta, no obliga
+           neutro  informacion
+
+   El orden de las reglas es el desempate: lo que exige accion se
+   evalua primero, porque la accion manda sobre la clasificacion. */
+function señal(d){
+  if (d.estado_vigencia !== 'vigente')
+    return {rotulo:'No la apliques', tono:'alerta'};
+  if (d.nivel_alerta === 'critica')
+    return {rotulo:'Acción requerida', tono:'alerta'};
+
   const f = fechaDePlazo((d.plazos_mencionados||[])[0]);
-  if (f){
-    const n = diasHasta(f);
-    if (n >= 0 && n <= 30) return 'Vence pronto';
-  }
-  if (d.tiene_efectos_retroactivos) return 'Puede tocar años pasados';
-  if ((d.modificado_por||[]).length) return 'Hay norma posterior';
-  return ROTULO_PRI[d.prioridad] || 'Informativa';
+  const dias = f ? diasHasta(f) : null;
+  if (dias !== null && dias >= 0 && dias <= 30)
+    return {rotulo:'Vence pronto', tono:'alerta'};
+  if (d.tiene_efectos_retroactivos)
+    return {rotulo:'Puede tocar años pasados', tono:'alerta'};
+
+  if ((d.modificado_por||[]).length)
+    return {rotulo:'Hay norma posterior', tono:'orienta'};
+  if (dias !== null && dias >= 0)
+    return {rotulo:'Tiene plazo', tono:'obliga'};
+  if (d.clasificacion_obligatoriedad === 'obligatorio_dian_y_contribuyentes')
+    return {rotulo:'Obligatoria', tono:'obliga'};
+
+  return {rotulo:'Informativa', tono:'neutro'};
 }
 
 /* Los glifos van al modo de Byrne: la figura dice lo que diria una etiqueta. */
 function glifo(d){
+  // Los dos azules son el mismo color a distinta intensidad: obligar y
+  // orientar son grados de lo mismo, y la figura lo refuerza.
   const c = d.estado_vigencia !== 'vigente' ? '#B23A32'
           : d.clasificacion_obligatoriedad === 'obligatorio_dian_y_contribuyentes' ? '#2C4C8F'
-          : '#C99A2E';
+          : '#3D82B8';
   if (d.estado_vigencia !== 'vigente')
     return `<svg width="15" height="15" viewBox="0 0 15 15" aria-hidden="true">
       <rect x="2" y="2" width="11" height="11" fill="none" stroke="${c}" stroke-width="1.5"/>
@@ -203,7 +203,9 @@ function bloqueDatos(d){
 function ficha(d){
   const temas = (d.temas||[]).filter(t=>!t.startsWith('dian:') && t!=='boletin_mensual');
   const marcas = [
-    `<span class="${d.estado_vigencia!=='vigente'?'alerta':'fuerte'}">${leyenda(d)}</span>`,
+    `<span class="${d.estado_vigencia!=='vigente' ? 'alerta'
+        : d.clasificacion_obligatoriedad==='obligatorio_dian_y_contribuyentes' ? 'obliga'
+        : 'orienta'}">${leyenda(d)}</span>`,
     d.materia ? `<span class="materia">${esc(d.materia)}</span>` : '',
     ...temas.slice(0,6).map(t=>`<span>${nombreTema(t)}</span>`),
     d.tiene_efectos_retroactivos ? '<span class="alerta">retroactivo</span>' : '',
@@ -214,8 +216,10 @@ function ficha(d){
 
   const lateral = [bloquePlazo(d), bloqueRelaciones(d)].filter(Boolean).join('');
 
-  return `<article data-id="${d.id}" class="p-${d.prioridad||'informativa'}${d.resumen_humano?' escrito':''}">
-    <div class="cinta">${rotuloPrioridad(d)}</div>
+  const s = señal(d);
+
+  return `<article data-id="${d.id}" class="t-${s.tono}${d.resumen_humano?' escrito':''}">
+    <div class="cinta">${s.rotulo}</div>
     <div class="fila-id">
       ${glifo(d)}
       <a class="codigo" href="${esc(d.enlace_oficial)}" target="_blank" rel="noopener">${esc(d.numero_resolucion)}</a>
