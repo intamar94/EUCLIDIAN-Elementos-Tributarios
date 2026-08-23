@@ -4,7 +4,9 @@
  * cada ficha esta en fichas.js, que se carga antes.
  */
 let CLAVE = sessionStorage.getItem('euclidian_clave') || '';
-const F = { estado:'pendientes', prioridad:'', tema:'', orden:'recientes', pagina:1 };
+/* Tres ejes que se combinan libremente, mas tema y orden. */
+const F = { estado:'pendientes', prioridad:'', naturaleza:'',
+            tema:'', orden:'recientes', pagina:1 };
 
 function entrar(e){
   e.preventDefault();
@@ -54,6 +56,7 @@ async function cargar(){
     const q = new URLSearchParams({estado:F.estado, orden:F.orden, pagina:F.pagina});
     if(F.tema) q.set('tema', F.tema);
     if(F.prioridad) q.set('prioridad', F.prioridad);
+    if(F.naturaleza) q.set('naturaleza', F.naturaleza);
 
     const r = await fetch('/api/documentos?'+q, {headers:{'x-clave':CLAVE}});
     if (r.status === 401){
@@ -72,8 +75,10 @@ async function cargar(){
     document.getElementById('nPend').textContent = data.pendientes;
     document.getElementById('nApr').textContent = data.aprobados;
 
-    pintar('gEstado', data.conteos || {});
-    pintar('gPrioridad', data.porPrioridad || {});
+    pintar('gPrioridad', data.prioridad || {});
+    pintar('gNaturaleza', data.naturaleza || {});
+    pintar('gEstado', data.estado || {});
+    marcarActivos();
     poblarTemas(data.temas || []);
 
     const s = document.getElementById('sello');
@@ -179,6 +184,33 @@ async function decidir(id, decision){
 }
 
 /* ═══════════ controles ═══════════ */
+/* Cuantos filtros hay puestos, y como quitarlos. Sin esto es facil
+   quedarse mirando una lista corta sin recordar que hay un tema
+   seleccionado dentro del panel. */
+function marcarActivos(){
+  const n = [
+    F.prioridad, F.naturaleza, F.tema,
+    F.estado !== 'pendientes' ? F.estado : '',
+    F.orden !== 'recientes' ? F.orden : '',
+  ].filter(Boolean).length;
+  const marca = document.getElementById('activos');
+  if (marca) marca.textContent = n ? n : '';
+  const btn = document.getElementById('btnLimpiar');
+  if (btn) btn.hidden = n === 0;
+}
+
+function limpiar(){
+  F.prioridad = ''; F.naturaleza = ''; F.tema = '';
+  F.estado = 'pendientes'; F.orden = 'recientes'; F.pagina = 1;
+  document.getElementById('selTema').value = '';
+  document.getElementById('selOrden').value = 'recientes';
+  ['gPrioridad','gNaturaleza','gEstado'].forEach(g=>{
+    document.querySelectorAll('#'+g+' button').forEach((b,i)=>
+      b.setAttribute('aria-pressed', String(i === 0)));
+  });
+  cargar();
+}
+
 function grupoClic(grupo, campo){
   document.getElementById(grupo).addEventListener('click', e=>{
     const b = e.target.closest('button'); if(!b) return;
@@ -189,8 +221,9 @@ function grupoClic(grupo, campo){
     cargar();
   });
 }
-grupoClic('gEstado','estado');
 grupoClic('gPrioridad','prioridad');
+grupoClic('gNaturaleza','naturaleza');
+grupoClic('gEstado','estado');
 
 document.getElementById('selTema').addEventListener('change', e=>{
   F.tema = e.target.value; F.pagina = 1; cargar();
