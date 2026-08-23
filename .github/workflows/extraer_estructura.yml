@@ -1,0 +1,43 @@
+name: Extraer estructura
+
+on:
+  # Despues del enriquecedor: necesita texto_completo para trabajar.
+  schedule:
+    - cron: '15 13 * * *'
+  workflow_dispatch:
+    inputs:
+      modo:
+        description: 'dry-run muestra sin guardar'
+        required: true
+        default: 'dry-run'
+        type: choice
+        options: ['dry-run', 'aplicar']
+      anio:
+        description: 'Solo un año (vacio = todos)'
+        required: false
+        default: ''
+      limite:
+        description: 'Cuantos documentos'
+        required: false
+        default: '500'
+
+jobs:
+  extraer:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Instalar dependencias
+        run: pip install -r scripts/requirements.txt
+      - name: Extraer estructura
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: |
+          cd scripts
+          ARGS="--limite ${{ inputs.limite || '500' }}"
+          if [ "${{ inputs.modo }}" = "dry-run" ]; then ARGS="$ARGS --dry-run"; fi
+          if [ -n "${{ inputs.anio }}" ]; then ARGS="$ARGS --anio ${{ inputs.anio }}"; fi
+          python extractor_estructura.py $ARGS
