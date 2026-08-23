@@ -1,3 +1,9 @@
+/* EUCLIDIAN — base y controles
+ *
+ * Colores, tipografia, cabecera y filtros. Los estilos de las fichas
+ * viven en fichas.css, que se carga despues.
+ */
+
 :root{
   --papel:#EDF1E9;      /* papel de libro contable */
   --ficha:#FAFBF8;
@@ -31,12 +37,17 @@ header{
 }
 .cab{display:flex;flex-wrap:wrap;align-items:flex-end;gap:14px;padding:14px 0 11px}
 @media (max-width:700px){
-  /* En telefono cada bloque toma su renglon. Apretarlos en uno solo
-     hacia que el boton se saliera de la pantalla. */
-  .cab{gap:10px;padding:12px 0 10px}
-  .cab > div{width:100%}
-  .derecha{margin-left:0;justify-content:space-between;width:100%}
-  .cifras{gap:26px}
+  /* En telefono: la marca y las cifras comparten renglon, y la fecha
+     con el boton van debajo. Menos alto de cabecera es mas espacio
+     para lo que importa, que son los documentos. */
+  .cab{gap:8px 16px;padding:11px 0 9px;align-items:center}
+  .marca{font-size:17px}
+  .sub{display:none}
+  .cifras{gap:20px;margin-left:auto}
+  .cifras b{font-size:16px}
+  .derecha{width:100%;justify-content:space-between;margin-left:0}
+  .sello{font-size:9px}
+  .recargar{padding:5px 11px;font-size:12px}
 }
 .marca{font-family:'Spectral',Georgia,serif;font-size:20px;font-weight:600;letter-spacing:.06em}
 .marca em{font-style:normal;color:var(--regla)}
@@ -56,32 +67,49 @@ header{
 .recargar[disabled]{opacity:.5;cursor:wait}
 
 /* ══════════════ controles ══════════════ */
-.controles{padding:12px 0 4px}
-.grupo{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-bottom:9px}
-@media (max-width:700px){
-  .grupo{margin-bottom:11px}
-  .rotulo{width:100%;min-width:0;margin:0 0 2px}
-  .grupo select{flex:1;min-width:150px}
+/* Solo la prioridad queda a la vista. Lo demas se despliega, porque
+   antes los tres grupos ocupaban la pantalla entera y habia que
+   desplazarse para ver el primer documento. */
+.controles{padding:10px 0 6px}
+
+/* Una sola tira que se desplaza de lado en pantallas angostas: mas
+   compacto que dejar que los botones salten de renglon. */
+.tiras{
+  display:flex;gap:7px;overflow-x:auto;padding-bottom:3px;
+  scrollbar-width:none;-webkit-overflow-scrolling:touch;
 }
-.rotulo{
-  font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.13em;
-  text-transform:uppercase;color:var(--tenue);margin-right:3px;min-width:74px;
-}
-.grupo button{
+.tiras::-webkit-scrollbar{display:none}
+.tiras button{
+  flex:0 0 auto;
   font-family:'IBM Plex Mono',monospace;font-size:11.5px;letter-spacing:.05em;
-  text-transform:uppercase;padding:6px 12px;border:1px solid var(--linea);
-  background:transparent;color:var(--tenue);border-radius:2px;cursor:pointer;
+  text-transform:uppercase;padding:7px 13px;border:1px solid var(--linea);
+  background:var(--ficha);color:var(--tenue);border-radius:2px;cursor:pointer;
+  white-space:nowrap;
 }
-.grupo button b{font-weight:500;opacity:.7;margin-left:5px}
-.grupo button:hover{border-color:var(--tenue)}
-.grupo button[aria-pressed="true"]{background:var(--tinta);color:var(--papel);border-color:var(--tinta)}
-.grupo button[aria-pressed="true"] b{opacity:.85}
-.grupo button:focus-visible{outline:2px solid var(--azul);outline-offset:2px}
-.grupo button.pri-accion[aria-pressed="true"]{background:var(--regla);border-color:var(--regla)}
-.grupo button.pri-importante[aria-pressed="true"]{background:#8A6415;border-color:#8A6415}
-.grupo select{
-  padding:6px 10px;border:1px solid var(--linea);background:var(--ficha);
-  color:var(--tinta);border-radius:2px;font-family:'IBM Plex Sans',sans-serif;
-  font-size:13px;max-width:100%;
+.tiras button b{font-weight:600;opacity:.75;margin-left:5px}
+.tiras button:hover{border-color:var(--tenue)}
+.tiras button[aria-pressed="true"]{background:var(--tinta);color:var(--papel);border-color:var(--tinta)}
+.tiras button[aria-pressed="true"] b{opacity:.9}
+.tiras button:focus-visible{outline:2px solid var(--azul);outline-offset:2px}
+.tiras button.pri-accion[aria-pressed="true"]{background:var(--regla);border-color:var(--regla)}
+.tiras button.pri-importante[aria-pressed="true"]{background:#8A6415;border-color:#8A6415}
+
+.mas{margin-top:9px}
+.mas summary{
+  cursor:pointer;list-style:none;display:inline-block;
+  font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--tenue);padding:5px 0;
 }
-.grupo select:focus{outline:2px solid var(--azul);outline-offset:1px}
+.mas summary::-webkit-details-marker{display:none}
+.mas summary::before{content:'▸ '}
+.mas[open] summary::before{content:'▾ '}
+.mas summary:hover{color:var(--tinta)}
+.mas .tiras{margin-top:7px}
+
+.selectores{display:flex;gap:8px;flex-wrap:wrap;margin-top:9px}
+.selectores select{
+  flex:1;min-width:170px;padding:7px 10px;border:1px solid var(--linea);
+  background:var(--ficha);color:var(--tinta);border-radius:2px;
+  font-family:'IBM Plex Sans',sans-serif;font-size:13px;
+}
+.selectores select:focus{outline:2px solid var(--azul);outline-offset:1px}
