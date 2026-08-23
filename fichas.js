@@ -103,17 +103,30 @@ function leyenda(d){
   return 'informativo';
 }
 
-/* La tesis juridica es la conclusion del documento: dice que respondio
-   la DIAN, no de que trataba. Cuando existe, encabeza la ficha. */
+/* La pregunta y la respuesta, en ese orden.
+ *
+ * La pregunta importa por si sola: es donde la DIAN dice a quien se
+ * refiere. "¿Una sociedad en liquidacion judicial debe presentar
+ * certificacion bancaria?" se lee y se sabe si es el caso propio, sin
+ * que nadie tenga que inventar una etiqueta de "aplica a".
+ *
+ * Por eso se muestra aunque no haya tesis: son dos datos distintos y
+ * cada uno vale por su cuenta. */
 function bloqueRespuesta(d){
-  if(!d.tesis_juridica) return '';
+  if(!d.problema_juridico && !d.tesis_juridica) return '';
+
+  const pregunta = d.problema_juridico ? `<div class="consulta">
+      <span class="consulta-rotulo">Lo que le preguntaron a la DIAN</span>
+      <p>${esc(d.problema_juridico).slice(0,420)}</p>
+    </div>` : '';
+
+  if(!d.tesis_juridica) return `<div class="respuesta solo-pregunta">${pregunta}</div>`;
+
   const r = d.tesis_respuesta || '';
   const marca = r==='si' ? 'Sí' : r==='no' ? 'No' : r==='matizada' ? 'Depende' : '—';
-  const pregunta = d.problema_juridico
-    ? `<div class="pregunta">${esc(d.problema_juridico).slice(0,300)}</div>` : '';
-  return `<div class="respuesta ${r}">
-    <div class="resp-cab"><span class="resp-marca">${marca}</span> Lo que respondió la DIAN</div>
+  return `<div class="respuesta">
     ${pregunta}
+    <div class="resp-cab"><span class="resp-marca">${marca}</span> Lo que respondió</div>
     <p>${esc(d.tesis_juridica).slice(0,700)}</p>
   </div>`;
 }
@@ -202,14 +215,22 @@ function bloqueDatos(d){
 
 function ficha(d){
   const temas = (d.temas||[]).filter(t=>!t.startsWith('dian:') && t!=='boletin_mensual');
-  const marcas = [
+  // Dos grupos, cada uno con un rotulo que dice la verdad.
+  //
+  // Antes iban todas juntas bajo "A quien le compete", y eso prometia
+  // algo que las etiquetas no dan: ninguna dice a que contribuyentes
+  // aplica. Ese dato no esta en el documento y no se va a inventar.
+  const fuerza = [
     `<span class="${d.estado_vigencia!=='vigente' ? 'alerta'
         : d.clasificacion_obligatoriedad==='obligatorio_dian_y_contribuyentes' ? 'obliga'
         : 'orienta'}">${leyenda(d)}</span>`,
+    d.tiene_efectos_retroactivos ? '<span class="alerta">afecta años pasados</span>' : '',
+  ].filter(Boolean).join('');
+
+  const materias = [
     d.materia ? `<span class="materia">${esc(d.materia)}</span>` : '',
     ...temas.slice(0,6).map(t=>`<span>${nombreTema(t)}</span>`),
-    d.tiene_efectos_retroactivos ? '<span class="alerta">retroactivo</span>' : '',
-  ].join('');
+  ].filter(Boolean).join('');
 
   const descriptores = (d.descriptores||[]).length
     ? `<ul>${d.descriptores.slice(0,6).map(x=>`<li>${esc(x)}</li>`).join('')}</ul>` : '';
@@ -233,11 +254,20 @@ function ficha(d){
         ${bloqueBorrador(d)}
         ${bloqueDatos(d)}
         <details class="oficial">
-          <summary>Ver el texto de la DIAN</summary>
+          <summary><span class="abrir">Ver cómo lo dice la DIAN</span></summary>
           <p>${esc(d.descripcion_limpia||d.contenido||'').slice(0,1200)}</p>
           ${descriptores}
         </details>
-        <div class="marcas">${marcas}</div>
+        <div class="clasificacion">
+          <div class="grupo-marcas">
+            <span class="clas-rotulo">Qué fuerza tiene</span>
+            <div class="marcas">${fuerza}</div>
+          </div>
+          ${materias ? `<div class="grupo-marcas">
+            <span class="clas-rotulo">De qué trata</span>
+            <div class="marcas">${materias}</div>
+          </div>` : ''}
+        </div>
         <div class="escribir">
           <label for="r-${d.id}">En palabras simples
             <span class="contador" id="c-${d.id}">${(d.resumen_humano||'').length||0}</span></label>
