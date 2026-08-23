@@ -67,6 +67,16 @@ body{background:#f3f0e8}
   font-family:'IBM Plex Sans',sans-serif;color:#b83b2f;font-size:13px;
   margin-top:12px;min-height:18px;
 }
+/* En monitor la tarjeta puede crecer: a 720px en una pantalla ancha se
+   ve encogida, y esta es la primera impresion del producto. */
+@media(min-width:1100px){
+  #puerta form{width:min(860px,100%);padding:0 60px 52px}
+  #puerta .ilustracion{width:calc(100% + 120px);margin:0 -60px;max-height:440px}
+  #puerta .marca{font-size:64px;margin-top:36px}
+  #puerta .sub{font-size:15px}
+  #puerta p{font-size:14px;margin:48px 0 18px}
+  #puerta input,#puerta button{height:64px;font-size:18px}
+}
 @media(max-width:620px){
   #puerta{padding:12px}
   #puerta form{padding:0 22px 28px;border-radius:16px}
