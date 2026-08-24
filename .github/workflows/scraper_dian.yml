@@ -1,10 +1,14 @@
 name: Scraper DIAN
 
 on:
-  # Cada 3 dias a las 6:00 Colombia (11:00 UTC).
-  # El sitio declara meta-Revisit-After: 3 days.
+  # Diario a las 6:00 Colombia (11:00 UTC).
+  #
+  # Antes era '0 11 */3 * *', porque "*/3" no significa "cada 3 dias"
+  # sino los dias del mes divisibles entre 3. Al cambiar de mes el
+  # intervalo se rompe y GitHub puede ademas omitir ejecuciones con carga.
+  # La consulta incremental diaria mantiene la base actualizada.
   schedule:
-    - cron: '0 11 */3 * *'
+    - cron: '0 11 * * *'
 
   workflow_dispatch:
     inputs:
