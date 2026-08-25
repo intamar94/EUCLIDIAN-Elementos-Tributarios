@@ -1,17 +1,23 @@
 name: Enriquecer documentos
 
 on:
-  # Todos los dias a las 7:00 Colombia (12:00 UTC), una hora despues
-  # del scraper. Va comiendo la cola de a poco para no golpear el sitio.
+  # Diario a las 7:00 Colombia (12:00 UTC), una hora despues del scraper.
+  # Tambien se ejecuta al actualizar este workflow para que las reparaciones
+  # de datos no tengan que esperar al siguiente ciclo diario.
   schedule:
     - cron: '0 12 * * *'
+  push:
+    paths:
+      - 'scripts/enriquecedor_fechas.py'
+      - 'scripts/validar_fuentes_dian.py'
+      - '.github/workflows/enriquecer.yml'
 
   workflow_dispatch:
     inputs:
       limite:
         description: 'Cuantos documentos abrir'
         required: false
-        default: '150'
+        default: '500'
       anio:
         description: 'Solo un año (vacio = todos, mas recientes primero)'
         required: false
@@ -39,13 +45,13 @@ jobs:
       - name: Validar fuentes oficiales DIAN
         run: python scripts/validar_fuentes_dian.py
 
-      - name: Enriquecer con fecha verificada
+      - name: Reparar y enriquecer fechas
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
         run: |
           cd scripts
-          ARGS="--limite ${{ inputs.limite || '150' }}"
+          ARGS="--limite ${{ inputs.limite || '500' }}"
           if [ -n "${{ inputs.anio }}" ]; then ARGS="$ARGS --anio ${{ inputs.anio }}"; fi
           if [ "${{ inputs.dry_run }}" = "si" ]; then ARGS="$ARGS --dry-run"; fi
           python enriquecedor_fechas.py $ARGS
