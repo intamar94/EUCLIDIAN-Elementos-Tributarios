@@ -2,13 +2,14 @@ name: Enriquecer documentos
 
 on:
   # Diario a las 7:00 Colombia (12:00 UTC), una hora despues del scraper.
-  # Tambien se ejecuta al actualizar este workflow para que las reparaciones
+  # Tambien se ejecuta al actualizar el reparador para que las correcciones
   # de datos no tengan que esperar al siguiente ciclo diario.
   schedule:
     - cron: '0 12 * * *'
   push:
     paths:
       - 'scripts/enriquecedor_fechas.py'
+      - 'scripts/enriquecedor_fechas_v2.py'
       - 'scripts/validar_fuentes_dian.py'
       - '.github/workflows/enriquecer.yml'
 
@@ -54,4 +55,4 @@ jobs:
           ARGS="--limite ${{ inputs.limite || '500' }}"
           if [ -n "${{ inputs.anio }}" ]; then ARGS="$ARGS --anio ${{ inputs.anio }}"; fi
           if [ "${{ inputs.dry_run }}" = "si" ]; then ARGS="$ARGS --dry-run"; fi
-          python enriquecedor_fechas.py $ARGS
+          python enriquecedor_fechas_v2.py $ARGS
