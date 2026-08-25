@@ -12,17 +12,13 @@ Regla:
    de publicación verificable.
 4. Nunca se considera "fecha real" el 1 de enero artificial creado por el
    scraper si el documento oficial permite encontrar otra fecha.
-
-Las dos páginas raíz que gobiernan la ingesta son las páginas oficiales de
-la Compilación Jurídica DIAN indicadas en validar_fuentes_dian.py.
 """
 
 import re
 import sys
-from datetime import date
 from urllib.parse import urlparse
 
-from enriquecedor import Enriquecedor as EnriquecedorBase, MESES, a_fecha
+from enriquecedor import Enriquecedor as EnriquecedorBase, a_fecha
 
 SOURCE_ROOTS = (
     "https://normograma.dian.gov.co/dian/compilacion/novedades_boletines.html",
@@ -38,22 +34,26 @@ class EnriquecedorFechas(EnriquecedorBase):
         campos = "id,numero_resolucion,enlace_oficial,tipo_documento,contenido,temas"
         encontrados = {}
 
+        def aplicar_filtro(q):
+            if self.anio:
+                return q.gte("fecha_publicacion", f"{self.anio}-01-01") \
+                    .lte("fecha_publicacion", f"{self.anio}-12-31")
+            return q
+
         try:
-            r = self.db.table("documentos_tributarios").select(campos) \
-                .eq("fecha_es_real", False) \
-                .order("fecha_publicacion", desc=True) \
-                .order("numero_resolucion", desc=True) \
-                .limit(self.limite).execute()
+            q = self.db.table("documentos_tributarios").select(campos) \
+                .eq("fecha_es_real", False)
+            r = aplicar_filtro(q).order("fecha_publicacion", desc=True) \
+                .order("numero_resolucion", desc=True).limit(self.limite).execute()
             for d in r.data or []:
                 encontrados[d["id"]] = d
 
             # El scraper inicial puso muchos documentos exactamente en 1 enero.
             # También reparamos esos aunque fecha_es_real haya quedado True.
-            r = self.db.table("documentos_tributarios").select(campos) \
-                .like("fecha_publicacion", "%-01-01") \
-                .order("fecha_publicacion", desc=True) \
-                .order("numero_resolucion", desc=True) \
-                .limit(self.limite).execute()
+            q = self.db.table("documentos_tributarios").select(campos) \
+                .like("fecha_publicacion", "%-01-01")
+            r = aplicar_filtro(q).order("fecha_publicacion", desc=True) \
+                .order("numero_resolucion", desc=True).limit(self.limite).execute()
             for d in r.data or []:
                 encontrados[d["id"]] = d
         except Exception as e:
@@ -73,7 +73,7 @@ class EnriquecedorFechas(EnriquecedorBase):
 
     def _fecha(self, texto):
         """Extrae una fecha exacta, priorizando publicación sobre expedición."""
-        # 1) Diario Oficial: es la evidencia más fuerte de publicación.
+        # 1) Diario Oficial: evidencia directa de publicación.
         patrones_diario = [
             r"Diario Oficial[^\n]{0,100}?de\s+(\d{1,2})\s+de\s+([A-Za-záéíóúÁÉÍÓÚ]+)\s+de\s+((?:19|20)\d{2})",
             r"Diario Oficial[^\n]{0,100}?del\s+(\d{1,2})\s+de\s+([A-Za-záéíóúÁÉÍÓÚ]+)\s+de\s+((?:19|20)\d{2})",
@@ -85,7 +85,7 @@ class EnriquecedorFechas(EnriquecedorBase):
                 if f:
                     return f
 
-        # 2) Frases explícitas de publicación dentro del documento.
+        # 2) Frases explícitas de publicación.
         patrones_publicacion = [
             r"publicad[ao][^\n]{0,100}?(\d{1,2})\s+de\s+([A-Za-záéíóúÁÉÍÓÚ]+)\s+de\s+((?:19|20)\d{2})",
             r"publicaci[oó]n[^\n]{0,100}?(\d{1,2})\s+de\s+([A-Za-záéíóúÁÉÍÓÚ]+)\s+de\s+((?:19|20)\d{2})",
@@ -97,25 +97,30 @@ class EnriquecedorFechas(EnriquecedorBase):
                 if f:
                     return f
 
-        # 3) Fallback: fecha del acto en el encabezado. Sigue siendo una fecha
-        # real del documento, pero solo se usa si no hay fecha de publicación.
+        # 3) Fallback: fecha del acto en el encabezado. Es real, pero no se
+        # presenta como fecha de publicación cuando no hay evidencia de ella.
         anio = None
         m_anio = re.search(r"\bDE\s+((?:19|20)\d{2})\b", texto[:800])
         if m_anio:
             anio = m_anio.group(1)
 
-        for patron in (
+        m = re.search(
             r"\(\s*([A-Za-záéíóúÁÉÍÓÚ]+)\s+(\d{1,2})\s*\)",
+            texto[:1800], re.IGNORECASE,
+        )
+        if m and anio:
+            f = a_fecha(m.group(2), m.group(1), anio)
+            if f:
+                return f
+
+        m = re.search(
             r"\(\s*(\d{1,2})\s+de\s+([A-Za-záéíóúÁÉÍÓÚ]+)\s*\)",
-        ):
-            m = re.search(patron, texto[:1800], re.IGNORECASE)
-            if m and anio:
-                if patron.startswith("\\(") and "de\\s" not in patron:
-                    f = a_fecha(m.group(2), m.group(1), anio)
-                else:
-                    f = a_fecha(m.group(1), m.group(2), anio)
-                if f:
-                    return f
+            texto[:1800], re.IGNORECASE,
+        )
+        if m and anio:
+            f = a_fecha(m.group(1), m.group(2), anio)
+            if f:
+                return f
 
         m = re.search(
             r"Dad[oa][^\n]{0,80}?(\d{1,2})\s+de\s+([A-Za-záéíóúÁÉÍÓÚ]+)\s+de\s+((?:19|20)\d{2})",
