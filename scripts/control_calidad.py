@@ -14,17 +14,26 @@ que alguien mire.
 
 QUE REVISA
 ----------
-  1. Enlaces rotos hacia el normograma
-  2. Fechas imposibles (futuras, o anteriores a la DIAN misma)
-  3. Documentos duplicados
-  4. Documentos aprobados sin nada que decir
-  5. Aprobados cuya norma dejo de estar vigente despues de aprobarlos
-  6. Aprobados que una norma posterior ya toco
-  7. Si el scraper dejo de traer datos
-  8. Fichas que prometen un plazo sin fecha
+  1. Completitud del enriquecimiento: ningun documento puede quedar con
+     fecha_es_real = false.
+  2. Enlaces rotos hacia el normograma
+  3. Fechas imposibles (futuras, o anteriores a la DIAN misma)
+  4. Documentos duplicados
+  5. Documentos aprobados sin nada que decir
+  6. Aprobados cuya norma dejo de estar vigente despues de aprobarlos
+  7. Aprobados que una norma posterior ya toco
+  8. Si el scraper dejo de traer datos
+  9. Fichas que prometen un plazo sin fecha
 
-Los puntos 5 y 6 son los que mas importan: describen documentos que
-estaban bien cuando los aprobaste y dejaron de estarlo despues.
+Los puntos 1, 6 y 7 son los que mas importan: describen documentos que
+no estan completos o que dejaron de ser confiables despues de aprobarlos.
+
+IMPORTANTE
+----------
+El control no considera "terminado" un lote exitoso. Solo devuelve un
+resultado de calidad completo cuando la cola de enriquecimiento esta en
+cero. Un proceso que actualiza 500 de 17.595 documentos es exitoso para
+ese lote, pero NO esta terminado.
 
 USO
 ---
@@ -38,7 +47,7 @@ import logging
 import os
 import sys
 from collections import Counter
-from datetime import date, datetime, timedelta, timezone
+from datetime import date, datetime, timezone
 
 import requests
 
@@ -82,6 +91,7 @@ class Control:
         log.info("EUCLIDIAN — control de calidad")
         log.info("=" * 62)
 
+        self._completitud_enriquecimiento()
         self._aprobados_sin_texto()
         self._aprobados_caidos()
         self._aprobados_superados()
@@ -92,6 +102,38 @@ class Control:
         self._enlaces()
 
         return self._veredicto()
+
+    # ------------------------------------------------------------------
+
+    def _completitud_enriquecimiento(self):
+        """No permite declarar el sistema completo mientras haya cola."""
+        try:
+            total = self.db.table("documentos_tributarios").select(
+                "id", count="exact").limit(1).execute()
+            pendientes = self.db.table("documentos_tributarios").select(
+                "id", count="exact").eq("fecha_es_real", False).limit(1).execute()
+        except Exception as e:
+            self.graves.append(
+                f"No se pudo verificar la completitud del enriquecimiento: {str(e)[:180]}"
+            )
+            return
+
+        total_n = total.count or 0
+        pendientes_n = pendientes.count or 0
+        completos_n = max(total_n - pendientes_n, 0)
+        self.stats["documentos_totales"] = total_n
+        self.stats["documentos_fecha_real"] = completos_n
+        self.stats["documentos_fecha_pendiente"] = pendientes_n
+
+        if total_n == 0:
+            self.graves.append("La tabla documentos_tributarios no contiene documentos")
+        elif pendientes_n:
+            self.graves.append(
+                f"Quedan {pendientes_n} documentos sin fecha real de enriquecimiento "
+                f"({completos_n}/{total_n} completos)"
+            )
+        else:
+            log.info("COMPLETITUD: %d/%d documentos con fecha real", completos_n, total_n)
 
     # ------------------------------------------------------------------
 
@@ -115,11 +157,7 @@ class Control:
     # ------------------------------------------------------------------
 
     def _aprobados_caidos(self):
-        """
-        Una norma puede quedar suspendida entre que la apruebas y que sale
-        el correo. Si el texto no lo advierte, el boletin recomienda algo
-        que ya no aplica.
-        """
+        """Una norma puede quedar suspendida despues de aprobarla."""
         try:
             r = self.db.table("documentos_tributarios").select(
                 "numero_resolucion,estado_vigencia,resumen_humano,resumen_borrador"
@@ -187,7 +225,6 @@ class Control:
             r = self.db.rpc("execute_sql", {}).execute()
         except Exception:
             pass
-        # Sin RPC generico, se aproxima comparando conteos
         try:
             total = self.db.table("documentos_tributarios").select(
                 "id", count="exact").limit(1).execute()
@@ -241,8 +278,7 @@ class Control:
     # ------------------------------------------------------------------
 
     def _enlaces(self):
-        """Un enlace roto en el correo destruye la confianza: el lector no
-        puede verificar, que es lo unico que le pedimos que haga."""
+        """Un enlace roto en el correo destruye la confianza."""
         try:
             r = self.db.table("documentos_tributarios").select(
                 "numero_resolucion,enlace_oficial"
@@ -283,7 +319,7 @@ class Control:
     def _veredicto(self):
         log.info("")
         for k in sorted(self.stats):
-            log.info("  %-26s %s", k, self.stats[k])
+            log.info("  %-30s %s", k, self.stats[k])
 
         if self.graves:
             log.info("")
@@ -301,12 +337,12 @@ class Control:
 
         log.info("")
         if not self.graves and not self.avisos:
-            log.info("Todo en orden. Se puede enviar.")
+            log.info("RESULTADO: SISTEMA COMPLETO Y EN CONDICIONES DE ENVIO")
             return 0
         if self.graves:
-            log.error("No conviene enviar hasta resolver lo grave.")
+            log.error("RESULTADO: NO COMPLETO / NO CONVIENE ENVIAR")
             return 1
-        log.info("Sin problemas graves. Revisa los avisos antes de enviar.")
+        log.info("RESULTADO: SIN PROBLEMAS GRAVES. REVISAR AVISOS.")
         return 1 if self.estricto else 0
 
 
