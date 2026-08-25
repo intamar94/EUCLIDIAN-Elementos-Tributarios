@@ -2,11 +2,6 @@ name: Scraper DIAN
 
 on:
   # Diario a las 6:00 Colombia (11:00 UTC).
-  #
-  # Antes era '0 11 */3 * *', porque "*/3" no significa "cada 3 dias"
-  # sino los dias del mes divisibles entre 3. Al cambiar de mes el
-  # intervalo se rompe y GitHub puede ademas omitir ejecuciones con carga.
-  # La consulta incremental diaria mantiene la base actualizada.
   schedule:
     - cron: '0 11 * * *'
 
@@ -34,6 +29,9 @@ jobs:
 
       - name: Instalar dependencias
         run: pip install -r scripts/requirements.txt
+
+      - name: Validar fuentes oficiales DIAN
+        run: python scripts/validar_fuentes_dian.py
 
       - name: Ejecutar scraper
         env:
