@@ -42,7 +42,7 @@ jobs:
       - name: Instalar dependencias
         run: pip install -r scripts/requirements.txt
 
-      - name: Redactar
+      - name: Redactar con control de confianza
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
@@ -52,5 +52,5 @@ jobs:
           if [ "${{ inputs.modo }}" = "dry-run" ]; then ARGS="$ARGS --dry-run"; fi
           if [ -n "${{ inputs.anio }}" ]; then ARGS="$ARGS --anio ${{ inputs.anio }}"; fi
           if [ "${{ inputs.rehacer }}" = "si" ]; then ARGS="$ARGS --rehacer"; fi
-          python redactor_reglas.py $ARGS
+          python redactor_alta_confianza.py $ARGS
 
