@@ -15,10 +15,14 @@ on:
 
   workflow_dispatch:
     inputs:
-      limite:
-        description: 'Cuantos documentos abrir'
+      lote:
+        description: 'Documentos por lote'
         required: false
         default: '500'
+      max_lotes:
+        description: 'Maximo de lotes por ejecucion'
+        required: false
+        default: '50'
       anio:
         description: 'Solo un año (vacio = todos, mas recientes primero)'
         required: false
@@ -33,6 +37,7 @@ on:
 jobs:
   enriquecer:
     runs-on: ubuntu-latest
+    timeout-minutes: 330
     steps:
       - uses: actions/checkout@v4
 
@@ -46,13 +51,48 @@ jobs:
       - name: Validar fuentes oficiales DIAN
         run: python scripts/validar_fuentes_dian.py
 
-      - name: Reparar y enriquecer fechas
+      - name: Reparar y enriquecer todos los pendientes por lotes
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: |
+          set -euo pipefail
+          cd scripts
+          LOTE='${{ inputs.lote || '500' }}'
+          MAX_LOTES='${{ inputs.max_lotes || '50' }}'
+          ANIO='${{ inputs.anio || '' }}'
+          DRY='${{ inputs.dry_run || 'no' }}'
+
+          for ((lote=1; lote<=MAX_LOTES; lote++)); do
+            echo "============================================================"
+            echo "LOTE ${lote}/${MAX_LOTES} — hasta ${LOTE} documentos"
+            echo "============================================================"
+
+            ARGS="--limite ${LOTE}"
+            if [ -n "${ANIO}" ]; then ARGS="$ARGS --anio ${ANIO}"; fi
+            if [ "${DRY}" = "si" ]; then ARGS="$ARGS --dry-run"; fi
+
+            SALIDA=$(python enriquecedor_fechas_v2.py ${ARGS} 2>&1 | tee /dev/stderr) || {
+              echo "ERROR: fallo el lote ${lote}. No se declara el proceso completo."
+              exit 1
+            }
+
+            if echo "${SALIDA}" | grep -q "No hay documentos por enriquecer"; then
+              echo "COMPLETADO: no quedan documentos pendientes."
+              break
+            fi
+
+            if [ "${lote}" -eq "${MAX_LOTES}" ]; then
+              echo "ERROR: se alcanzo MAX_LOTES=${MAX_LOTES}."
+              echo "La base puede seguir teniendo documentos pendientes."
+              exit 1
+            fi
+          done
+
+      - name: Control final de calidad
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
         run: |
           cd scripts
-          ARGS="--limite ${{ inputs.limite || '500' }}"
-          if [ -n "${{ inputs.anio }}" ]; then ARGS="$ARGS --anio ${{ inputs.anio }}"; fi
-          if [ "${{ inputs.dry_run }}" = "si" ]; then ARGS="$ARGS --dry-run"; fi
-          python enriquecedor_fechas_v2.py $ARGS
+          python control_calidad.py --enlaces 25 --estricto
