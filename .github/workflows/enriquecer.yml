@@ -36,7 +36,10 @@ jobs:
       - name: Instalar dependencias
         run: pip install -r scripts/requirements.txt
 
-      - name: Enriquecer
+      - name: Validar fuentes oficiales DIAN
+        run: python scripts/validar_fuentes_dian.py
+
+      - name: Enriquecer con fecha verificada
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
@@ -45,4 +48,4 @@ jobs:
           ARGS="--limite ${{ inputs.limite || '150' }}"
           if [ -n "${{ inputs.anio }}" ]; then ARGS="$ARGS --anio ${{ inputs.anio }}"; fi
           if [ "${{ inputs.dry_run }}" = "si" ]; then ARGS="$ARGS --dry-run"; fi
-          python enriquecedor.py $ARGS
+          python enriquecedor_fechas.py $ARGS
