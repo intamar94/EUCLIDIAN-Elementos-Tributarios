@@ -4,6 +4,10 @@ on:
   # Diario a las 6:00 Colombia (11:00 UTC).
   schedule:
     - cron: '0 11 * * *'
+  # Ejecuta una vez al incorporar el lanzador basado en las fuentes oficiales.
+  push:
+    paths:
+      - 'scripts/scraper_fuentes_dian.py'
 
   workflow_dispatch:
     inputs:
