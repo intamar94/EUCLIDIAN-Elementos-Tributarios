@@ -1,16 +1,6 @@
 name: Enriquecer documentos
 
 on:
-  # Diario a las 7:00 Colombia (12:00 UTC).
-  #
-  # Cada corrida abre un tramo del archivo y para sola al llegar a su
-  # tope de reloj. No intenta terminar los 17.595 de una: eso tomaba mas
-  # de veinte horas y GitHub corta a las seis, dejando la corrida sin
-  # resumen y sin saber donde quedo.
-  #
-  # Lo procesado queda guardado documento por documento, asi que la
-  # corrida siguiente sigue exactamente donde quedo. El archivo completo
-  # se termina en unos dias, sin vigilancia.
   schedule:
     - cron: '0 12 * * *'
 
@@ -35,11 +25,13 @@ on:
         type: choice
         options: ['no', 'si']
 
+concurrency:
+  group: euclidian-enriquecimiento
+  cancel-in-progress: false
+
 jobs:
   enriquecer:
     runs-on: ubuntu-latest
-    # Red de seguridad: si algo se atasca, el job muere solo a las 2 h
-    # en vez de consumir las 6 que da GitHub.
     timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
