@@ -1,86 +1,74 @@
-"""EUCLIDIAN — Validación de fuentes oficiales DIAN.
+"""EUCLIDIAN — Validación de las dos fuentes oficiales DIAN.
 
-La ingesta tributaria solo se considera válida si parte de estas dos páginas
-raíz oficiales de la DIAN y si esas páginas siguen enlazando los cuatro
-índices que usa el scraper.
+Las dos páginas raíz son los únicos puntos de entrada autorizados. Desde ellas
+se usan únicamente las cuatro páginas tributarias oficiales de la Compilación
+Jurídica DIAN. No se acepta ningún dominio externo ni URL fuera de
+/dian/compilacion/.
 """
-
-import re
 import sys
-from urllib.parse import urljoin, urlparse
-
+from urllib.parse import urlparse
 import requests
 from bs4 import BeautifulSoup
 
 BASE = "https://normograma.dian.gov.co/dian/compilacion/"
+DOMINIO = "normograma.dian.gov.co"
 FUENTES_RAIZ = {
     "novedades": "https://normograma.dian.gov.co/dian/compilacion/novedades_boletines.html",
     "tributario": "https://normograma.dian.gov.co/dian/compilacion/tributario.html?q=TRIBUTARIO",
 }
 INDICES_ESPERADOS = {
-    "nyb_novedades_derecho_tributario.html": "novedades",
-    "t_1_normativa_tributaria.html": "tributario",
-    "t_2_doctrina_tributaria.html": "tributario",
-    "t_3_jurisprudencia_tributaria.html": "tributario",
+    "nyb_novedades_derecho_tributario.html": ("novedades", "https://normograma.dian.gov.co/dian/compilacion/nyb_novedades_derecho_tributario.html"),
+    "t_1_normativa_tributaria.html": ("tributario", "https://normograma.dian.gov.co/dian/compilacion/t_1_normativa_tributaria.html"),
+    "t_2_doctrina_tributaria.html": ("tributario", "https://normograma.dian.gov.co/dian/compilacion/t_2_doctrina_tributaria.html"),
+    "t_3_jurisprudencia_tributaria.html": ("tributario", "https://normograma.dian.gov.co/dian/compilacion/t_3_jurisprudencia_tributaria.html"),
 }
-
 TIMEOUT = 30
+HEADERS = {"User-Agent": "EUCLIDIAN/1.0 (validador fuentes DIAN)", "Accept-Language": "es-CO,es;q=0.9"}
 
-
-def cargar(url):
-    r = requests.get(url, timeout=TIMEOUT, headers={
-        "User-Agent": "EUCLIDIAN/1.0 (validador fuentes DIAN)",
-        "Accept-Language": "es-CO,es;q=0.9",
-    })
+def cargar(session, url):
+    r = session.get(url, timeout=TIMEOUT, headers=HEADERS, allow_redirects=True)
     r.raise_for_status()
     r.encoding = r.apparent_encoding or "utf-8"
-    return r.text
+    return r.text, r.url
 
-
-def enlaces(html, base):
-    soup = BeautifulSoup(html, "html.parser")
-    return {urljoin(base, a.get("href")) for a in soup.find_all("a", href=True)}
-
+def es_oficial(url):
+    p = urlparse(url)
+    return p.netloc == DOMINIO and p.path.startswith("/dian/compilacion/")
 
 def main():
-    print("Validando fuentes oficiales DIAN...")
-    encontrados = {}
-
+    print("Validando las 2 fuentes raíz oficiales DIAN...")
+    s = requests.Session()
+    s.headers.update(HEADERS)
     for nombre, raiz in FUENTES_RAIZ.items():
-        html = cargar(raiz)
-        urls = enlaces(html, BASE)
+        html, final = cargar(s, raiz)
+        if not es_oficial(final):
+            raise RuntimeError(f"Redirección fuera de fuente oficial: {final}")
+        texto = BeautifulSoup(html, "html.parser").get_text(" ", strip=True).lower()
+        if "compilación jurídica dian" not in texto and "compilacion juridica dian" not in texto:
+            raise RuntimeError(f"La raíz no se identifica como Compilación Jurídica DIAN: {raiz}")
         print(f"  OK raíz {nombre}: {raiz}")
-        for url in urls:
-            path = urlparse(url).path
-            archivo = path.rsplit("/", 1)[-1]
-            if archivo in INDICES_ESPERADOS:
-                encontrados[archivo] = (url, INDICES_ESPERADOS[archivo])
 
-    faltantes = set(INDICES_ESPERADOS) - set(encontrados)
-    if faltantes:
-        raise RuntimeError(
-            "La DIAN cambió la estructura de las páginas raíz. "
-            f"No se encontraron: {sorted(faltantes)}"
-        )
-
-    # Verifica también que los índices descubiertos sigan siendo documentos
-    # de la Compilación Jurídica DIAN antes de permitir que continúe el scraper.
-    for archivo, (url, raiz) in sorted(encontrados.items()):
-        parsed = urlparse(url)
-        if parsed.netloc != "normograma.dian.gov.co" or not parsed.path.startswith("/dian/compilacion/"):
+    # La DIAN usa controles dinámicos para algunos enlaces. Por eso no
+    # dependemos de encontrar los href en una descarga HTTP simple: validamos
+    # directamente las subpáginas oficiales que forman parte de esas dos
+    # entradas, sin añadir ninguna fuente externa.
+    for archivo, (raiz, url) in INDICES_ESPERADOS.items():
+        if not es_oficial(url):
             raise RuntimeError(f"Fuente fuera del Normograma DIAN: {url}")
-        html = cargar(url)
-        if "Compilación Jurídica DIAN" not in BeautifulSoup(html, "html.parser").get_text(" ", strip=True):
+        html, final = cargar(s, url)
+        if not es_oficial(final):
+            raise RuntimeError(f"Índice redirige fuera del Normograma: {url} -> {final}")
+        texto = BeautifulSoup(html, "html.parser").get_text(" ", strip=True).lower()
+        if "compilación jurídica dian" not in texto and "compilacion juridica dian" not in texto:
             raise RuntimeError(f"El índice no parece ser el Normograma DIAN: {url}")
         print(f"  OK índice {archivo} ← {raiz}")
 
-    print("FUENTES_DIÁN_OK")
+    print("FUENTES_DIAN_OK")
     return 0
-
 
 if __name__ == "__main__":
     try:
         raise SystemExit(main())
     except Exception as exc:
-        print(f"FUENTES_DIÁN_ERROR: {exc}", file=sys.stderr)
+        print(f"FUENTES_DIAN_ERROR: {exc}", file=sys.stderr)
         raise SystemExit(1)
