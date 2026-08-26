@@ -5,6 +5,9 @@ oficial y después descubre los enlaces reales publicados por las dos páginas
 raíz indicadas por EUCLIDIAN. Esos nombres se inyectan en scraper.py antes de
 crear la instancia, por lo que el scraper usa exactamente los índices que la
 DIAN publica actualmente.
+
+Ejecución: la modificación de este archivo dispara el workflow de validación
+para que el cambio pueda probarse sin esperar al ciclo diario.
 """
 
 import argparse
