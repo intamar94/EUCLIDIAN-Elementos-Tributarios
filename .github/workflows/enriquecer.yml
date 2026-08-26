@@ -11,6 +11,7 @@ on:
       - 'scripts/validar_fuentes_dian.py'
       - 'scripts/scraper_fuentes_dian.py'
       - 'scripts/control_calidad.py'
+      - 'scripts/control_calidad_fechas.py'
       - '.github/workflows/enriquecer.yml'
   workflow_dispatch:
     inputs:
@@ -76,7 +77,7 @@ jobs:
               echo "COMPLETADO: no quedan documentos en la cola."
               break
             fi
-            if echo "${SALIDA}" | grep -q "actualizados[[:space:]]*0"; then
+            if echo "${SALIDA}" | grep -Eq "actualizados[[:space:]]+0([[:space:]]|$)"; then
               echo "ERROR: el lote no produjo actualizaciones; se detiene para evitar un bucle."
               exit 1
             fi
@@ -85,6 +86,13 @@ jobs:
               exit 1
             fi
           done
+      - name: Control estricto de fechas
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: |
+          cd scripts
+          python control_calidad_fechas.py
       - name: Control final de calidad
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
