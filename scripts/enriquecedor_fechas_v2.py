@@ -1,21 +1,18 @@
-"""EUCLIDIAN — Reparador robusto de fechas.
+"""EUCLIDIAN — Reparador de fechas, seguro y reanudable.
 
-Correccion de dos problemas del primer reparador:
-1. PostgreSQL no permite usar LIKE directamente sobre una columna DATE.
-2. El encabezado puede tener (mes dia) o (dia de mes), por lo que el
-   extractor debe tratar ambos formatos por separado.
-
-La fecha_publicacion se obtiene, en este orden, de:
-- Diario Oficial No. X de DD de MES de AAAA.
-- una frase explicita de publicacion.
-- la fecha del acto como ultimo respaldo real.
-
-El documento siempre se abre desde una URL del Normograma DIAN.
+Reglas de integridad:
+- fecha_publicacion solo se escribe cuando el documento oficial contiene
+  evidencia de publicacion/Diario Oficial.
+- La fecha del acto NO se usa como fecha de publicacion.
+- Un 01-01 artificial nunca se considera una fecha verificada.
+- Cada documento se guarda individualmente: si GitHub interrumpe la corrida,
+  la siguiente ejecucion continua con los pendientes.
 """
 
 import argparse
 import re
 import sys
+import time
 from datetime import datetime
 from urllib.parse import urlparse
 
@@ -36,9 +33,12 @@ class EnriquecedorFechasV2(EnriquecedorFechas):
             for d in r.data or []:
                 encontrados[d["id"]] = d
 
-            # PostgreSQL DATE no admite LIKE. Buscamos exactamente el 1 de
-            # enero de cada año posible para reparar las fechas artificiales.
-            for anio in range(1900, datetime.now().year + 2):
+            # Reparar registros antiguos que quedaron marcados como reales
+            # pero conservan la fecha artificial 1 de enero. No recorremos
+            # 1900-2027: solo los años razonablemente presentes en la base.
+            anio_inicio = 1950
+            anio_fin = datetime.now().year + 1
+            for anio in range(anio_inicio, anio_fin + 1):
                 r = self.db.table("documentos_tributarios").select(campos) \
                     .eq("fecha_publicacion", f"{anio}-01-01") \
                     .limit(self.limite).execute()
@@ -60,69 +60,37 @@ class EnriquecedorFechasV2(EnriquecedorFechas):
         super()._enriquecer(doc, i, total)
 
     def _fecha(self, texto):
-        """Devuelve la fecha de publicacion verificable o un fallback real."""
-        # 1. Publicacion en Diario Oficial: maxima prioridad.
+        """Devuelve SOLO una fecha de publicacion verificable."""
         patrones_diario = [
-            r"Diario Oficial[^\n]{0,120}?de\s+(\d{1,2})\s+de\s+([A-Za-záéíóúÁÉÍÓÚ]+)\s+de\s+((?:19|20)\d{2})",
-            r"Diario Oficial[^\n]{0,120}?del\s+(\d{1,2})\s+de\s+([A-Za-záéíóúÁÉÍÓÚ]+)\s+de\s+((?:19|20)\d{2})",
+            r"Diario Oficial[^\n]{0,140}?de\s+(\d{1,2})\s+de\s+([A-Za-záéíóúÁÉÍÓÚ]+)\s+de\s+((?:19|20)\d{2})",
+            r"Diario Oficial[^\n]{0,140}?del\s+(\d{1,2})\s+de\s+([A-Za-záéíóúÁÉÍÓÚ]+)\s+de\s+((?:19|20)\d{2})",
         ]
         for patron in patrones_diario:
-            m = re.search(patron, texto[:6000], re.IGNORECASE)
-            if m:
-                f = a_fecha(m.group(1), m.group(2), m.group(3))
-                if f:
-                    return f
-
-        # 2. Fecha de publicacion expresamente indicada.
-        patrones_publicacion = [
-            r"publicad[ao][^\n]{0,120}?(\d{1,2})\s+de\s+([A-Za-záéíóúÁÉÍÓÚ]+)\s+de\s+((?:19|20)\d{2})",
-            r"publicaci[oó]n[^\n]{0,120}?(\d{1,2})\s+de\s+([A-Za-záéíóúÁÉÍÓÚ]+)\s+de\s+((?:19|20)\d{2})",
-        ]
-        for patron in patrones_publicacion:
             m = re.search(patron, texto[:12000], re.IGNORECASE)
             if m:
                 f = a_fecha(m.group(1), m.group(2), m.group(3))
                 if f:
                     return f
 
-        # 3. Fallback: fecha del acto, que sigue siendo una fecha real,
-        # pero no se presenta como fecha de publicacion cuando falta DO.
-        m_anio = re.search(r"\bDE\s+((?:19|20)\d{2})\b", texto[:1000])
-        anio = m_anio.group(1) if m_anio else None
+        patrones_publicacion = [
+            r"publicad[ao][^\n]{0,160}?(\d{1,2})\s+de\s+([A-Za-záéíóúÁÉÍÓÚ]+)\s+de\s+((?:19|20)\d{2})",
+            r"publicaci[oó]n[^\n]{0,160}?(\d{1,2})\s+de\s+([A-Za-záéíóúÁÉÍÓÚ]+)\s+de\s+((?:19|20)\d{2})",
+        ]
+        for patron in patrones_publicacion:
+            m = re.search(patron, texto[:20000], re.IGNORECASE)
+            if m:
+                f = a_fecha(m.group(1), m.group(2), m.group(3))
+                if f:
+                    return f
 
-        m = re.search(
-            r"\(\s*([A-Za-záéíóúÁÉÍÓÚ]+)\s+(\d{1,2})\s*\)",
-            texto[:2200], re.IGNORECASE,
-        )
-        if m and anio:
-            f = a_fecha(m.group(2), m.group(1), anio)
-            if f:
-                return f
-
-        m = re.search(
-            r"\(\s*(\d{1,2})\s+de\s+([A-Za-záéíóúÁÉÍÓÚ]+)\s*\)",
-            texto[:2200], re.IGNORECASE,
-        )
-        if m and anio:
-            f = a_fecha(m.group(1), m.group(2), anio)
-            if f:
-                return f
-
-        m = re.search(
-            r"Dad[oa][^\n]{0,100}?(\d{1,2})\s+de\s+([A-Za-záéíóúÁÉÍÓÚ]+)\s+de\s+((?:19|20)\d{2})",
-            texto[:15000], re.IGNORECASE,
-        )
-        if m:
-            f = a_fecha(m.group(1), m.group(2), m.group(3))
-            if f:
-                return f
-
+        # Sin evidencia de publicacion: NO inventamos ni reutilizamos la
+        # fecha de expedicion. El documento permanece pendiente para control.
         return None
 
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
-    ap.add_argument("--limite", type=int, default=500)
+    ap.add_argument("--limite", type=int, default=250)
     ap.add_argument("--anio", type=int, default=None)
     ap.add_argument("--dry-run", action="store_true")
     args = ap.parse_args()
