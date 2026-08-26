@@ -1,30 +1,29 @@
 name: Enriquecer documentos
 
 on:
-  # Diario a las 7:00 Colombia (12:00 UTC), una hora despues del scraper.
-  # Tambien se ejecuta al actualizar el reparador o la entrada de fuentes.
   schedule:
     - cron: '0 12 * * *'
   push:
     paths:
+      - 'scripts/enriquecedor.py'
       - 'scripts/enriquecedor_fechas.py'
       - 'scripts/enriquecedor_fechas_v2.py'
       - 'scripts/validar_fuentes_dian.py'
       - 'scripts/scraper_fuentes_dian.py'
+      - 'scripts/control_calidad.py'
       - '.github/workflows/enriquecer.yml'
-
   workflow_dispatch:
     inputs:
       lote:
         description: 'Documentos por lote'
         required: false
-        default: '500'
+        default: '250'
       max_lotes:
         description: 'Maximo de lotes por ejecucion'
         required: false
-        default: '50'
+        default: '100'
       anio:
-        description: 'Solo un año (vacio = todos, mas recientes primero)'
+        description: 'Solo un año (vacio = todos)'
         required: false
         default: ''
       dry_run:
@@ -34,61 +33,58 @@ on:
         type: choice
         options: ['no', 'si']
 
+concurrency:
+  group: euclidian-enriquecimiento
+  cancel-in-progress: false
+
 jobs:
   enriquecer:
     runs-on: ubuntu-latest
     timeout-minutes: 330
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-
       - name: Instalar dependencias
         run: pip install -r scripts/requirements.txt
-
       - name: Validar fuentes oficiales DIAN
         run: python scripts/validar_fuentes_dian.py
-
-      - name: Reparar y enriquecer todos los pendientes por lotes
+      - name: Reparar y enriquecer por lotes
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
         run: |
           set -euo pipefail
           cd scripts
-          LOTE='${{ inputs.lote || '500' }}'
-          MAX_LOTES='${{ inputs.max_lotes || '50' }}'
+          LOTE='${{ inputs.lote || '250' }}'
+          MAX_LOTES='${{ inputs.max_lotes || '100' }}'
           ANIO='${{ inputs.anio || '' }}'
           DRY='${{ inputs.dry_run || 'no' }}'
-
           for ((lote=1; lote<=MAX_LOTES; lote++)); do
             echo "============================================================"
             echo "LOTE ${lote}/${MAX_LOTES} — hasta ${LOTE} documentos"
             echo "============================================================"
-
             ARGS="--limite ${LOTE}"
             if [ -n "${ANIO}" ]; then ARGS="$ARGS --anio ${ANIO}"; fi
             if [ "${DRY}" = "si" ]; then ARGS="$ARGS --dry-run"; fi
-
             SALIDA=$(python enriquecedor_fechas_v2.py ${ARGS} 2>&1 | tee /dev/stderr) || {
-              echo "ERROR: fallo el lote ${lote}. No se declara el proceso completo."
+              echo "ERROR: fallo el lote ${lote}."
               exit 1
             }
-
             if echo "${SALIDA}" | grep -q "No hay documentos por enriquecer"; then
-              echo "COMPLETADO: no quedan documentos pendientes."
+              echo "COMPLETADO: no quedan documentos en la cola."
               break
             fi
-
+            if echo "${SALIDA}" | grep -q "actualizados[[:space:]]*0"; then
+              echo "ERROR: el lote no produjo actualizaciones; se detiene para evitar un bucle."
+              exit 1
+            fi
             if [ "${lote}" -eq "${MAX_LOTES}" ]; then
-              echo "ERROR: se alcanzo MAX_LOTES=${MAX_LOTES}."
-              echo "La base puede seguir teniendo documentos pendientes."
+              echo "ERROR: se alcanzo MAX_LOTES=${MAX_LOTES}; la base puede seguir pendiente."
               exit 1
             fi
           done
-
       - name: Control final de calidad
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
