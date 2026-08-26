@@ -1,8 +1,7 @@
 name: Enviar boletín
 
-# Sin cron a proposito. El envio es la unica accion irreversible del
-# sistema: un correo mandado no se recoge. Se dispara a mano y siempre
-# despues de haber mirado la prueba.
+# El envío sigue siendo manual. Antes de generar o enviar, el filtro
+# automático vuelve a comprobar las dos fuentes oficiales.
 on:
   workflow_dispatch:
     inputs:
@@ -11,10 +10,7 @@ on:
         required: true
         default: 'ver'
         type: choice
-        options:
-          - ver          # muestra a quien iria, sin enviar
-          - prueba       # solo al correo de abajo
-          - enviar       # de verdad, a todos los suscriptores
+        options: [ver, prueba, enviar]
       correo_prueba:
         description: 'Correo para la prueba'
         required: false
@@ -30,14 +26,25 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-
       - name: Instalar dependencias
         run: pip install -r scripts/requirements.txt
-
+      - name: Verificación final obligatoria
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: |
+          cd scripts
+          python verificador_aprobacion.py --auto-aprobar --limite 300
+      - name: Control de calidad estricto
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: |
+          cd scripts
+          python control_calidad.py --enlaces 25 --estricto
       - name: Generar el borrador
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
@@ -47,7 +54,6 @@ jobs:
           ARGS="--guardar"
           if [ -n "${{ inputs.desde }}" ]; then ARGS="$ARGS --desde ${{ inputs.desde }}"; fi
           python generador.py $ARGS
-
       - name: Enviar
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
@@ -59,16 +65,8 @@ jobs:
           cd scripts
           case "${{ inputs.accion }}" in
             prueba)
-              if [ -z "${{ inputs.correo_prueba }}" ]; then
-                echo "Falta el correo de prueba."
-                exit 1
-              fi
-              python enviador.py --prueba "${{ inputs.correo_prueba }}"
-              ;;
-            enviar)
-              python enviador.py --confirmar
-              ;;
-            *)
-              python enviador.py
-              ;;
+              if [ -z "${{ inputs.correo_prueba }}" ]; then echo "Falta el correo de prueba."; exit 1; fi
+              python enviador.py --prueba "${{ inputs.correo_prueba }}" ;;
+            enviar) python enviador.py --confirmar ;;
+            *) python enviador.py ;;
           esac
