@@ -2,8 +2,7 @@ name: Enriquecer documentos
 
 on:
   # Diario a las 7:00 Colombia (12:00 UTC), una hora despues del scraper.
-  # Tambien se ejecuta al actualizar el reparador para que las correcciones
-  # de datos no tengan que esperar al siguiente ciclo diario.
+  # Tambien se ejecuta al actualizar el reparador o la entrada de fuentes.
   schedule:
     - cron: '0 12 * * *'
   push:
@@ -11,6 +10,7 @@ on:
       - 'scripts/enriquecedor_fechas.py'
       - 'scripts/enriquecedor_fechas_v2.py'
       - 'scripts/validar_fuentes_dian.py'
+      - 'scripts/scraper_fuentes_dian.py'
       - '.github/workflows/enriquecer.yml'
 
   workflow_dispatch:
