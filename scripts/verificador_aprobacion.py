@@ -1,8 +1,7 @@
 """EUCLIDIAN — filtro automático de aprobación de alta confianza.
 
-Solo aprueba información que puede demostrarse desde las DOS fuentes raíz
-oficiales de EUCLIDIAN y desde los documentos publicados por ellas.
-Ante cualquier duda, NO APRUEBA.
+Solo aprueba información demostrable desde las dos entradas oficiales DIAN y
+sus subpáginas tributarias oficiales. Ante cualquier duda, NO APRUEBA.
 """
 import argparse
 import logging
@@ -19,7 +18,6 @@ from validar_fuentes_dian import FUENTES_RAIZ, INDICES_ESPERADOS, TIMEOUT
 log = logging.getLogger("euclidian.aprobacion")
 logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
 DOMINIO = "normograma.dian.gov.co"
-PREFIJO = "https://normograma.dian.gov.co/dian/compilacion/"
 STOP = {"para","como","desde","entre","sobre","esta","este","debe","puede","segun","cuando","donde","hace","solo","tambien","una","uno","los","las","del","por","con","que","sus"}
 
 def norm(s):
@@ -33,31 +31,30 @@ def load(session, url):
     r = session.get(url, timeout=TIMEOUT, allow_redirects=True)
     r.raise_for_status()
     soup = BeautifulSoup(r.text, "html.parser")
-    return soup, norm(soup.get_text(" ", strip=True))
+    return soup, norm(soup.get_text(" ", strip=True)), r.url
 
-def validate_roots(session):
-    """The only roots permitted for ingestion."""
-    found = {}
-    for root, root_url in FUENTES_RAIZ.items():
-        soup, text = load(session, root_url)
-        if "normograma" not in text and "compilacion juridica" not in text:
-            raise RuntimeError(f"La fuente raíz no parece ser DIAN: {root_url}")
-        for a in soup.find_all("a", href=True):
-            href = a.get("href") or ""
-            if not href.startswith(PREFIJO):
-                continue
-            name = urlparse(href).path.rsplit("/", 1)[-1]
-            if name in INDICES_ESPERADOS:
-                if INDICES_ESPERADOS[name] != root:
-                    raise RuntimeError(f"Índice {name} proviene de una raíz no autorizada")
-                found[name] = href
-    missing = set(INDICES_ESPERADOS) - set(found)
-    if missing:
-        raise RuntimeError("Faltan índices publicados por las dos raíces: " + ", ".join(sorted(missing)))
-    return found
+def validate_sources(session):
+    """Validate the two roots and only their current official subpages."""
+    for name, url in FUENTES_RAIZ.items():
+        _, text, final = load(session, url)
+        p = urlparse(final)
+        if p.netloc != DOMINIO or not p.path.startswith("/dian/compilacion/"):
+            raise RuntimeError(f"Fuente raíz fuera del Normograma: {final}")
+        if "normograma" not in text and "compilacion juridica dian" not in text:
+            raise RuntimeError(f"La fuente raíz no se identifica como DIAN: {url}")
+        log.info("Fuente raíz OK: %s", name)
+    for filename, (root, url) in INDICES_ESPERADOS.items():
+        _, text, final = load(session, url)
+        p = urlparse(final)
+        if p.netloc != DOMINIO or not p.path.startswith("/dian/compilacion/"):
+            raise RuntimeError(f"Subfuente fuera del Normograma: {final}")
+        if "normograma" not in text and "compilacion juridica dian" not in text:
+            raise RuntimeError(f"Subfuente no identificada como DIAN: {url}")
+        log.info("Subfuente OK: %s <- %s", filename, root)
+    return True
 
 def check_summary(source_text, summary):
-    """Extractive evidence gate. Never infers semantic equivalence."""
+    """Extractive evidence gate; no semantic inference."""
     src = norm(source_text)
     sentences = [x.strip() for x in re.split(r"[.!?;]\s+", str(summary or "")) if len(x.strip()) >= 20]
     if not sentences:
@@ -81,9 +78,11 @@ def verify(session, doc):
     if parsed.netloc != DOMINIO or not parsed.path.startswith("/dian/compilacion/"):
         return False, ["Enlace fuera de la fuente oficial permitida."]
     try:
-        _, source = load(session, url)
+        _, source, final = load(session, url)
     except Exception as exc:
         return False, [f"No se pudo leer la fuente oficial: {str(exc)[:150]}"]
+    if urlparse(final).netloc != DOMINIO or not urlparse(final).path.startswith("/dian/compilacion/"):
+        return False, ["La fuente redirige fuera del Normograma DIAN."]
     if "normograma" not in source and "compilacion juridica dian" not in source:
         errors.append("La página no se identifica como Normograma DIAN.")
     number = norm(doc.get("numero_resolucion"))
@@ -111,8 +110,7 @@ def main(auto=False, limit=300):
     session = requests.Session()
     session.headers.update({"User-Agent":"EUCLIDIAN/1.0 (verificador de alta confianza)","Accept-Language":"es-CO,es;q=0.9"})
     log.info("Validando las dos fuentes raíz...")
-    roots = validate_roots(session)
-    log.info("Fuentes raíz OK; índices autorizados: %d", len(roots))
+    validate_sources(session)
     rows = db.table("documentos_tributarios").select("id,numero_resolucion,contenido,descripcion_limpia,resumen_humano,resumen_borrador,enlace_oficial,fecha_publicacion,fecha_es_real,tesis_juridica").not_.is_("resumen_borrador","null").order("fecha_publicacion", desc=True).limit(limit).execute().data or []
     good = bad = 0
     for doc in rows:
