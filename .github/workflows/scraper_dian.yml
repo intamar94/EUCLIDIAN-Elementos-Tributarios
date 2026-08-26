@@ -33,14 +33,14 @@ jobs:
       - name: Validar fuentes oficiales DIAN
         run: python scripts/validar_fuentes_dian.py
 
-      - name: Ejecutar scraper
+      - name: Ejecutar scraper desde fuentes descubiertas
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
         run: |
           cd scripts
           case "${{ inputs.modo || 'incremental' }}" in
-            historico)  python scraper.py --historico ;;
-            dry-run)    python scraper.py --dry-run ;;
-            *)          python scraper.py ;;
+            historico)  python scraper_fuentes_dian.py --historico ;;
+            dry-run)    python scraper_fuentes_dian.py --dry-run ;;
+            *)          python scraper_fuentes_dian.py ;;
           esac
