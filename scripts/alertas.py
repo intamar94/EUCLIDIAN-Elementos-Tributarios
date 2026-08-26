@@ -11,6 +11,7 @@ por razones distintas a como se lee una pagina.
 
 
 import logging
+import re
 
 log = logging.getLogger("euclidian")
 
