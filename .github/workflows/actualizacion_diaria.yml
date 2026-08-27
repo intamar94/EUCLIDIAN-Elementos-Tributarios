@@ -1,0 +1,28 @@
+name: Actualización diaria DIAN
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '15 06 * * *'
+
+jobs:
+  actualizar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Instalar dependencias
+        run: pip install -r scripts/requirements.txt
+      - name: Sincronizar catálogo
+        run: python scripts/actualizacion_diaria.py
+      - name: Exportar índice consultable
+        run: python scripts/catalogo_historico.py --entrada descubrimiento_fuentes.json --salida historico_index.json
+      - name: Publicar artefactos del histórico
+        uses: actions/upload-artifact@v4
+        with:
+          name: euclidian-historico
+          path: |
+            historico_index.json
+            descubrimiento_fuentes.json
