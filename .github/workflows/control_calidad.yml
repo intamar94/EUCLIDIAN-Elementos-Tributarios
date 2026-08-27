@@ -24,6 +24,8 @@ jobs:
           python-version: '3.11'
       - name: Instalar dependencias
         run: pip install -r scripts/requirements.txt
+      - name: Verificar las dos fuentes oficiales DIAN
+        run: python scripts/validar_fuentes_dian.py
       - name: Verificar y aprobar automáticamente
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
