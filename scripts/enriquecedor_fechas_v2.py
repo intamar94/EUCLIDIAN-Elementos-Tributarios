@@ -5,12 +5,16 @@ Fuente de verdad: documento oficial del Normograma DIAN.
 - La fecha de expedición no se convierte en fecha de publicación.
 - 01-01 artificial nunca se considera verificada.
 - Cada documento se guarda individualmente para permitir reanudación.
+- Los fallos HTTP transitorios se reintentan; los 404 se consideran
+  definitivos para ese enlace y no se presentan como éxito.
 """
 import argparse, logging, os, re, sys, time
 from collections import Counter
 from datetime import date, datetime, timezone
 from urllib.parse import urlparse
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 from bs4 import BeautifulSoup
 from supabase import create_client
 
@@ -30,16 +34,24 @@ class EnriquecedorFechasV2:
         self.limite,self.anio,self.dry_run=limite,anio,dry_run; self.stats=Counter()
         url,key=os.getenv("SUPABASE_URL"),os.getenv("SUPABASE_SERVICE_KEY")
         if not url or not key: raise SystemExit("Faltan SUPABASE_URL o SUPABASE_SERVICE_KEY")
-        self.db=create_client(url,key); self.s=requests.Session(); self.s.headers.update({"User-Agent":"EUCLIDIAN/1.0 (Normograma DIAN)","Accept-Language":"es-CO,es;q=0.9"})
+        self.db=create_client(url,key)
+        self.s=requests.Session()
+        self.s.headers.update({"User-Agent":"EUCLIDIAN/1.1 (Normograma DIAN)","Accept-Language":"es-CO,es;q=0.9"})
+        retry=Retry(total=4,connect=4,read=4,status=4,backoff_factor=1, status_forcelist=(429,500,502,503,504), allowed_methods=frozenset(["GET"]))
+        self.s.mount("https://",HTTPAdapter(max_retries=retry))
 
     def correr(self):
         docs=self._pendientes()
-        if not docs: log.info("No hay documentos por enriquecer."); return
+        if not docs:
+            log.info("No hay documentos por enriquecer.")
+            return
         log.info("%d documentos seleccionados",len(docs))
         for i,doc in enumerate(docs,1):
             if PAUSA: time.sleep(PAUSA)
             self._procesar(doc,i,len(docs))
         for k in sorted(self.stats): log.info("  %-24s %s",k,self.stats[k])
+        total=sum(self.stats.values())
+        if total: log.info("RESUMEN_EUCLIDIAN %s",dict(sorted(self.stats.items())))
 
     def _pendientes(self):
         campos="id,numero_resolucion,enlace_oficial,tipo_documento,contenido,temas,fecha_publicacion"
@@ -49,9 +61,6 @@ class EnriquecedorFechasV2:
             if self.anio:q=q.gte("fecha_publicacion",f"{self.anio}-01-01").lte("fecha_publicacion",f"{self.anio}-12-31")
             r=q.order("fecha_publicacion",desc=True).order("numero_resolucion",desc=True).limit(self.limite).execute()
             for d in r.data or []:encontrados[d["id"]]=d
-            # Para los antiguos que quedaron true con 01-01, paginamos solo
-            # el conjunto de fechas y filtramos en memoria; evita decenas de
-            # consultas por año en cada lote.
             total=self.db.table("documentos_tributarios").select("id",count="exact").gte("fecha_publicacion","1950-01-01").lte("fecha_publicacion",f"{datetime.now().year+1}-12-31").eq("fecha_es_real",True).limit(1).execute().count or 0
             for start in range(0,total,PAGE):
                 r=self.db.table("documentos_tributarios").select(campos).eq("fecha_es_real",True).gte("fecha_publicacion","1950-01-01").lte("fecha_publicacion",f"{datetime.now().year+1}-12-31").range(start,start+PAGE-1).execute()
@@ -63,18 +72,30 @@ class EnriquecedorFechasV2:
 
     def _procesar(self,doc,i,total):
         url=doc.get("enlace_oficial") or ""; p=urlparse(url)
-        if p.netloc!=OFFICIAL_HOST or not p.path.startswith(OFFICIAL_PREFIX):self.stats["url_no_oficial"]+=1; log.error("[%d/%d] %s URL no oficial",i,total,doc.get("numero_resolucion")); return
+        numero=doc.get("numero_resolucion")
+        if p.netloc!=OFFICIAL_HOST or not p.path.startswith(OFFICIAL_PREFIX):
+            self.stats["url_no_oficial"]+=1; log.error("[%d/%d] %s URL no oficial",i,total,numero); return
         try:
             r=self.s.get(url,timeout=TIMEOUT)
-            if r.status_code==429:time.sleep(3); r=self.s.get(url,timeout=TIMEOUT)
+            if r.status_code==404:
+                self.stats["enlace_404"]+=1
+                log.error("[%d/%d] %s ENLACE_404 %s",i,total,numero,url)
+                return
             r.raise_for_status(); r.encoding=r.apparent_encoding or "utf-8"
-        except requests.RequestException as e:self.stats["error_red"]+=1; log.warning("[%d/%d] %s red: %s",i,total,doc.get("numero_resolucion"),str(e)[:100]); return
+        except requests.RequestException as e:
+            self.stats["error_red"]+=1
+            log.warning("[%d/%d] %s ERROR_RED %s",i,total,numero,str(e)[:180])
+            return
         soup=BeautifulSoup(r.text,"html.parser")
         for x in soup(["script","style","nav","footer"]):x.decompose()
         texto=re.sub(r"\n{3,}","\n\n",re.sub(r"[ \t]+"," ",soup.get_text("\n"))).strip(); fecha=self._fecha_publicacion(texto)
         campos={"texto_completo":texto[:60000],"enriquecido_en":datetime.now(timezone.utc).isoformat()}
-        if fecha:campos.update(fecha_publicacion=fecha.isoformat(),fecha_es_real=True);self.stats["fecha_verificada"]+=1
-        else:self.stats["fecha_no_verificada"]+=1
+        if fecha:
+            campos.update(fecha_publicacion=fecha.isoformat(),fecha_es_real=True);self.stats["fecha_verificada"]+=1
+        else:
+            self.stats["fecha_no_verificada"]+=1
+            if re.search(r"Diario Oficial|publicad[ao]|publicaci[oó]n",texto[:25000],re.I): self.stats["fecha_patron_sin_fecha_valida"]+=1
+            else: self.stats["fecha_sin_evidencia_en_pagina"]+=1
         diario=self._diario(texto)
         if diario:campos["diario_oficial"]=diario[:120]
         entidad=self._entidad(texto)
@@ -91,11 +112,12 @@ class EnriquecedorFechasV2:
         if plazos:campos["plazos_mencionados"]=plazos[:12]
         estado,motivo=self._estado(anot)
         if estado:campos["estado_vigencia"]=estado;campos["motivo_cambio_estado"]=motivo[:500]
-        if self.dry_run:log.info("[%d/%d] %s fecha=%s DO=%s",i,total,doc.get("numero_resolucion"),fecha or "NO VERIFICADA","si" if diario else "-");return
+        if self.dry_run:
+            log.info("[%d/%d] %s fecha=%s DO=%s",i,total,numero,fecha or "NO VERIFICADA","si" if diario else "-");return
         try:
             self.db.table("documentos_tributarios").update(campos).eq("id",doc["id"]).execute();self.stats["actualizados"]+=1;self._alertas(doc,campos,retro,zonas)
-        except Exception as e:self.stats["error_guardado"]+=1;log.error("[%d/%d] %s guardar: %s",i,total,doc.get("numero_resolucion"),str(e)[:150]);return
-        log.info("[%d/%d] %s fecha=%s",i,total,doc.get("numero_resolucion"),fecha or "NO VERIFICADA")
+        except Exception as e:self.stats["error_guardado"]+=1;log.error("[%d/%d] %s ERROR_GUARDADO: %s",i,total,numero,str(e)[:180]);return
+        log.info("[%d/%d] %s fecha=%s",i,total,numero,fecha or "NO VERIFICADA")
 
     def _fecha_publicacion(self,texto):
         patrones=[r"Diario Oficial[^\n]{0,160}?de\s+(\d{1,2})\s+de\s+([A-Za-záéíóúÁÉÍÓÚ]+)\s+de\s+((?:19|20)\d{2})",r"Diario Oficial[^\n]{0,160}?del\s+(\d{1,2})\s+de\s+([A-Za-záéíóúÁÉÍÓÚ]+)\s+de\s+((?:19|20)\d{2})",r"publicad[ao][^\n]{0,180}?(\d{1,2})\s+de\s+([A-Za-záéíóúÁÉÍÓÚ]+)\s+de\s+((?:19|20)\d{2})",r"publicaci[oó]n[^\n]{0,180}?(\d{1,2})\s+de\s+([A-Za-záéíóúÁÉÍÓÚ]+)\s+de\s+((?:19|20)\d{2})"]
