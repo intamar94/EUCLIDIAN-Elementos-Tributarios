@@ -1,7 +1,8 @@
 """EUCLIDIAN — filtro automático de aprobación de alta confianza.
 
-Solo aprueba información demostrable desde las dos entradas oficiales DIAN y
-sus subpáginas tributarias oficiales. Ante cualquier duda, NO APRUEBA.
+Solo aprueba información demostrable desde las dos entradas oficiales DIAN.
+No añade fuentes raíz ni dependencias de índices externos. Ante cualquier duda,
+NO APRUEBA.
 """
 import argparse
 import logging
@@ -13,19 +14,23 @@ from urllib.parse import urlparse
 import requests
 from bs4 import BeautifulSoup
 from supabase import create_client
-from validar_fuentes_dian import FUENTES_RAIZ, INDICES_ESPERADOS, TIMEOUT
+from validar_fuentes_dian import FUENTES_RAIZ, TIMEOUT
 
 log = logging.getLogger("euclidian.aprobacion")
 logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
 DOMINIO = "normograma.dian.gov.co"
+PREFIJO = "/dian/compilacion/"
 STOP = {"para","como","desde","entre","sobre","esta","este","debe","puede","segun","cuando","donde","hace","solo","tambien","una","uno","los","las","del","por","con","que","sus"}
+
 
 def norm(s):
     s = unicodedata.normalize("NFKD", str(s or "")).encode("ascii", "ignore").decode().lower()
     return re.sub(r"\s+", " ", s).strip()
 
+
 def words(s):
     return {x for x in re.findall(r"[a-z0-9]{4,}", norm(s)) if x not in STOP}
+
 
 def load(session, url):
     r = session.get(url, timeout=TIMEOUT, allow_redirects=True)
@@ -33,25 +38,19 @@ def load(session, url):
     soup = BeautifulSoup(r.text, "html.parser")
     return soup, norm(soup.get_text(" ", strip=True)), r.url
 
+
 def validate_sources(session):
-    """Validate the two roots and only their current official subpages."""
+    """Validate exactly the two authorized DIAN root sources."""
     for name, url in FUENTES_RAIZ.items():
         _, text, final = load(session, url)
         p = urlparse(final)
-        if p.netloc != DOMINIO or not p.path.startswith("/dian/compilacion/"):
+        if p.netloc != DOMINIO or not p.path.startswith(PREFIJO):
             raise RuntimeError(f"Fuente raíz fuera del Normograma: {final}")
         if "normograma" not in text and "compilacion juridica dian" not in text:
             raise RuntimeError(f"La fuente raíz no se identifica como DIAN: {url}")
         log.info("Fuente raíz OK: %s", name)
-    for filename, (root, url) in INDICES_ESPERADOS.items():
-        _, text, final = load(session, url)
-        p = urlparse(final)
-        if p.netloc != DOMINIO or not p.path.startswith("/dian/compilacion/"):
-            raise RuntimeError(f"Subfuente fuera del Normograma: {final}")
-        if "normograma" not in text and "compilacion juridica dian" not in text:
-            raise RuntimeError(f"Subfuente no identificada como DIAN: {url}")
-        log.info("Subfuente OK: %s <- %s", filename, root)
     return True
+
 
 def check_summary(source_text, summary):
     """Extractive evidence gate; no semantic inference."""
@@ -71,18 +70,19 @@ def check_summary(source_text, summary):
                 errors.append(f"Afirmación {i}: el dato '{number}' no aparece en la fuente.")
     return not errors, errors
 
+
 def verify(session, doc):
     errors = []
     url = str(doc.get("enlace_oficial") or "")
     parsed = urlparse(url)
-    if parsed.netloc != DOMINIO or not parsed.path.startswith("/dian/compilacion/"):
+    if parsed.netloc != DOMINIO or not parsed.path.startswith(PREFIJO):
         return False, ["Enlace fuera de la fuente oficial permitida."]
     try:
         _, source, final = load(session, url)
     except Exception as exc:
         return False, [f"No se pudo leer la fuente oficial: {str(exc)[:150]}"]
     final_parsed = urlparse(final)
-    if final_parsed.netloc != DOMINIO or not final_parsed.path.startswith("/dian/compilacion/"):
+    if final_parsed.netloc != DOMINIO or not final_parsed.path.startswith(PREFIJO):
         return False, ["La fuente redirige fuera del Normograma DIAN."]
     if "normograma" not in source and "compilacion juridica dian" not in source:
         errors.append("La página no se identifica como Normograma DIAN.")
@@ -102,6 +102,7 @@ def verify(session, doc):
             errors.append("La tesis jurídica no tiene suficiente respaldo textual.")
     return not errors and ok, errors
 
+
 def main(auto=False, limit=300):
     supa_url = os.getenv("SUPABASE_URL")
     supa_key = os.getenv("SUPABASE_SERVICE_KEY")
@@ -110,7 +111,7 @@ def main(auto=False, limit=300):
     db = create_client(supa_url, supa_key)
     session = requests.Session()
     session.headers.update({"User-Agent":"EUCLIDIAN/1.0 (verificador de alta confianza)","Accept-Language":"es-CO,es;q=0.9"})
-    log.info("Validando las dos fuentes raíz...")
+    log.info("Validando exactamente las dos fuentes raíz...")
     validate_sources(session)
     rows = db.table("documentos_tributarios").select("id,numero_resolucion,contenido,descripcion_limpia,resumen_humano,resumen_borrador,enlace_oficial,fecha_publicacion,fecha_es_real,tesis_juridica").not_.is_("resumen_borrador","null").order("fecha_publicacion", desc=True).limit(limit).execute().data or []
     good = bad = 0
@@ -126,9 +127,8 @@ def main(auto=False, limit=300):
             db.table("documentos_tributarios").update({"aprobado_para_email":False,"borrador_confianza":"no_aprobado","borrador_advertencias":errors[:12]}).eq("id",doc["id"]).execute()
             log.warning("NO APROBADO %s: %s", doc.get("numero_resolucion"), " | ".join(errors[:3]))
     log.info("RESULTADO: aprobados=%d rechazados=%d", good, bad)
-    # Rechazar documentos inseguros es el comportamiento correcto del filtro.
-    # El proceso falla únicamente ante un error técnico que impida validar.
     return 0
+
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
