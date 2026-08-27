@@ -1,0 +1,46 @@
+name: EUCLIDIAN — Histórico autónomo
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: euclidian-historico
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  historico:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Instalar dependencias
+        run: pip install -r scripts/requirements.txt
+
+      - name: Descubrir fuentes oficiales
+        run: python scripts/descubrimiento_fuentes.py --limite 5000
+
+      - name: Procesar siguiente lote
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python scripts/carga_historica.py --lote 300
+
+      - name: Guardar estado de progreso
+        run: |
+          git config user.name 'euclidian-bot'
+          git config user.email 'euclidian-bot@users.noreply.github.com'
+          git add historico_cursor.json descubrimiento_fuentes.json historico_index.json || true
+          git diff --cached --quiet || git commit -m 'chore: avanzar carga historica automatica'
+          git push
