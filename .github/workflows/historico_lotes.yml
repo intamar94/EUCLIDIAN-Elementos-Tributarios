@@ -1,16 +1,27 @@
-name: EUCLIDIAN — Carga histórica por lotes
+name: EUCLIDIAN — Carga histórica autónoma
 
 on:
+  schedule:
+    # Continua la carga sin intervención manual. GitHub puede retrasar
+    # cron en períodos de alta demanda, pero el siguiente ciclo continúa.
+    - cron: '*/15 * * * *'
   workflow_dispatch:
     inputs:
       lote:
         description: Documentos por lote
         required: false
-        default: '100'
+        default: '300'
       minutos:
         description: Máximo de minutos por ejecución
         required: false
         default: '20'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: euclidian-historico
+  cancel-in-progress: false
 
 jobs:
   historico:
@@ -18,17 +29,32 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+
       - name: Instalar dependencias
         run: pip install -r scripts/requirements.txt
+
       - name: Ejecutar lote reanudable
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
-        run: python scripts/carga_historica_pipeline.py --lote ${{ inputs.lote || '100' }} --minutos ${{ inputs.minutos || '20' }}
-      - name: Guardar estado de carga
+        run: python scripts/carga_historica_pipeline.py --lote ${{ inputs.lote || '300' }} --minutos ${{ inputs.minutos || '20' }}
+
+      - name: Guardar cursor para la siguiente ejecución
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add historico_cursor.json historico_index.json descubrimiento_fuentes.json 2>/dev/null || true
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: actualizar progreso histórico EUCLIDIAN"
+            git push
+          fi
+
+      - name: Guardar estado de diagnóstico
         if: always()
         uses: actions/upload-artifact@v4
         with:
