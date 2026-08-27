@@ -3,7 +3,6 @@ name: Enriquecer documentos
 on:
   schedule:
     - cron: '0 12 * * *'
-
   workflow_dispatch:
     inputs:
       anio:
@@ -14,10 +13,6 @@ on:
         description: 'Cuantos documentos como maximo'
         required: false
         default: '400'
-      minutos:
-        description: 'Tope de reloj en minutos (0 = sin tope)'
-        required: false
-        default: '90'
       dry_run:
         description: 'Mostrar sin guardar'
         required: false
@@ -43,14 +38,16 @@ jobs:
       - name: Instalar dependencias
         run: pip install -r scripts/requirements.txt
 
-      - name: Enriquecer
+      - name: Validar las dos fuentes oficiales DIAN
+        run: python scripts/validar_fuentes_dian.py
+
+      - name: Reparar y enriquecer documentos
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
         run: |
           cd scripts
           ARGS="--limite ${{ inputs.limite || '400' }}"
-          ARGS="$ARGS --minutos ${{ inputs.minutos || '90' }}"
           if [ -n "${{ inputs.anio }}" ]; then ARGS="$ARGS --anio ${{ inputs.anio }}"; fi
           if [ "${{ inputs.dry_run }}" = "si" ]; then ARGS="$ARGS --dry-run"; fi
-          python enriquecedor.py $ARGS
+          python enriquecedor_fechas_v2.py $ARGS
