@@ -1,0 +1,40 @@
+name: EUCLIDIAN — Carga histórica por lotes
+
+on:
+  workflow_dispatch:
+    inputs:
+      lote:
+        description: Documentos por lote
+        required: false
+        default: '100'
+      minutos:
+        description: Máximo de minutos por ejecución
+        required: false
+        default: '20'
+
+jobs:
+  historico:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Instalar dependencias
+        run: pip install -r scripts/requirements.txt
+      - name: Ejecutar lote reanudable
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python scripts/carga_historica_pipeline.py --lote ${{ inputs.lote || '100' }} --minutos ${{ inputs.minutos || '20' }}
+      - name: Guardar estado de carga
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: estado-historico-${{ github.run_id }}
+          path: |
+            historico_cursor.json
+            descubrimiento_fuentes.json
+            historico_index.json
+          if-no-files-found: ignore
