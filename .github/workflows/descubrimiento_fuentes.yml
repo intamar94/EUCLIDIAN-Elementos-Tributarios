@@ -1,0 +1,31 @@
+name: Descubrimiento fuentes DIAN
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '30 13 * * 1-5'
+
+jobs:
+  descubrir:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Instalar dependencias
+        run: pip install -r scripts/requirements.txt
+      - name: Descubrir enlaces desde las dos raíces oficiales
+        run: python scripts/descubrimiento_fuentes.py --limite 250
+      - name: Verificar trazabilidad
+        run: |
+          python - <<'PY'
+          import json
+          from scripts.validar_fuentes_dian import FUENTES_RAIZ
+          with open('descubrimiento_fuentes.json', encoding='utf-8') as f:
+              data = json.load(f)
+          assert data['fuentes_raiz'] == FUENTES_RAIZ
+          assert all(d['raiz'] in FUENTES_RAIZ for d in data['documentos'])
+          assert all(d['url'].startswith('https://normograma.dian.gov.co/dian/compilacion/') for d in data['documentos'])
+          print('TRAZABILIDAD_OK')
+          PY
