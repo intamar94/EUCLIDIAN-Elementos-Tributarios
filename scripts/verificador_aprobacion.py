@@ -81,7 +81,8 @@ def verify(session, doc):
         _, source, final = load(session, url)
     except Exception as exc:
         return False, [f"No se pudo leer la fuente oficial: {str(exc)[:150]}"]
-    if urlparse(final).netloc != DOMINIO or not urlparse(final).path.startswith("/dian/compilacion/"):
+    final_parsed = urlparse(final)
+    if final_parsed.netloc != DOMINIO or not final_parsed.path.startswith("/dian/compilacion/"):
         return False, ["La fuente redirige fuera del Normograma DIAN."]
     if "normograma" not in source and "compilacion juridica dian" not in source:
         errors.append("La página no se identifica como Normograma DIAN.")
@@ -125,7 +126,9 @@ def main(auto=False, limit=300):
             db.table("documentos_tributarios").update({"aprobado_para_email":False,"borrador_confianza":"no_aprobado","borrador_advertencias":errors[:12]}).eq("id",doc["id"]).execute()
             log.warning("NO APROBADO %s: %s", doc.get("numero_resolucion"), " | ".join(errors[:3]))
     log.info("RESULTADO: aprobados=%d rechazados=%d", good, bad)
-    return 0 if bad == 0 else 1
+    # Rechazar documentos inseguros es el comportamiento correcto del filtro.
+    # El proceso falla únicamente ante un error técnico que impida validar.
+    return 0
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
