@@ -1,30 +1,26 @@
-"""Entrada segura del scraper DIAN usando las dos fuentes raíz oficiales.
-
-Las dos raíces son los únicos puntos de entrada. La validación conoce las
-subpáginas tributarias oficiales actuales porque la navegación de la DIAN usa
-controles dinámicos; no depende de que esos controles aparezcan como href en
-una descarga HTTP simple.
-"""
+"""Entrada segura del scraper DIAN usando las dos fuentes raíz oficiales."""
 import argparse
 import scraper
-from validar_fuentes_dian import INDICES_ESPERADOS, main as validar_fuentes
+from validar_fuentes_dian import main as validar_fuentes
 
 CATEGORIAS = {
-    "nyb_novedades_derecho_tributario.html": "boletin",
-    "t_1_normativa_tributaria.html": "normativa",
-    "t_2_doctrina_tributaria.html": "doctrina",
-    "t_3_jurisprudencia_tributaria.html": "jurisprudencia",
+    "nyb_novedades_derecho_tributario": "boletin",
+    "t_1_normativa_tributaria": "normativa",
+    "t_2_doctrina_tributaria": "doctrina",
+    "t_3_jurisprudencia_tributaria": "jurisprudencia",
 }
 
+
 def descubrir_indices():
-    """Usa exclusivamente las subpáginas oficiales ya validadas."""
+    """Usa únicamente los índices internos autorizados del Normograma DIAN."""
     resultado = []
-    for archivo, (_raiz, url) in INDICES_ESPERADOS.items():
-        stem = archivo[:-5] if archivo.endswith(".html") else archivo
-        categoria = CATEGORIAS[archivo]
+    for stem, categoria in scraper.INDICES:
+        if stem not in CATEGORIAS:
+            raise RuntimeError(f"Índice no autorizado: {stem}")
         resultado.append((stem, categoria))
-        print(f"  FUENTE REAL: {url} -> {categoria}")
+        print(f"  FUENTE DERIVADA DIAN: {stem}.html -> {categoria}")
     return resultado
+
 
 def main():
     if validar_fuentes() != 0:
@@ -39,6 +35,7 @@ def main():
     s = scraper.Scraper(historico=args.historico, dry_run=args.dry_run, anios_recientes=args.anios)
     s.correr()
     return 0
+
 
 if __name__ == "__main__":
     raise SystemExit(main())
