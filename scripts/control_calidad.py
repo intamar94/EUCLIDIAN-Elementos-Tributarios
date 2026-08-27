@@ -25,10 +25,14 @@ class Control:
     def _completitud(self):
         try:
             total=self.db.table("documentos_tributarios").select("id",count="exact").limit(1).execute().count or 0
-            pendientes=self.db.table("documentos_tributarios").select("id",count="exact").eq("fecha_es_real",False).limit(1).execute().count or 0
-            self.stats.update(documentos_totales=total,documentos_fecha_pendiente=pendientes)
+            aprobados=self.db.table("documentos_tributarios").select("id",count="exact").eq("aprobado_para_email",True).limit(1).execute().count or 0
+            fechas_pendientes=self.db.table("documentos_tributarios").select("id",count="exact").eq("aprobado_para_email",True).eq("fecha_es_real",False).limit(1).execute().count or 0
+            self.stats.update(documentos_totales=total,aprobados=aprobados,documentos_fecha_pendiente=fechas_pendientes)
             if not total:self.graves.append("No hay documentos tributarios")
-            elif pendientes:self.graves.append(f"Hay {pendientes} documentos con fecha sin validar")
+            # Los documentos rechazados pueden conservarse para trazabilidad y
+            # volver a evaluarse; solo lo que entra al flujo de salida debe tener
+            # fecha fuerte validada.
+            if fechas_pendientes:self.graves.append(f"Hay {fechas_pendientes} documentos aprobados con fecha sin validar")
         except Exception as e:self.graves.append(f"No se pudo comprobar completitud: {str(e)[:150]}")
     def _aprobados(self):
         try:r=self.db.table("documentos_tributarios").select("numero_resolucion,resumen_humano,resumen_borrador,contenido,enlace_oficial,borrador_confianza").eq("aprobado_para_email",True).execute().data or []
@@ -49,7 +53,7 @@ class Control:
     def _duplicados(self):
         try:
             rows=self.db.table("documentos_tributarios").select("numero_resolucion,enlace_oficial").execute().data or []
-            seen={};
+            seen={}
             for d in rows:
                 u=d.get("enlace_oficial")
                 if u:
