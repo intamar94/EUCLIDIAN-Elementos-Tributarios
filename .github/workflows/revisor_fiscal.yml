@@ -1,0 +1,35 @@
+name: EUCLIDIAN — Revisor Fiscal
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+    inputs:
+      limite:
+        description: 'Documentos a evaluar por ejecución'
+        required: false
+        default: '500'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: euclidian-revisor-fiscal
+  cancel-in-progress: false
+
+jobs:
+  revisar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - name: Instalar dependencias
+        run: pip install -r scripts/requirements.txt
+      - name: Ejecutar revisión fiscal
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python scripts/revisor_fiscal_euclidian.py --limit ${{ inputs.limite || '500' }}
