@@ -1,0 +1,44 @@
+name: EUCLIDIAN — Estado de progreso
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: euclidian-progreso
+  cancel-in-progress: true
+
+jobs:
+  progreso:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - name: Instalar dependencias
+        run: pip install -r scripts/requirements.txt
+      - name: Generar progreso
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python scripts/progreso_euclidian.py
+      - name: Guardar snapshot
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add progreso_euclidian.json
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: actualizar progreso EUCLIDIAN"
+            git push
+          fi
+      - name: Publicar snapshot
+        uses: actions/upload-artifact@v5
+        with:
+          name: progreso-euclidian-${{ github.run_id }}
+          path: progreso_euclidian.json
