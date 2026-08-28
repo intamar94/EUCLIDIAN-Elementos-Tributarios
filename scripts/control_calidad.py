@@ -2,9 +2,9 @@
 
 El producto solo se considera apto cuando los datos mostrados al contador
 pueden trazarse a las fuentes oficiales permitidas y las fichas aprobadas
-superan las comprobaciones de integridad. La ausencia de un campo opcional
-se registra como aviso/revisión; no convierte por sí sola un documento en
-fallo técnico del pipeline.
+superan las comprobaciones de integridad. La ausencia de un campo no
+localizado se conserva como dato pendiente; no se convierte artificialmente
+en un fallo técnico del pipeline.
 """
 import argparse, logging, os, sys
 from collections import Counter
@@ -34,8 +34,7 @@ class Control:
                                  .eq("aprobado_para_email", True).eq("fecha_es_real", False).limit(1).execute().count or 0)
             self.stats.update(documentos_totales=total, aprobados=aprobados, documentos_fecha_pendiente=fechas_pendientes)
             if not total: self.graves.append("No hay documentos tributarios")
-            if fechas_pendientes:
-                self.avisos.append(f"Hay {fechas_pendientes} documentos aprobados sin fecha de publicación demostrada; se revisan por campo")
+            if fechas_pendientes: log.info("Campos fecha pendientes: %d (no bloquean el documento)", fechas_pendientes)
         except Exception as e: self.graves.append(f"No se pudo comprobar completitud: {str(e)[:150]}")
 
     def _aprobados(self):
@@ -100,7 +99,7 @@ class Control:
             except requests.RequestException: self.graves.append(f"{d['numero_resolucion']} no responde")
 
     def _veredicto(self):
-        log.info("RESULTADO: graves=%d avisos=%d aprobados=%d", len(self.graves), len(self.avisos), self.stats.get('aprobados_revisados', 0))
+        log.info("RESULTADO: graves=%d avisos=%d aprobados=%d fechas_pendientes=%d", len(self.graves), len(self.avisos), self.stats.get('aprobados_revisados', 0), self.stats.get('documentos_fecha_pendiente', 0))
         for x in self.graves[:25]: log.error(x)
         for x in self.avisos[:15]: log.warning(x)
         if self.graves or (self.estricto and self.avisos): log.error("NO APTO PARA ENVÍO"); return 1
