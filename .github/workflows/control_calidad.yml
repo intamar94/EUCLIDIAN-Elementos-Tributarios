@@ -9,14 +9,20 @@ on:
     - cron: '0 14 * * 1-5'
   workflow_dispatch:
     inputs:
-      enlaces:
-        description: 'Cuantos enlaces probar'
+      limite:
+        description: 'Documentos a auditar (vacío = todo el universo)'
         required: false
-        default: '25'
+        default: '1000'
+      aplicar:
+        description: 'Escribir aprobaciones/bloqueos en Supabase'
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   revisar:
     runs-on: ubuntu-latest
+    timeout-minutes: 360
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -44,17 +50,21 @@ jobs:
           PY
       - name: Verificar las dos fuentes oficiales DIAN
         run: python scripts/validar_fuentes_dian.py
-      - name: Verificar y aprobar automáticamente
+      - name: Auditar universo documental
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
         run: |
           cd scripts
-          python verificador_aprobacion.py --auto-aprobar --limite 300
-      - name: Control final estricto
+          LIMIT='${{ inputs.limite || '1000' }}'
+          APPLY='${{ inputs.aplicar || 'false' }}'
+          if [ "$APPLY" = "true" ]; then
+            python verificador_aprobacion.py --apply ${LIMIT:+--limite "$LIMIT"}
+          else
+            python verificador_aprobacion.py ${LIMIT:+--limite "$LIMIT"}
+          fi
+      - name: Control final de fuentes
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
-        run: |
-          cd scripts
-          python control_calidad.py --enlaces ${{ inputs.enlaces || '25' }} --estricto
+        run: python scripts/control_calidad.py --enlaces 25 --estricto
