@@ -59,14 +59,16 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
         run: |
-          python scripts/verificador_evidencia.py --limite 1000 --strict | tee evidencia.log
+          set -o pipefail
+          python scripts/verificador_evidencia.py --limite 1000 --strict 2>&1 | tee evidencia.log
 
       - name: Control de calidad final
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
         run: |
-          python scripts/control_calidad.py --enlaces 25 --estricto | tee calidad.log
+          set -o pipefail
+          python scripts/control_calidad.py --enlaces 25 --estricto 2>&1 | tee calidad.log
 
       - name: Generar informe de progreso
         if: always()
