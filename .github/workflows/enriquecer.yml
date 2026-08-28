@@ -49,9 +49,7 @@ jobs:
           set -o pipefail
           ARGS="--limite ${{ inputs.limite || '1000' }}"
           if [ -n "${{ inputs.anio }}" ]; then ARGS="$ARGS --anio ${{ inputs.anio }}"; fi
-          if [ "${{ github.event_name }}" = "schedule" ]; then
-            ARGS="$ARGS --no-dry-run"
-          elif [ "${{ inputs.dry_run || 'si' }}" = "si" ]; then
+          if [ "${{ github.event_name }}" != "schedule" ] && [ "${{ inputs.dry_run || 'si' }}" = "si" ]; then
             ARGS="$ARGS --dry-run"
           fi
           python scripts/enriquecedor_fechas_v2.py $ARGS 2>&1 | tee enriquecimiento.log
