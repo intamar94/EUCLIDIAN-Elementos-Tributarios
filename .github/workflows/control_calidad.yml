@@ -54,6 +54,11 @@ jobs:
           python test_verificador_aprobacion_v2.py
       - name: Verificar las dos fuentes oficiales DIAN
         run: python scripts/validar_fuentes_dian.py
+      - name: Reparar dato con evidencia oficial DIAN
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python scripts/reparar_dato_oficial.py
       - name: Auditar universo documental
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
