@@ -48,6 +48,10 @@ jobs:
               print('OK', test.__name__)
           print(f'Contrato de calidad: {len(tests)} pruebas OK')
           PY
+      - name: Verificar verificador v2
+        run: |
+          cd scripts
+          python test_verificador_aprobacion_v2.py
       - name: Verificar las dos fuentes oficiales DIAN
         run: python scripts/validar_fuentes_dian.py
       - name: Auditar universo documental
@@ -59,9 +63,9 @@ jobs:
           LIMIT='${{ inputs.limite || '1000' }}'
           APPLY='${{ inputs.aplicar || 'false' }}'
           if [ "$APPLY" = "true" ]; then
-            python verificador_aprobacion.py --apply ${LIMIT:+--limite "$LIMIT"}
+            python verificador_aprobacion.py --apply --limite "$LIMIT"
           else
-            python verificador_aprobacion.py ${LIMIT:+--limite "$LIMIT"}
+            python verificador_aprobacion.py --limite "$LIMIT"
           fi
       - name: Control final de fuentes
         env:
