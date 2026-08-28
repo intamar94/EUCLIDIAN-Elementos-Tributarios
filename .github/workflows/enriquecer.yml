@@ -12,7 +12,7 @@ on:
       limite:
         description: 'Cuantos documentos como maximo'
         required: false
-        default: '400'
+        default: '1000'
       dry_run:
         description: 'Mostrar sin guardar'
         required: false
@@ -27,7 +27,7 @@ concurrency:
 jobs:
   enriquecer:
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 360
     steps:
       - uses: actions/checkout@v4
 
@@ -47,18 +47,32 @@ jobs:
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
         run: |
           set -o pipefail
-          ARGS="--limite ${{ inputs.limite || '400' }}"
+          ARGS="--limite ${{ inputs.limite || '1000' }}"
           if [ -n "${{ inputs.anio }}" ]; then ARGS="$ARGS --anio ${{ inputs.anio }}"; fi
-          if [ "${{ inputs.dry_run || 'si' }}" = "si" ]; then ARGS="$ARGS --dry-run"; fi
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            ARGS="$ARGS --no-dry-run"
+          elif [ "${{ inputs.dry_run || 'si' }}" = "si" ]; then
+            ARGS="$ARGS --dry-run"
+          fi
           python scripts/enriquecedor_fechas_v2.py $ARGS 2>&1 | tee enriquecimiento.log
 
-      - name: Verificar evidencia y aptitud de datos aprobados
+      - name: Procesar lote con verificación de alta confianza
+        if: ${{ github.event_name == 'schedule' || inputs.dry_run == 'no' }}
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
         run: |
           set -o pipefail
-          python scripts/verificador_evidencia.py --limite 1000 --strict 2>&1 | tee evidencia.log
+          python scripts/procesar_lote_seguro.py --apply --limite "${{ inputs.limite || '1000' }}" 2>&1 | tee lote_seguro.log
+
+      - name: Auditoría sin escritura
+        if: ${{ github.event_name != 'schedule' && inputs.dry_run != 'no' }}
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: |
+          set -o pipefail
+          python scripts/procesar_lote_seguro.py --limite "${{ inputs.limite || '1000' }}" 2>&1 | tee lote_seguro.log
 
       - name: Control de calidad final
         env:
@@ -75,24 +89,19 @@ jobs:
             echo "## EUCLIDIAN — Progreso y calidad"
             echo
             echo "### Ejecución"
-            echo "- Límite: ${{ inputs.limite || '400' }}"
+            echo "- Límite: ${{ inputs.limite || '1000' }}"
             echo "- Año: ${{ inputs.anio || 'más recientes primero' }}"
-            echo "- Modo simulación: ${{ inputs.dry_run || 'si' }}"
+            echo "- Evento: ${{ github.event_name }}"
+            echo "- Modo simulación: ${{ inputs.dry_run || 'automático en schedule' }}"
             echo
             echo "### Enriquecimiento"
             grep -E 'documentos seleccionados|RESUMEN_EUCLIDIAN|fecha_verificada|fecha_no_verificada|fecha_patron_sin_fecha_valida|fecha_sin_evidencia_en_pagina|enlace_404|error_red|error_guardado|actualizados' enriquecimiento.log || true
             echo
-            echo "### Evidencia"
-            cat evidencia.log || true
+            echo "### Lote seguro"
+            cat lote_seguro.log || true
             echo
             echo "### Control de calidad"
             cat calidad.log || true
-            echo
-            echo "### Enlaces 404"
-            grep 'ENLACE_404' enriquecimiento.log || echo "Ninguno"
-            echo
-            echo "### Documentos sin fecha verificable"
-            grep 'fecha=NO VERIFICADA' enriquecimiento.log | tail -50 || echo "Ninguno"
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Guardar informes de ejecución
@@ -102,8 +111,7 @@ jobs:
           name: euclidian-calidad-${{ github.run_number }}
           path: |
             enriquecimiento.log
-            evidencia.log
+            lote_seguro.log
             calidad.log
-            evidencia_euclidian.json
           if-no-files-found: warn
           retention-days: 30
