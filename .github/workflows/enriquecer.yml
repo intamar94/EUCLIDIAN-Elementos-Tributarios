@@ -54,21 +54,39 @@ jobs:
           if [ "${{ inputs.dry_run }}" = "si" ]; then ARGS="$ARGS --dry-run"; fi
           python scripts/enriquecedor_fechas_v2.py $ARGS 2>&1 | tee enriquecimiento.log
 
+      - name: Verificar evidencia y aptitud de datos aprobados
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: |
+          python scripts/verificador_evidencia.py --limite 1000 --strict | tee evidencia.log
+
+      - name: Control de calidad final
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: |
+          python scripts/control_calidad.py --enlaces 25 --estricto | tee calidad.log
+
       - name: Generar informe de progreso
         if: always()
         run: |
           {
-            echo "## EUCLIDIAN — Progreso del enriquecimiento"
+            echo "## EUCLIDIAN — Progreso y calidad"
             echo
             echo "### Ejecución"
             echo "- Límite: ${{ inputs.limite || '400' }}"
             echo "- Año: ${{ inputs.anio || 'más recientes primero' }}"
             echo "- Modo simulación: ${{ inputs.dry_run || 'no' }}"
             echo
-            echo "### Métricas"
-            echo '```text'
+            echo "### Enriquecimiento"
             grep -E 'documentos seleccionados|RESUMEN_EUCLIDIAN|fecha_verificada|fecha_no_verificada|fecha_patron_sin_fecha_valida|fecha_sin_evidencia_en_pagina|enlace_404|error_red|error_guardado|actualizados' enriquecimiento.log || true
-            echo '```'
+            echo
+            echo "### Evidencia"
+            cat evidencia.log || true
+            echo
+            echo "### Control de calidad"
+            cat calidad.log || true
             echo
             echo "### Enlaces 404"
             grep 'ENLACE_404' enriquecimiento.log || echo "Ninguno"
@@ -77,10 +95,15 @@ jobs:
             grep 'fecha=NO VERIFICADA' enriquecimiento.log | tail -50 || echo "Ninguno"
           } >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Guardar informe de ejecución
+      - name: Guardar informes de ejecución
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: euclidian-enriquecimiento-${{ github.run_number }}
-          path: enriquecimiento.log
+          name: euclidian-calidad-${{ github.run_number }}
+          path: |
+            enriquecimiento.log
+            evidencia.log
+            calidad.log
+            evidencia_euclidian.json
+          if-no-files-found: warn
           retention-days: 30
