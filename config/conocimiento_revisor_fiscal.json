@@ -1,0 +1,44 @@
+{
+  "version": "1.0",
+  "principio": "Reconocer variantes de expresión sin relajar la evidencia ni cambiar el significado jurídico.",
+  "comparacion": {
+    "equivalencia_sintactica": [
+      "debe presentar", "esta obligado a presentar", "se encuentra obligado a presentar", "tiene el deber de presentar",
+      "no esta obligado a", "no se encuentra obligado a", "no tiene el deber de", "no resulta exigible"
+    ],
+    "normalizacion": [
+      "fechas: aceptar formatos equivalentes y conservar el valor canónico",
+      "porcentajes: separar número y unidad antes de comparar",
+      "articulos: normalizar abreviaturas sin perder el número",
+      "numeros_norma: comparar tipo, número y año por separado"
+    ]
+  },
+  "diferencias_materiales": [
+    "sujeto afectado",
+    "impuesto o obligación",
+    "periodo",
+    "condición",
+    "excepción",
+    "cuantía o porcentaje",
+    "fecha de vigencia",
+    "alcance territorial",
+    "tipo de operación",
+    "norma o artículo aplicable"
+  ],
+  "criterios_contador": [
+    "qué cambió",
+    "a quién afecta",
+    "desde cuándo",
+    "qué debe revisar",
+    "qué debe hacer",
+    "qué excepción debe comprobar",
+    "qué riesgo existe",
+    "qué evidencia oficial lo demuestra"
+  ],
+  "decision": {
+    "approve": "Todos los campos críticos tienen evidencia suficiente y no existe diferencia material sin resolver.",
+    "review": "Existe una discrepancia corregible o una equivalencia que debe volver a evaluarse.",
+    "escalate": "Tras las iteraciones permitidas persiste una cuestión interpretativa que requiere revisión especializada.",
+    "never_block_pipeline": true
+  }
+}
