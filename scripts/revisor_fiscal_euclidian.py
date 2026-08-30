@@ -1,23 +1,16 @@
 """EUCLIDIAN Fiscal Reviewer.
 
-Last quality gate before approval. It never converts missing or uncertain
-source evidence into approval. A failed rule produces REVIEW and remains
-outside the high-confidence approval path.
+Last quality gate before approval. Missing/uncertain evidence always returns
+REVIEW. APPROVE is the only path that marks a document as approved for the
+next stage; REVIEW remains eligible for a later re-evaluation.
 """
 from __future__ import annotations
 import argparse
 import os
 from supabase import create_client
 
-RULES_VERSION = "2.2"
-
-# A document cannot reach APPROVE unless every substantive quality gate passes.
-# In particular, classification is critical because the reviewer must know
-# what information is actually useful to a contador/revisor fiscal.
-CRITICAL = {
-    "OFICIAL", "FECHA", "CONTENIDO", "VIGENCIA", "EVIDENCIA",
-    "CONFIANZA", "CLASIFICACION",
-}
+RULES_VERSION = "2.3"
+CRITICAL = {"OFICIAL", "FECHA", "CONTENIDO", "VIGENCIA", "EVIDENCIA", "CONFIANZA", "CLASIFICACION"}
 
 
 def evaluate(d):
@@ -35,25 +28,18 @@ def evaluate(d):
     classification = bool((d.get("materia") or d.get("area_derecho") or "").strip())
     confidence = (d.get("borrador_confianza") or "").strip().lower() == "alta"
     warnings = d.get("borrador_advertencias") or []
-
-    # Evidence is derived conservatively from the official DIAN source plus
-    # verified date, usable content and known validity state. Missing any
-    # component keeps the document in REVIEW.
     evidence = official and content and date_ok and validity
 
     rule("OFICIAL", official, "Falta enlace oficial DIAN.", True)
     rule("FECHA", date_ok, "Fecha no verificada.", True)
     rule("CONTENIDO", content, "No hay contenido suficiente.", True)
     rule("VIGENCIA", validity, "Estado de vigencia no determinado.", True)
-    rule("CLASIFICACION", classification,
-         "Clasificación/materia incompleta para el uso profesional.", True)
-    rule("EVIDENCIA", evidence,
-         "La evidencia trazable no reúne fuente oficial, contenido, fecha verificada y vigencia.", True)
+    rule("CLASIFICACION", classification, "Clasificación/materia incompleta para el uso profesional.", True)
+    rule("EVIDENCIA", evidence, "La evidencia trazable no reúne fuente oficial, contenido, fecha verificada y vigencia.", True)
     rule("CONFIANZA", confidence, "El borrador no tiene confianza alta.", True)
     rule("ADVERTENCIAS", not warnings, "Existen advertencias del borrador.", True)
 
-    unresolved_critical = any(code in CRITICAL for code in failed)
-    result = "APPROVE" if not unresolved_critical and not warnings else "REVIEW"
+    result = "APPROVE" if not any(code in CRITICAL for code in failed) and not warnings else "REVIEW"
     score = max(0, round(len(passed) / 8 * 100))
     return result, score, passed, failed, reasons
 
@@ -85,17 +71,16 @@ def main():
         result, score, passed, failed, reasons = evaluate(d)
         counts[result] += 1
         sb.table("revisor_fiscal_euclidian_evaluaciones").upsert(
-            {
-                "documento_id": d["id"],
-                "resultado": result,
-                "puntuacion": score,
-                "reglas_pasadas": passed,
-                "reglas_fallidas": failed,
-                "motivos": reasons,
-                "version_reglas": RULES_VERSION,
-            },
+            {"documento_id": d["id"], "resultado": result, "puntuacion": score,
+             "reglas_pasadas": passed, "reglas_fallidas": failed, "motivos": reasons,
+             "version_reglas": RULES_VERSION},
             on_conflict="documento_id",
         ).execute()
+
+        # Only a fully approved document leaves the pending queue. REVIEW is
+        # deliberately left pending so a later extraction/correction can retry.
+        if result == "APPROVE":
+            sb.table("documentos_tributarios").update({"aprobado_para_email": True}).eq("id", d["id"]).execute()
 
     print({"evaluated": len(rows), "counts": counts, "rules_version": RULES_VERSION})
 
