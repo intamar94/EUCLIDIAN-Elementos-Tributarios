@@ -1,0 +1,33 @@
+name: EUCLIDIAN — Tests Revisor Fiscal
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/revisor_fiscal_euclidian.py'
+      - 'tests/**'
+      - 'scripts/requirements.txt'
+      - '.github/workflows/revisor_fiscal_tests.yml'
+  pull_request:
+    paths:
+      - 'scripts/revisor_fiscal_euclidian.py'
+      - 'tests/**'
+      - 'scripts/requirements.txt'
+      - '.github/workflows/revisor_fiscal_tests.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - name: Instalar dependencias
+        run: pip install -r scripts/requirements.txt
+      - name: Ejecutar pruebas
+        run: python -m unittest discover -s tests -p 'test_*.py' -v
