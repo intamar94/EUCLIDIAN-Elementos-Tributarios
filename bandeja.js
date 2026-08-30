@@ -1,228 +1,43 @@
-/* EUCLIDIAN — navegacion de la bandeja.
- *
- * Estado, carga, paginacion, filtros y decisiones. El armado visual de
- * cada ficha esta en fichas.js, que se carga antes.
+/* EUCLIDIAN — navegación de la bandeja del cliente.
+ * El cliente consulta únicamente información ya verificada/publicada.
+ * El estado interno de revisión no forma parte de esta interfaz.
  */
 let CLAVE = sessionStorage.getItem('euclidian_clave') || '';
-/* El cliente trabaja sobre una colección única de información ya aprobada. */
-const F = { estado:'aprobados', prioridad:'', naturaleza:'',
-            tema:'', orden:'recientes', pagina:1 };
+const F = { estado:'aprobados', prioridad:'', naturaleza:'', tema:'', orden:'recientes', pagina:1 };
 
-function entrar(e){
-  e.preventDefault();
-  CLAVE = document.getElementById('clave').value;
-  sessionStorage.setItem('euclidian_clave', CLAVE);
-  cargar();
-}
+function entrar(e){e.preventDefault();CLAVE=document.getElementById('clave').value;sessionStorage.setItem('euclidian_clave',CLAVE);cargar();}
 
-/* ═══════════ editor interno ═══════════ */
-function contar(id){
-  const t = document.getElementById('r-'+id), c = document.getElementById('c-'+id);
-  if(!t||!c) return;
-  const n = t.value.trim().length;
-  c.textContent = n ? n+' / 320' : '0';
-  c.className = 'contador' + (n>320 ? ' largo' : '');
-}
-function usarBorrador(id){
-  const t = document.getElementById('r-'+id);
-  const b = document.querySelector(`article[data-id="${id}"] .borrador p`);
-  if(!t||!b) return;
-  t.value = b.textContent.trim(); contar(id); t.focus();
-}
-async function guardarResumen(id){
-  const t = document.getElementById('r-'+id);
-  if(!t) return;
-  const valor = t.value.trim();
-  if (t.dataset.guardado === valor) return;
-  try{
-    const r = await fetch('/api/decidir',{method:'POST',
-      headers:{'Content-Type':'application/json','x-clave':CLAVE},
-      body: JSON.stringify({id, decision:'devolver', resumen:valor})});
-    if(!r.ok) throw new Error('no se guardó');
-    t.dataset.guardado = valor; t.style.borderColor='';
-    const art = t.closest('article');
-    if(art) art.classList.toggle('escrito', !!valor);
-  }catch(e){ t.style.borderColor='var(--regla)'; }
-}
-
-/* ═══════════ carga ═══════════ */
 async function cargar(){
-  const lista = document.getElementById('lista');
-  const btn = document.getElementById('btnRecargar');
-  if(btn) btn.disabled = true;
-  lista.innerHTML = '<div class="aviso">Leyendo información verificada…</div>';
-  document.getElementById('paginas').innerHTML = '';
+  const lista=document.getElementById('lista'),btn=document.getElementById('btnRecargar');
+  if(btn)btn.disabled=true;
+  lista.innerHTML='<div class="aviso"><b>Cargando información</b><span>Consultando la información verificada…</span></div>';
+  document.getElementById('paginas').innerHTML='';
   try{
-    const q = new URLSearchParams({estado:F.estado, orden:F.orden, pagina:F.pagina});
-    if(F.tema) q.set('tema', F.tema);
-    if(F.prioridad) q.set('prioridad', F.prioridad);
-    if(F.naturaleza) q.set('naturaleza', F.naturaleza);
-
-    const r = await fetch('/api/documentos?'+q, {headers:{'x-clave':CLAVE}});
-    if (r.status === 401){
-      sessionStorage.removeItem('euclidian_clave');
-      document.getElementById('puerta').hidden = false;
-      document.getElementById('mal').textContent = 'Clave incorrecta.';
-      lista.innerHTML=''; return;
-    }
-    const data = await r.json();
-    if (!r.ok) throw new Error(data.detalle || data.error);
-
-    document.getElementById('puerta').hidden = true;
-    document.getElementById('mal').textContent = '';
-    document.getElementById('cab').hidden = false;
-    document.getElementById('controles').hidden = false;
-    document.getElementById('nPend').textContent = data.pendientes;
-    document.getElementById('nApr').textContent = data.aprobados;
-
-    pintar('gPrioridad', data.prioridad || {});
-    pintar('gNaturaleza', data.naturaleza || {});
-    pintar('gEstado', data.estado || {});
-    marcarActivos();
-    poblarTemas(data.temas || []);
-
-    const s = document.getElementById('sello');
-    if (s && data.actualizado){
-      const f = new Date(data.actualizado);
-      s.textContent = 'Información actualizada el ' + f.toLocaleDateString('es-CO',{day:'numeric',month:'long'}) +
-        ', ' + f.toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'});
-    }
-
-    if (!data.documentos.length){
-      lista.innerHTML = F.estado==='aprobados'
-        ? '<div class="aviso"><b>No hay resultados con estos filtros.</b><span>Prueba con otro criterio de búsqueda.</span></div>'
-        : '<div class="aviso"><b>No hay resultados con estos filtros.</b><span>Prueba con otro criterio de búsqueda.</span></div>';
-      return;
-    }
-    lista.innerHTML = data.documentos.map(ficha).join('');
-    paginacion(data);
-    window.scrollTo({top:0, behavior:'smooth'});
-  }catch(e){
-    lista.innerHTML = `<div class="error">No se pudo leer la información.<code>${esc(e.message)}</code></div>`;
-  }finally{
-    if(btn) btn.disabled = false;
-  }
+    const q=new URLSearchParams({estado:'aprobados',orden:F.orden,pagina:F.pagina});
+    if(F.tema)q.set('tema',F.tema);
+    if(F.prioridad)q.set('prioridad',F.prioridad);
+    if(F.naturaleza)q.set('naturaleza',F.naturaleza);
+    const r=await fetch('/api/documentos?'+q,{headers:{'x-clave':CLAVE}});
+    if(r.status===401){sessionStorage.removeItem('euclidian_clave');document.getElementById('puerta').hidden=false;document.getElementById('mal').textContent='No se pudo validar el acceso.';lista.innerHTML='';return;}
+    const data=await r.json();if(!r.ok)throw new Error(data.detalle||data.error);
+    document.getElementById('puerta').hidden=true;document.getElementById('mal').textContent='';document.getElementById('cab').hidden=false;document.getElementById('controles').hidden=false;
+    pintar('gPrioridad',data.prioridad||{});pintar('gNaturaleza',data.naturaleza||{});marcarActivos();poblarTemas(data.temas||[]);
+    const s=document.getElementById('sello');if(s&&data.actualizado){const f=new Date(data.actualizado);s.textContent='Información actualizada el '+f.toLocaleDateString('es-CO',{day:'numeric',month:'long'})+', '+f.toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'});}
+    if(!data.documentos.length){lista.innerHTML='<div class="aviso"><b>No hay resultados con estos filtros.</b><span>Prueba con otro criterio de búsqueda.</span></div>';return;}
+    lista.innerHTML=data.documentos.map(ficha).join('');paginacion(data);window.scrollTo({top:0,behavior:'smooth'});
+  }catch(e){lista.innerHTML='<div class="error"><b>No se pudo cargar la información.</b><span>Inténtalo de nuevo en unos momentos.</span></div>';}
+  finally{if(btn)btn.disabled=false;}
 }
-
-function pintar(grupo, conteos){
-  document.querySelectorAll('#'+grupo+' button').forEach(b=>{
-    const marca = b.querySelector('b');
-    if(marca){
-      const n = conteos[b.dataset.v];
-      marca.textContent = (n===undefined ? '' : n);
-    }
-  });
-}
-
-function poblarTemas(temas){
-  const sel = document.getElementById('selTema');
-  const actual = sel.value;
-  const orden = [...temas].sort((a,b)=>nombreTema(a).localeCompare(nombreTema(b),'es'));
-  sel.innerHTML = '<option value="">Todos los temas</option>' +
-    orden.map(t=>`<option value="${t}">${nombreTema(t)}</option>`).join('');
-  sel.value = actual;
-}
-
-function paginacion(data){
-  const cont = document.getElementById('paginas');
-  const {pagina, paginas, total, porPagina} = data;
-  if (total === 0){ cont.innerHTML=''; return; }
-
-  const primero = (pagina-1)*porPagina + 1;
-  const ultimo = Math.min(pagina*porPagina, total);
-  let html = `<div class="rango">${primero}–${ultimo} de ${total}</div>`;
-
-  if (paginas > 1){
-    html += `<button onclick="irA(${pagina-1})" ${pagina<=1?'disabled':''}>‹</button>`;
-    const nums = new Set([1, paginas, pagina, pagina-1, pagina+1]);
-    const orden = [...nums].filter(n=>n>=1 && n<=paginas).sort((a,b)=>a-b);
-    let previo = 0;
-    orden.forEach(n=>{
-      if (n - previo > 1) html += `<span style="color:var(--tenue)">…</span>`;
-      html += `<button onclick="irA(${n})" aria-current="${n===pagina}">${n}</button>`;
-      previo = n;
-    });
-    html += `<button onclick="irA(${pagina+1})" ${pagina>=paginas?'disabled':''}>›</button>`;
-  }
-  cont.innerHTML = html;
-}
-function irA(n){ F.pagina = n; cargar(); }
-
-/* ═══════════ decisiones internas ═══════════ */
-async function decidir(id, decision){
-  const art = document.querySelector(`article[data-id="${id}"]`);
-  const t = document.getElementById('r-'+id);
-  const resumen = t ? t.value.trim() : undefined;
-  if (art) art.style.opacity = '.4';
-  try{
-    const r = await fetch('/api/decidir',{method:'POST',
-      headers:{'Content-Type':'application/json','x-clave':CLAVE},
-      body: JSON.stringify({id, decision, resumen})});
-    if (!r.ok){
-      const d = await r.json();
-      throw new Error(d.detalle || d.error || 'falló');
-    }
-    if (art) art.remove();
-    const n = document.getElementById('nPend');
-    n.textContent = Math.max(0, (+n.textContent||0) - 1);
-    if (decision==='aprobar'){
-      const a = document.getElementById('nApr');
-      a.textContent = (+a.textContent||0) + 1;
-    }
-    if (!document.querySelector('article')) cargar();
-  }catch(e){
-    if (art){
-      art.style.opacity='1';
-      art.insertAdjacentHTML('beforeend',
-        `<div class="error" style="margin-top:10px">No se guardó la decisión.<code>${esc(e.message)}</code></div>`);
-    }
-  }
-}
-
-/* ═══════════ controles ═══════════ */
-function marcarActivos(){
-  const n = [
-    F.prioridad, F.naturaleza, F.tema,
-    F.estado !== 'aprobados' ? F.estado : '',
-    F.orden !== 'recientes' ? F.orden : '',
-  ].filter(Boolean).length;
-  const marca = document.getElementById('activos');
-  if (marca) marca.textContent = n ? n : '';
-  const btn = document.getElementById('btnLimpiar');
-  if (btn) btn.hidden = n === 0;
-}
-
-function limpiar(){
-  F.prioridad = ''; F.naturaleza = ''; F.tema = '';
-  F.estado = 'aprobados'; F.orden = 'recientes'; F.pagina = 1;
-  document.getElementById('selTema').value = '';
-  document.getElementById('selOrden').value = 'recientes';
-  ['gPrioridad','gNaturaleza','gEstado'].forEach(g=>{
-    document.querySelectorAll('#'+g+' button').forEach((b,i)=>
-      b.setAttribute('aria-pressed', String(i === 0)));
-  });
-  cargar();
-}
-
-function grupoClic(grupo, campo){
-  document.getElementById(grupo).addEventListener('click', e=>{
-    const b = e.target.closest('button'); if(!b) return;
-    F[campo] = b.dataset.v;
-    F.pagina = 1;
-    document.querySelectorAll('#'+grupo+' button').forEach(x=>
-      x.setAttribute('aria-pressed', String(x===b)));
-    cargar();
-  });
-}
-grupoClic('gPrioridad','prioridad');
-grupoClic('gNaturaleza','naturaleza');
-grupoClic('gEstado','estado');
-
-document.getElementById('selTema').addEventListener('change', e=>{
-  F.tema = e.target.value; F.pagina = 1; cargar();
-});
-document.getElementById('selOrden').addEventListener('change', e=>{
-  F.orden = e.target.value; F.pagina = 1; cargar();
-});
-
-if (CLAVE) cargar(); else document.getElementById('puerta').hidden = false;
+function pintar(grupo,conteos){document.querySelectorAll('#'+grupo+' button').forEach(b=>{const marca=b.querySelector('b');if(marca){const n=conteos[b.dataset.v];marca.textContent=n===undefined?'':n;}});}
+function poblarTemas(temas){const sel=document.getElementById('selTema'),actual=sel.value,orden=[...temas].sort((a,b)=>nombreTema(a).localeCompare(nombreTema(b),'es'));sel.innerHTML='<option value="">Todos los temas</option>'+orden.map(t=>`<option value="${t}">${nombreTema(t)}</option>`).join('');sel.value=actual;}
+function paginacion(data){const cont=document.getElementById('paginas'),{pagina,paginas,total,porPagina}=data;if(!total){cont.innerHTML='';return;}const primero=(pagina-1)*porPagina+1,ultimo=Math.min(pagina*porPagina,total);let html=`<div class="rango">${primero}–${ultimo} de ${total}</div>`;if(paginas>1){html+=`<button onclick="irA(${pagina-1})" ${pagina<=1?'disabled':''}>‹</button>`;const nums=new Set([1,paginas,pagina,pagina-1,pagina+1]);const orden=[...nums].filter(n=>n>=1&&n<=paginas).sort((a,b)=>a-b);let previo=0;orden.forEach(n=>{if(n-previo>1)html+='<span aria-hidden="true">…</span>';html+=`<button onclick="irA(${n})" aria-current="${n===pagina}">${n}</button>`;previo=n;});html+=`<button onclick="irA(${pagina+1})" ${pagina>=paginas?'disabled':''}>›</button>`;}cont.innerHTML=html;}
+function irA(n){if(n<1)return;F.pagina=n;cargar();}
+function marcarActivos(){const n=[F.prioridad,F.naturaleza,F.tema,F.orden!=='recientes'?F.orden:''].filter(Boolean).length;const marca=document.getElementById('activos');if(marca)marca.textContent=n?' · '+n+' filtro'+(n===1?'':'s'):'';const btn=document.getElementById('btnLimpiar');if(btn)btn.hidden=n===0;}
+function limpiar(){F.prioridad='';F.naturaleza='';F.tema='';F.orden='recientes';F.pagina=1;document.getElementById('selTema').value='';document.getElementById('selOrden').value='recientes';document.querySelectorAll('#gPrioridad button,#gNaturaleza button').forEach((b,i)=>b.setAttribute('aria-pressed',String(i===0)));cargar();}
+function grupoClic(grupo,campo){document.getElementById(grupo).addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;F[campo]=b.dataset.v;F.pagina=1;document.querySelectorAll('#'+grupo+' button').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));cargar();});}
+grupoclic('gPrioridad','prioridad');
+function grupoclic(grupo,campo){grupoClic(grupo,campo);}
+grupoclic('gNaturaleza','naturaleza');
+document.getElementById('selTema').addEventListener('change',e=>{F.tema=e.target.value;F.pagina=1;cargar();});
+document.getElementById('selOrden').addEventListener('change',e=>{F.orden=e.target.value;F.pagina=1;cargar();});
+if(CLAVE)cargar();else document.getElementById('puerta').hidden=false;
