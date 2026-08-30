@@ -69,6 +69,11 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
         run: python scripts/reparar_fechas_oficiales.py
+      - name: Poner en cuarentena fechas futuras
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python scripts/quarantine_future_dates.py
       - name: Auditar universo documental
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
