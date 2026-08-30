@@ -9,8 +9,15 @@ import argparse
 import os
 from supabase import create_client
 
-RULES_VERSION = "2.1"
-CRITICAL = {"OFICIAL", "FECHA", "CONTENIDO", "VIGENCIA", "EVIDENCIA", "CONFIANZA"}
+RULES_VERSION = "2.2"
+
+# A document cannot reach APPROVE unless every substantive quality gate passes.
+# In particular, classification is critical because the reviewer must know
+# what information is actually useful to a contador/revisor fiscal.
+CRITICAL = {
+    "OFICIAL", "FECHA", "CONTENIDO", "VIGENCIA", "EVIDENCIA",
+    "CONFIANZA", "CLASIFICACION",
+}
 
 
 def evaluate(d):
@@ -29,19 +36,19 @@ def evaluate(d):
     confidence = (d.get("borrador_confianza") or "").strip().lower() == "alta"
     warnings = d.get("borrador_advertencias") or []
 
-    # The live schema does not contain the previously referenced
-    # evidencia/evidencias/fuentes_formales columns. Evidence is therefore
-    # derived conservatively from the official DIAN source plus verified
-    # date, usable content and known validity state. Missing any component
-    # keeps the document in REVIEW.
+    # Evidence is derived conservatively from the official DIAN source plus
+    # verified date, usable content and known validity state. Missing any
+    # component keeps the document in REVIEW.
     evidence = official and content and date_ok and validity
 
     rule("OFICIAL", official, "Falta enlace oficial DIAN.", True)
     rule("FECHA", date_ok, "Fecha no verificada.", True)
     rule("CONTENIDO", content, "No hay contenido suficiente.", True)
     rule("VIGENCIA", validity, "Estado de vigencia no determinado.", True)
-    rule("CLASIFICACION", classification, "Clasificación/materia incompleta.")
-    rule("EVIDENCIA", evidence, "La evidencia trazable no reúne fuente oficial, contenido, fecha verificada y vigencia.", True)
+    rule("CLASIFICACION", classification,
+         "Clasificación/materia incompleta para el uso profesional.", True)
+    rule("EVIDENCIA", evidence,
+         "La evidencia trazable no reúne fuente oficial, contenido, fecha verificada y vigencia.", True)
     rule("CONFIANZA", confidence, "El borrador no tiene confianza alta.", True)
     rule("ADVERTENCIAS", not warnings, "Existen advertencias del borrador.", True)
 
@@ -55,6 +62,8 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--limit", type=int, default=500)
     args = ap.parse_args()
+    if args.limit < 1 or args.limit > 500:
+        raise SystemExit("--limit debe estar entre 1 y 500")
 
     url = os.environ.get("SUPABASE_URL")
     key = os.environ.get("SUPABASE_SERVICE_KEY")
@@ -66,6 +75,7 @@ def main():
         sb.table("documentos_tributarios")
         .select("id,enlace_oficial,fecha_es_real,contenido,estado_vigencia,materia,area_derecho,borrador_advertencias,borrador_confianza")
         .eq("aprobado_para_email", False)
+        .order("id", desc=False)
         .limit(args.limit)
         .execute().data or []
     )
