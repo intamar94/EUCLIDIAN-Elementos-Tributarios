@@ -28,6 +28,8 @@ jobs:
           python-version: '3.11'
       - name: Instalar dependencias
         run: pip install -r scripts/requirements.txt
+      - name: Pruebas del revisor fiscal
+        run: python -m unittest discover -s tests -p 'test_*.py' -v
       - name: Ejecutar revisión fiscal
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
