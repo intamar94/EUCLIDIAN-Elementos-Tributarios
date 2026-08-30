@@ -74,15 +74,18 @@ def main():
     for d in rows:
         result, score, passed, failed, reasons = evaluate(d)
         counts[result] += 1
-        sb.table("revisor_fiscal_euclidian_evaluaciones").upsert({
-            "documento_id": d["id"],
-            "resultado": result,
-            "puntuacion": score,
-            "reglas_pasadas": passed,
-            "reglas_fallidas": failed,
-            "motivos": reasons,
-            "version_reglas": RULES_VERSION,
-        }).execute()
+        sb.table("revisor_fiscal_euclidian_evaluaciones").upsert(
+            {
+                "documento_id": d["id"],
+                "resultado": result,
+                "puntuacion": score,
+                "reglas_pasadas": passed,
+                "reglas_fallidas": failed,
+                "motivos": reasons,
+                "version_reglas": RULES_VERSION,
+            },
+            on_conflict="documento_id",
+        ).execute()
 
     print({"evaluated": len(rows), "counts": counts, "rules_version": RULES_VERSION})
 
