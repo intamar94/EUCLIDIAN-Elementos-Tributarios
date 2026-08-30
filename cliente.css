@@ -1,0 +1,25 @@
+/* EUCLIDIAN — capa visual de cliente
+   La aplicación muestra información ya verificada. Los controles internos
+   de revisión permanecen fuera de la experiencia del contador. */
+:root{--cliente-fondo:#f5f3ed;--cliente-superficie:#fffdf8;--cliente-texto:#20231f;--cliente-suave:#6f746a;--cliente-linea:#ddd9cf;--cliente-acento:#a83a30;--cliente-verde:#4f6652}
+body{background:var(--cliente-fondo);color:var(--cliente-texto)}
+#cab .cifras{display:none!important}
+#cab .marco.cab{grid-template-columns:1fr auto!important}
+#controles .tiras# gPrioridad{display:none}
+#controles #gEstado{display:none!important}
+#controles .eje:has(#gEstado){display:none!important}
+#controles{margin-top:8px}
+#controles .mas summary{font-size:13px;letter-spacing:.04em;color:var(--cliente-suave)}
+#controles .tiras button{border-radius:999px}
+#lista{padding-top:18px}
+#lista article{background:var(--cliente-superficie);border:1px solid var(--cliente-linea);border-radius:16px;box-shadow:0 6px 24px rgba(38,35,28,.05);transition:box-shadow .18s,transform .18s}
+#lista article:hover{box-shadow:0 10px 30px rgba(38,35,28,.08);transform:translateY(-1px)}
+#lista .cinta{letter-spacing:.06em}
+#lista .codigo{font-weight:600}
+#lista .materia{font-weight:600}
+#lista .borrador,.editor,.decision,.decisiones,.revisor,.revision-interna,[data-interno="true"]{display:none!important}
+#lista .fuente a,#lista a[href]{text-underline-offset:3px}
+.aviso{max-width:760px;margin:48px auto;text-align:center;padding:40px 24px;background:var(--cliente-superficie);border:1px solid var(--cliente-linea);border-radius:16px}
+.aviso b{display:block;font-size:20px;margin-bottom:8px}
+.aviso span{display:block;color:var(--cliente-suave)}
+@media(max-width:700px){#cab .marco.cab{display:flex!important;align-items:center;justify-content:space-between;gap:14px}.recargar{padding:9px 12px}.controles{padding-inline:14px}#lista{padding-inline:14px}.mas .panel{padding-inline:4px}}
