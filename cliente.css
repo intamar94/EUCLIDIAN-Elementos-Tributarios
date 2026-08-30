@@ -1,22 +1,20 @@
-/* EUCLIDIAN — capa visual de cliente
-   La aplicación muestra información ya verificada. Los controles internos
-   de revisión permanecen fuera de la experiencia del contador. */
-:root{--cliente-fondo:#f5f3ed;--cliente-superficie:#fffdf8;--cliente-texto:#20231f;--cliente-suave:#6f746a;--cliente-linea:#ddd9cf;--cliente-acento:#a83a30;--cliente-verde:#4f6652}
+/* EUCLIDIAN — capa visual del cliente.
+   El cliente recibe únicamente información ya revisada y publicada. */
+:root{--cliente-fondo:#f5f3ed;--cliente-superficie:#fffdf8;--cliente-texto:#20231f;--cliente-suave:#6f746a;--cliente-linea:#ddd9cf;--cliente-acento:#8f3029;--cliente-verde:#4f6652}
 body{background:var(--cliente-fondo);color:var(--cliente-texto)}
 #cab .cifras{display:none!important}
 #cab .marco.cab{grid-template-columns:1fr auto!important}
-#controles .tiras# gPrioridad{display:none}
-#controles #gEstado{display:none!important}
-#controles .eje:has(#gEstado){display:none!important}
+#controles #gEstado,.eje:has(#gEstado),#controles .pri-accion{display:none!important}
 #controles{margin-top:8px}
 #controles .mas summary{font-size:13px;letter-spacing:.04em;color:var(--cliente-suave)}
 #controles .tiras button{border-radius:999px}
 #lista{padding-top:18px}
 #lista article{background:var(--cliente-superficie);border:1px solid var(--cliente-linea);border-radius:16px;box-shadow:0 6px 24px rgba(38,35,28,.05);transition:box-shadow .18s,transform .18s}
 #lista article:hover{box-shadow:0 10px 30px rgba(38,35,28,.08);transform:translateY(-1px)}
-#lista .cinta{letter-spacing:.06em}
+#lista .cinta{letter-spacing:.04em}
 #lista .codigo{font-weight:600}
 #lista .materia{font-weight:600}
+/* Todo control propio del back-office permanece fuera de la vista del cliente. */
 #lista .borrador,.editor,.decision,.decisiones,.revisor,.revision-interna,[data-interno="true"]{display:none!important}
 #lista .fuente a,#lista a[href]{text-underline-offset:3px}
 .aviso{max-width:760px;margin:48px auto;text-align:center;padding:40px 24px;background:var(--cliente-superficie);border:1px solid var(--cliente-linea);border-radius:16px}
