@@ -4,8 +4,8 @@
  * cada ficha esta en fichas.js, que se carga antes.
  */
 let CLAVE = sessionStorage.getItem('euclidian_clave') || '';
-/* Tres ejes que se combinan libremente, mas tema y orden. */
-const F = { estado:'pendientes', prioridad:'', naturaleza:'',
+/* El cliente trabaja sobre una colección única de información ya aprobada. */
+const F = { estado:'aprobados', prioridad:'', naturaleza:'',
             tema:'', orden:'recientes', pagina:1 };
 
 function entrar(e){
@@ -15,7 +15,7 @@ function entrar(e){
   cargar();
 }
 
-/* ═══════════ editor ═══════════ */
+/* ═══════════ editor interno ═══════════ */
 function contar(id){
   const t = document.getElementById('r-'+id), c = document.getElementById('c-'+id);
   if(!t||!c) return;
@@ -50,7 +50,7 @@ async function cargar(){
   const lista = document.getElementById('lista');
   const btn = document.getElementById('btnRecargar');
   if(btn) btn.disabled = true;
-  lista.innerHTML = '<div class="aviso">Leyendo…</div>';
+  lista.innerHTML = '<div class="aviso">Leyendo información verificada…</div>';
   document.getElementById('paginas').innerHTML = '';
   try{
     const q = new URLSearchParams({estado:F.estado, orden:F.orden, pagina:F.pagina});
@@ -84,21 +84,21 @@ async function cargar(){
     const s = document.getElementById('sello');
     if (s && data.actualizado){
       const f = new Date(data.actualizado);
-      s.textContent = 'Datos al ' + f.toLocaleDateString('es-CO',{day:'numeric',month:'long'}) +
+      s.textContent = 'Información actualizada el ' + f.toLocaleDateString('es-CO',{day:'numeric',month:'long'}) +
         ', ' + f.toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'});
     }
 
     if (!data.documentos.length){
       lista.innerHTML = F.estado==='aprobados'
-        ? '<div class="aviso"><b>Nada aprobado aún</b>Aprueba documentos y aparecerán aquí.</div>'
-        : '<div class="aviso"><b>Nada por aquí</b>Prueba con otro filtro, o vuelve cuando el scraper traiga cambios nuevos.</div>';
+        ? '<div class="aviso"><b>No hay resultados con estos filtros.</b><span>Prueba con otro criterio de búsqueda.</span></div>'
+        : '<div class="aviso"><b>No hay resultados con estos filtros.</b><span>Prueba con otro criterio de búsqueda.</span></div>';
       return;
     }
     lista.innerHTML = data.documentos.map(ficha).join('');
     paginacion(data);
     window.scrollTo({top:0, behavior:'smooth'});
   }catch(e){
-    lista.innerHTML = `<div class="error">No se pudo leer la base.<code>${esc(e.message)}</code></div>`;
+    lista.innerHTML = `<div class="error">No se pudo leer la información.<code>${esc(e.message)}</code></div>`;
   }finally{
     if(btn) btn.disabled = false;
   }
@@ -114,8 +114,6 @@ function pintar(grupo, conteos){
   });
 }
 
-/* Los temas vienen del servidor y cubren la seleccion completa, no solo
-   la pagina visible: asi el selector no cambia de opciones al avanzar. */
 function poblarTemas(temas){
   const sel = document.getElementById('selTema');
   const actual = sel.value;
@@ -125,8 +123,6 @@ function poblarTemas(temas){
   sel.value = actual;
 }
 
-/* Antes se traian 60 documentos sin decir que habia mas. Quien llegaba
-   al final creia haberlo visto todo. */
 function paginacion(data){
   const cont = document.getElementById('paginas');
   const {pagina, paginas, total, porPagina} = data;
@@ -152,7 +148,7 @@ function paginacion(data){
 }
 function irA(n){ F.pagina = n; cargar(); }
 
-/* ═══════════ decisiones ═══════════ */
+/* ═══════════ decisiones internas ═══════════ */
 async function decidir(id, decision){
   const art = document.querySelector(`article[data-id="${id}"]`);
   const t = document.getElementById('r-'+id);
@@ -184,13 +180,10 @@ async function decidir(id, decision){
 }
 
 /* ═══════════ controles ═══════════ */
-/* Cuantos filtros hay puestos, y como quitarlos. Sin esto es facil
-   quedarse mirando una lista corta sin recordar que hay un tema
-   seleccionado dentro del panel. */
 function marcarActivos(){
   const n = [
     F.prioridad, F.naturaleza, F.tema,
-    F.estado !== 'pendientes' ? F.estado : '',
+    F.estado !== 'aprobados' ? F.estado : '',
     F.orden !== 'recientes' ? F.orden : '',
   ].filter(Boolean).length;
   const marca = document.getElementById('activos');
@@ -201,7 +194,7 @@ function marcarActivos(){
 
 function limpiar(){
   F.prioridad = ''; F.naturaleza = ''; F.tema = '';
-  F.estado = 'pendientes'; F.orden = 'recientes'; F.pagina = 1;
+  F.estado = 'aprobados'; F.orden = 'recientes'; F.pagina = 1;
   document.getElementById('selTema').value = '';
   document.getElementById('selOrden').value = 'recientes';
   ['gPrioridad','gNaturaleza','gEstado'].forEach(g=>{
