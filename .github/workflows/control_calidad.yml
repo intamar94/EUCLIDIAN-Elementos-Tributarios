@@ -14,7 +14,7 @@ on:
         required: false
         default: '1000'
       aplicar:
-        description: 'Escribir aprobaciones/bloqueos en Supabase'
+        description: 'Escribir decisiones de aprobación/revisión en Supabase'
         required: false
         type: boolean
         default: false
@@ -52,13 +52,23 @@ jobs:
         run: |
           cd scripts
           python test_verificador_aprobacion_v2.py
+      - name: Verificar normalizador y cola resiliente
+        run: |
+          cd scripts
+          python test_normalizador_juridico.py
+          python test_cola_reprocesamiento.py
       - name: Verificar las dos fuentes oficiales DIAN
         run: python scripts/validar_fuentes_dian.py
-      - name: Reparar dato con evidencia oficial DIAN
+      - name: Reparar dato oficial conocido
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
         run: python scripts/reparar_dato_oficial.py
+      - name: Reparar fechas sospechosas con evidencia DIAN
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python scripts/reparar_fechas_oficiales.py
       - name: Auditar universo documental
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
