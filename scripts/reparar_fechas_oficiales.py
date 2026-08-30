@@ -1,8 +1,8 @@
 """EUCLIDIAN — reparación segura de fechas con evidencia DIAN.
 
 Solo corrige fechas sospechosas cuando la página oficial enlazada contiene
-una única fecha de documento inequívoca y el encabezado coincide con el
-identificador almacenado. Nunca inventa fechas ni usa fuentes externas.
+una única fecha de documento inequívoca y el identificador coincide con la
+página. Nunca inventa fechas ni usa fuentes externas.
 """
 import logging, os, re
 from datetime import date
@@ -32,17 +32,16 @@ def text_of(session, url):
 
 
 def expected_year(identifier):
-    m = re.search(r"(?:19|20)\d{2}(?!.*(?:19|20)\d{2})", identifier or "")
-    return int(m.group()) if m else None
+    years = re.findall(r"(?:19|20)\d{2}", identifier or "")
+    return int(years[-1]) if years else None
 
 
 def candidates(text, year):
     if not year: return []
     months = "|".join(MESES)
     patterns = [
-        rf"\b(?:19|20){year % 100:02d}\b\s*\(?\s*({months})\s+(\d{{1,2}})\s*\)?",
-        rf"\b(?:19|20){year % 100:02d}\b[^.(){{0,100}}]*\((?:{months})\s+\d{{1,2}}\)",
-        rf"\((\w+)\s+(\d{{1,2}})\)\s+(?:Diario Oficial|Ministerio|Direcci[oó]n|Por el cual|Por la cual)",
+        rf"\b{year}\b\s*\(?\s*({months})\s+(\d{{1,2}})\s*\)?",
+        rf"\((\w+)\s+(\d{{1,2}})\)\s+(?:diario oficial|ministerio|direcci[oó]n|por el cual|por la cual)",
         rf"\b(\d{{1,2}})\s+de\s+({months})\s+de\s+{year}\b",
     ]
     out = set()
@@ -63,7 +62,7 @@ def main():
     db = create_client(url, key)
     session = requests.Session()
     rows = (db.table("documentos_tributarios")
-              .select("id,numero_resolucion,fecha_publicacion,fecha_es_real,enlace_oficial,aprobado_para_email")
+              .select("id,numero_resolucion,fecha_publicacion,fecha_es_real,enlace_oficial")
               .not_.is_("enlace_oficial", "null").execute().data or [])
     reparados = 0
     for row in rows:
@@ -71,17 +70,15 @@ def main():
         suspicious = (not row.get("fecha_es_real") or current > date.today().isoformat())
         if not suspicious: continue
         try:
-            text, final = text_of(session, row["enlace_oficial"])
+            text, _ = text_of(session, row["enlace_oficial"])
             year = expected_year(row.get("numero_resolucion") or "")
             found = candidates(text, year)
             if len(found) != 1:
                 log.warning("SIN_REPARACION %s: candidatos=%s", row.get("numero_resolucion"), found)
                 continue
             new_date = found[0]
-            payload = {"fecha_publicacion": new_date, "fecha_es_real": True}
-            result = (db.table("documentos_tributarios").update(payload)
-                      .eq("id", row["id"]).eq("numero_resolucion", row["numero_resolucion"])
-                      .execute())
+            result = (db.table("documentos_tributarios").update({"fecha_publicacion": new_date, "fecha_es_real": True})
+                      .eq("id", row["id"]).eq("numero_resolucion", row["numero_resolucion"]).execute())
             if result.data:
                 reparados += 1
                 log.info("REPARADO %s: %s -> %s", row["numero_resolucion"], current, new_date)
