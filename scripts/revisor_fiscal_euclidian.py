@@ -1,17 +1,16 @@
 """EUCLIDIAN Fiscal Reviewer.
 
-This is the last quality gate before approval. It NEVER blocks the
-pipeline: a failed rule produces REVIEW, records the exact reason and
-returns the document to the correction/reprocessing queue. Approval is
-possible only when all critical evidence rules pass and the fiscal review
-has no unresolved warnings.
+Last quality gate before approval. It never converts missing or uncertain
+source evidence into approval. A failed rule produces REVIEW and remains
+outside the high-confidence approval path.
 """
 from __future__ import annotations
-import argparse, os
+import argparse
+import os
 from supabase import create_client
 
-RULES_VERSION = "2.0"
-CRITICAL = {"OFICIAL", "FECHA", "CONTENIDO", "VIGENCIA", "EVIDENCIA"}
+RULES_VERSION = "2.1"
+CRITICAL = {"OFICIAL", "FECHA", "CONTENIDO", "VIGENCIA", "EVIDENCIA", "CONFIANZA"}
 
 
 def evaluate(d):
@@ -23,24 +22,32 @@ def evaluate(d):
             reasons.append(("CRITICAL: " if critical else "") + reason)
 
     official = bool((d.get("enlace_oficial") or "").strip())
-    content = bool((d.get("texto_completo") or d.get("contenido") or "").strip())
+    content = bool((d.get("contenido") or "").strip())
     date_ok = d.get("fecha_es_real") is True
     validity = bool((d.get("estado_vigencia") or "").strip())
-    classification = bool((d.get("clasificacion_obligatoriedad") or d.get("materia") or d.get("area_derecho") or "").strip())
-    evidence = bool(d.get("evidencia") or d.get("evidencias") or d.get("fuentes_formales"))
+    classification = bool((d.get("materia") or d.get("area_derecho") or "").strip())
+    confidence = (d.get("borrador_confianza") or "").strip().lower() == "alta"
     warnings = d.get("borrador_advertencias") or []
 
-    rule("OFICIAL", official, "Falta enlace oficial.", True)
+    # The live schema does not contain the previously referenced
+    # evidencia/evidencias/fuentes_formales columns. Evidence is therefore
+    # derived conservatively from the official DIAN source plus verified
+    # date, usable content and known validity state. Missing any component
+    # keeps the document in REVIEW.
+    evidence = official and content and date_ok and validity
+
+    rule("OFICIAL", official, "Falta enlace oficial DIAN.", True)
     rule("FECHA", date_ok, "Fecha no verificada.", True)
     rule("CONTENIDO", content, "No hay contenido suficiente.", True)
     rule("VIGENCIA", validity, "Estado de vigencia no determinado.", True)
     rule("CLASIFICACION", classification, "Clasificación/materia incompleta.")
-    rule("EVIDENCIA", evidence, "No existe evidencia estructurada suficiente para las afirmaciones.", True)
+    rule("EVIDENCIA", evidence, "La evidencia trazable no reúne fuente oficial, contenido, fecha verificada y vigencia.", True)
+    rule("CONFIANZA", confidence, "El borrador no tiene confianza alta.", True)
     rule("ADVERTENCIAS", not warnings, "Existen advertencias del borrador.", True)
 
     unresolved_critical = any(code in CRITICAL for code in failed)
     result = "APPROVE" if not unresolved_critical and not warnings else "REVIEW"
-    score = max(0, round(len(passed) / 7 * 100))
+    score = max(0, round(len(passed) / 8 * 100))
     return result, score, passed, failed, reasons
 
 
@@ -57,7 +64,7 @@ def main():
     sb = create_client(url, key)
     rows = (
         sb.table("documentos_tributarios")
-        .select("id,enlace_oficial,fecha_es_real,texto_completo,contenido,estado_vigencia,clasificacion_obligatoriedad,materia,area_derecho,borrador_advertencias,evidencia,evidencias,fuentes_formales")
+        .select("id,enlace_oficial,fecha_es_real,contenido,estado_vigencia,materia,area_derecho,borrador_advertencias,borrador_confianza")
         .eq("aprobado_para_email", False)
         .limit(args.limit)
         .execute().data or []
