@@ -81,12 +81,7 @@ jobs:
         run: |
           cd scripts
           LIMIT='${{ inputs.limite || '1000' }}'
-          if [ "${{ github.event_name }}" = "schedule" ] || [ "${{ github.event_name }}" = "push" ]; then
-            APPLY='true'
-          else
-            APPLY='${{ inputs.aplicar || 'false' }}'
-          fi
-          echo "Modo de auditoría: APPLY=$APPLY LIMIT=$LIMIT EVENT=${{ github.event_name }}"
+          APPLY='${{ inputs.aplicar || 'false' }}'
           if [ "$APPLY" = "true" ]; then
             python verificador_aprobacion.py --apply --limite "$LIMIT"
           else
