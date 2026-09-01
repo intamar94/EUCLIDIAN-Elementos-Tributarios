@@ -12,18 +12,14 @@ const CAMPOS = ['id','numero_resolucion','numero_interno','tipo_documento','titu
 export default async function handler(req,res){
   if(CLAVE&&req.headers['x-clave']!==CLAVE)return res.status(401).json({error:'clave_incorrecta'});
   if(!SUPABASE_URL||!SUPABASE_KEY)return res.status(500).json({error:'falta_configuracion'});
-  const desde=req.query.desde||'',tema=req.query.tema||'',prioridad=PRIORIDADES[req.query.prioridad]?req.query.prioridad:'',naturaleza=NATURALEZAS[req.query.naturaleza]?req.query.naturaleza:'',orden=ORDENES[req.query.orden]||ORDENES.recientes,pagina=Math.max(1,parseInt(req.query.pagina,10)||1);
-  let filtro='aprobado_para_email=eq.true';
-  if(desde)filtro+=`&fecha_publicacion=gte.${encodeURIComponent(desde)}`;
+  const desde=req.query.desde||'2026-01-01',tema=req.query.tema||'',prioridad=PRIORIDADES[req.query.prioridad]?req.query.prioridad:'',naturaleza=NATURALEZAS[req.query.naturaleza]?req.query.naturaleza:'',orden=ORDENES[req.query.orden]||ORDENES.recientes,pagina=Math.max(1,parseInt(req.query.pagina,10)||1);
+  let filtro=`fecha_publicacion=gte.${desde}&aprobado_para_email=eq.true`;
   if(PRIORIDADES[prioridad])filtro+='&'+PRIORIDADES[prioridad];
   if(NATURALEZAS[naturaleza])filtro+='&'+NATURALEZAS[naturaleza];
   if(tema)filtro+=`&temas=cs.{${encodeURIComponent(tema)}}`;
   const primera=(pagina-1)*POR_PAGINA,cabeceras={apikey:SUPABASE_KEY,Authorization:`Bearer ${SUPABASE_KEY}`};
   try{
-    // La consulta pública usa la tabla de producción directamente. El cliente
-    // nunca recibe campos de control interno; el filtro de publicación se aplica
-    // exclusivamente aquí, con la service key en servidor.
-    const r=await fetch(`${SUPABASE_URL}/rest/v1/documentos_tributarios?select=${CAMPOS}&${filtro}&order=${orden}`,{headers:{...cabeceras,Prefer:'count=exact',Range:`${primera}-${primera+POR_PAGINA-1}`} });
+    const r=await fetch(`${SUPABASE_URL}/rest/v1/v_bandeja?select=${CAMPOS}&${filtro}&order=${orden}`,{headers:{...cabeceras,Prefer:'count=exact',Range:`${primera}-${primera+POR_PAGINA-1}`} });
     if(!r.ok){const detalle=await r.text();return res.status(502).json({error:'supabase',detalle:detalle.slice(0,300)});}
     const documentos=await r.json(),rango=r.headers.get('content-range')||'*/0',total=parseInt(rango.split('/')[1],10)||0;
     const temas=[...new Set(documentos.flatMap(d=>Array.isArray(d.temas)?d.temas:[]))].sort((a,b)=>String(a).localeCompare(String(b),'es'));
