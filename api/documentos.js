@@ -1,5 +1,5 @@
-// EUCLIDIAN — lista de documentos.
-// La vista cliente solo muestra documentos que superaron el Revisor Fiscal.
+// EUCLIDIAN — catálogo completo de documentos.
+// La vista cliente muestra todo el corpus; el estado fiscal se conserva como dato informativo.
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY;
 const CLAVE = process.env.EUCLIDIAN_CLAVE;
@@ -31,10 +31,10 @@ const CAMPOS = [
 export default async function handler(req,res){
   if(CLAVE&&req.headers['x-clave']!==CLAVE)return res.status(401).json({error:'clave_incorrecta'});
   if(!SUPABASE_URL||!SUPABASE_KEY)return res.status(500).json({error:'falta_configuracion'});
-  const periodoSolicitado=String(req.query.periodo||'2026');
-  const periodo=/^\d{4}$/.test(periodoSolicitado)?periodoSolicitado:(PERIODOS[periodoSolicitado]!==undefined?periodoSolicitado:'2026');
+  const periodoSolicitado=String(req.query.periodo||'todo');
+  const periodo=/^\d{4}$/.test(periodoSolicitado)?periodoSolicitado:(PERIODOS[periodoSolicitado]!==undefined?periodoSolicitado:'todo');
   const estadoSolicitado=req.query.estado;
-  const estado=ESTADOS[estadoSolicitado]!==undefined?estadoSolicitado:'aprobados';
+  const estado=ESTADOS[estadoSolicitado]!==undefined?estadoSolicitado:'todos';
   const tema=req.query.tema||'';
   const prioridad=PRIORIDADES[req.query.prioridad]?req.query.prioridad:'';
   const naturaleza=NATURALEZAS[req.query.naturaleza]?req.query.naturaleza:'';
@@ -42,7 +42,7 @@ export default async function handler(req,res){
   const pagina=Math.max(1,parseInt(req.query.pagina,10)||1);
   const cabeceras={apikey:SUPABASE_KEY,Authorization:`Bearer ${SUPABASE_KEY}`};
   let filtro;
-  if(/^\d{4}$/.test(periodo))filtro=`anio_publicacion=eq.${periodo}`;else filtro=PERIODOS[periodo]?PERIODOS[periodo]:'id=not.is.null';
+  if(/^\d{4}$/.test(periodo))filtro=`anio_publicacion=eq.${periodo}`;else filtro=PERIODOS[periodo]!==undefined?PERIODOS[periodo]:'id=not.is.null';
   if(ESTADOS[estado])filtro+='&'+ESTADOS[estado];
   if(PRIORIDADES[prioridad])filtro+='&'+PRIORIDADES[prioridad];
   if(NATURALEZAS[naturaleza])filtro+='&'+NATURALEZAS[naturaleza];
