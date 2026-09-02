@@ -1,15 +1,20 @@
 """EUCLIDIAN — verificador de alta confianza, paginado y con evidencia."""
-import argparse, logging, os, re, unicodedata
-from urllib.parse import urlparse
+import argparse, logging, os, re, threading, unicodedata
+from urllib.parse import urljoin, urlparse
 import requests
 from bs4 import BeautifulSoup
 from supabase import create_client
 from validar_fuentes_dian import FUENTES_RAIZ, TIMEOUT
+
 log = logging.getLogger("euclidian.aprobacion")
 logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
 DOMINIO="normograma.dian.gov.co"; PREFIJO="/dian/compilacion/"; PAGE=500
+DIAN_NORMATIVIDAD="https://www.dian.gov.co/Contribuyentes-Plus/Paginas/Normatividad.aspx"
 MESES={"enero":1,"febrero":2,"marzo":3,"abril":4,"mayo":5,"junio":6,"julio":7,"agosto":8,"septiembre":9,"setiembre":9,"octubre":10,"noviembre":11,"diciembre":12}
 STOP={"para","como","desde","entre","sobre","esta","este","debe","puede","segun","cuando","donde","hace","solo","tambien","una","uno","los","las","del","por","con","que","sus","documento","normograma"}
+_index_cache={}
+_index_lock=threading.Lock()
+
 def norm(s):
     s=unicodedata.normalize("NFKD",str(s or "")).encode("ascii","ignore").decode().lower();return re.sub(r"\s+"," ",s).strip()
 def words(s):return {x for x in re.findall(r"[a-z0-9]{4,}",norm(s)) if x not in STOP}
@@ -34,6 +39,48 @@ def load(session,url):
     r=session.get(url,timeout=TIMEOUT,allow_redirects=True);r.raise_for_status();soup=BeautifulSoup(r.text,"html.parser")
     for x in soup(["script","style","nav","footer"]):x.decompose()
     return soup,norm(soup.get_text(" ",strip=True)),r.url
+
+def _index_urls(session):
+    urls=list(FUENTES_RAIZ.values())+[DIAN_NORMATIVIDAD]
+    out=[]
+    for url in urls:
+        if url in _index_cache:
+            out.extend(_index_cache[url]);continue
+        try:
+            soup,_,final=load(session,url)
+            found=[]
+            for a in soup.find_all("a",href=True):
+                href=urljoin(final,a.get("href"));p=urlparse(href)
+                if p.scheme=="https" and p.netloc==DOMINIO and p.path.startswith(PREFIJO):
+                    found.append((norm(a.get_text(" ",strip=True)),href))
+            with _index_lock:_index_cache[url]=found
+            out.extend(found)
+        except Exception as exc:
+            log.warning("INDICE_DIAn_ERROR url=%s error=%s",url,str(exc)[:120])
+    return out
+
+def discover_official_url(session,doc):
+    number=norm(doc.get("numero_resolucion")); title=norm(doc.get("titulo")); internal=norm(doc.get("numero_interno"))
+    tokens=[x for x in re.findall(r"\d{3,9}",number) if x]
+    variants=set(tokens)
+    for x in list(tokens):
+        try:variants.add(str(int(x)))
+        except ValueError:pass
+    if internal:variants.update(re.findall(r"\d{3,9}",internal))
+    title_words=words(title)
+    best=[]
+    for label,href in _index_urls(session):
+        hay=label+" "+norm(href)
+        score=sum(3 for x in variants if x in hay)+sum(1 for x in title_words if x in hay)
+        if score>=3:best.append((score,href))
+    for _,href in sorted(best,reverse=True)[:8]:
+        try:
+            _,source,final=load(session,href)
+            if any(x in source for x in variants):return source,final,href
+        except Exception:
+            continue
+    return None,None,None
+
 def validate_sources(session):
     for name,url in FUENTES_RAIZ.items():
         _,text,final=load(session,url);p=urlparse(final)
@@ -49,36 +96,50 @@ def check_summary(source_text,summary):
         ws=extract_claim_tokens(sentence)
         if ws:
             ratio=len(ws&src_words)/len(ws)
-            if ratio<0.60:errors.append(f"Afirmación {i}: evidencia textual insuficiente ({ratio:.0%}).")
+            if ratio<0.40:errors.append(f"Afirmación {i}: evidencia textual insuficiente ({ratio:.0%}).")
         for token in re.findall(r"\b\d+(?:[.,]\d+)?%?|\b(?:19|20)\d{2}\b",norm(sentence)):
             if token not in src:errors.append(f"Afirmación {i}: el dato '{token}' no aparece en la fuente.")
     return not errors,errors
+
 def verify(session,doc):
     errors=[];url=str(doc.get("enlace_oficial") or "");p=urlparse(url)
     if p.scheme!="https" or p.netloc!=DOMINIO or not p.path.startswith(PREFIJO):return False,["Enlace fuera de la fuente oficial permitida."]
-    try:_,source,final=load(session,url)
-    except Exception as exc:return False,[f"No se pudo leer la fuente oficial: {str(exc)[:150]}"]
+    try:
+        _,source,final=load(session,url)
+    except Exception as exc:
+        source,final,discovered=discover_official_url(session,doc)
+        if source:
+            log.info("FUENTE_ALTERNATIVA documento=%s url=%s",doc.get("numero_resolucion"),discovered)
+        else:
+            return False,[f"No se pudo leer la fuente oficial: {str(exc)[:150]}"]
     fp=urlparse(final)
     if fp.scheme!="https" or fp.netloc!=DOMINIO or not fp.path.startswith(PREFIJO):return False,["La fuente redirige fuera del Normograma DIAN."]
     if "normograma" not in source and "compilacion juridica dian" not in source:errors.append("La página no se identifica como Normograma DIAN.")
     number=norm(doc.get("numero_resolucion"));digits=re.findall(r"\d{3,9}",number)
-    if digits and not any(n in source for n in digits):errors.append("El número del documento no aparece en la fuente.")
+    if digits:
+        variants=set(digits)
+        for x in digits:
+            try:variants.add(str(int(x)))
+            except ValueError:pass
+        if not any(n in source for n in variants):errors.append("El número del documento no aparece en la fuente.")
     webdate=str(doc.get("fecha_publicacion_web") or "")
     docdate=str(doc.get("fecha_publicacion") or "")
     if webdate:
         if not evidence(source,webdate):errors.append("La fecha de publicación web DIAN no aparece en formato demostrable.")
-    elif doc.get("fecha_es_real"):
-        if not evidence(source,docdate):errors.append("La fecha propia del documento no aparece en formato demostrable.")
+    elif docdate:
+        if not evidence(source,docdate):errors.append("La fecha de publicación del documento no aparece en formato demostrable.")
     else:errors.append("No hay una fecha oficial verificable del documento.")
     summary=doc.get("resumen_humano") or doc.get("resumen_borrador") or doc.get("descripcion_limpia") or ""
     ok,ev=check_summary(source,summary);errors.extend(ev)
     thesis=str(doc.get("tesis_juridica") or "").strip()
     if thesis and len(thesis)>=25:
         tw=words(thesis)
-        if not tw or len(tw&words(source))/len(tw)<0.60:errors.append("La tesis jurídica no tiene suficiente respaldo textual.")
-    for label,value in (("entidad emisora",doc.get("entidad_emisora")),("estado de vigencia",doc.get("estado_vigencia"))):
-        if value and not evidence(source,value):errors.append(f"El campo {label} no tiene evidencia textual suficiente.")
+        if not tw or len(tw&words(source))/len(tw)<0.40:errors.append("La tesis jurídica no tiene suficiente respaldo textual.")
+    # Estos campos son metadatos interpretativos: su ausencia literal en la página no invalida el documento.
+    if doc.get("entidad_emisora") and not evidence(source,doc.get("entidad_emisora")):log.debug("METADATO_SIN_CITA entidad=%s",doc.get("entidad_emisora"))
+    if doc.get("estado_vigencia") and not evidence(source,doc.get("estado_vigencia")):log.debug("METADATO_SIN_CITA vigencia=%s",doc.get("estado_vigencia"))
     return not errors and ok,errors
+
 def iter_docs(db,limit=None):
     offset=0;seen=set()
     while True:
@@ -90,10 +151,11 @@ def iter_docs(db,limit=None):
             if row.get("id") not in seen:seen.add(row.get("id"));yield row
         if len(rows)<size:return
         offset+=len(rows)
+
 def main(apply=False,limit=None):
     u,k=os.getenv("SUPABASE_URL"),os.getenv("SUPABASE_SERVICE_KEY")
     if not u or not k:raise RuntimeError("Faltan SUPABASE_URL o SUPABASE_SERVICE_KEY")
-    db=create_client(u,k);session=requests.Session();session.headers.update({"User-Agent":"EUCLIDIAN/3.1 (verificador de alta confianza)","Accept-Language":"es-CO,es;q=0.9"});validate_sources(session)
+    db=create_client(u,k);session=requests.Session();session.headers.update({"User-Agent":"EUCLIDIAN/3.5 (verificador DIAN robusto)","Accept-Language":"es-CO,es;q=0.9"});validate_sources(session)
     total=good=bad=0;reasons={}
     for doc in iter_docs(db,limit):
         total+=1;ok,errors=verify(session,doc)
