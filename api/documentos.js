@@ -103,8 +103,6 @@ export default async function handler(req, res) {
   const primera = (pagina - 1) * POR_PAGINA;
 
   try {
-    // Dos llamadas: la pagina de documentos, y una sola que resuelve
-    // todos los contadores. Con once, la funcion agotaba su tiempo.
     const [rDocs, rResumen] = await Promise.all([
       fetch(
         `${SUPABASE_URL}/rest/v1/v_bandeja?select=${CAMPOS}&${filtro}&order=${orden}`,
@@ -138,7 +136,6 @@ export default async function handler(req, res) {
     const rango = rDocs.headers.get('content-range') || '*/0';
     const total = parseInt(rango.split('/')[1], 10) || 0;
 
-    // Los contadores son accesorios: si fallan, la lista igual sirve.
     let resumen = {};
     try {
       resumen = (await rResumen.json()) || {};
