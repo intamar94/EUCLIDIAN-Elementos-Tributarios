@@ -23,56 +23,41 @@
     const html = original(d);
     const e = extracto(d);
     if(!e) return html;
-
     const bloque = `<section class="resumen-lectura" aria-label="Resumen de lectura">
-      <div class="resumen-cab">
-        <span>Resumen de lectura</span>
-        <small>${escapeHtml(e.etiqueta)}</small>
-      </div>
+      <div class="resumen-cab"><span>Resumen de lectura</span><small>${escapeHtml(e.etiqueta)}</small></div>
       <p>${escapeHtml(e.texto)}</p>
     </section>`;
-
     const marca = '<div class="escribir">';
     return html.includes(marca) ? html.replace(marca,bloque+marca) : html;
   };
 
-  function actualizarRango(){
-    const rango=document.getElementById('rango');
+  function actualizar(){
     const paginas=document.getElementById('paginas');
-    if(!rango) return;
-    const texto=(paginas?.querySelector('.rango')?.textContent||'').trim();
-    if(texto){rango.textContent=texto;return;}
-    const cards=document.querySelectorAll('#lista article').length;
-    if(cards) rango.textContent=`Mostrando ${cards} documentos de esta página`;
+    const rango=document.getElementById('rango');
+    if(!paginas||!rango)return;
+    const texto=(paginas.querySelector('.rango')?.textContent||'').trim();
+    if(texto) rango.textContent=texto;
   }
 
   function iniciar(){
     const controles=document.getElementById('controles');
-    if(!controles) return;
-    const total=document.createElement('div');
-    total.id='totalDocumentos';
-    total.className='total-documentos';
-    controles.parentNode.insertBefore(total,controles);
-
-    const originalCargar=window.cargar;
-    if(typeof originalCargar==='function'){
-      window.cargar=async function(){
-        await originalCargar();
-        actualizarTotal();
-        actualizarRango();
-      };
+    const paginas=document.getElementById('paginas');
+    if(!controles||!paginas)return;
+    if(!document.getElementById('totalDocumentos')){
+      const total=document.createElement('div');
+      total.id='totalDocumentos';
+      total.className='total-documentos';
+      controles.parentNode.insertBefore(total,controles);
     }
-    actualizarTotal();
-  }
-
-  function actualizarTotal(){
-    const total=document.getElementById('totalDocumentos');
-    if(!total) return;
-    const rango=document.getElementById('paginas');
-    const r=rango?.querySelector('.rango')?.textContent||'';
-    const m=r.match(/(?:de|\/)?\s*(\d+)$/);
-    if(m) total.textContent=`${m[1]} documentos publicados`;
-    else if(r) total.textContent=r;
+    const obs=new MutationObserver(()=>{
+      const r=paginas.querySelector('.rango')?.textContent||'';
+      const m=r.match(/\bde\s+(\d+)$/);
+      const total=document.getElementById('totalDocumentos');
+      if(total && m) total.textContent=`${m[1]} documentos publicados`;
+      actualizar();
+    });
+    obs.observe(paginas,{childList:true,subtree:true,characterData:true});
+    actualizar();
   }
 
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',iniciar,{once:true});
