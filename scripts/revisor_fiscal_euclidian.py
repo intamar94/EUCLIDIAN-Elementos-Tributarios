@@ -59,10 +59,10 @@ def preparar_ficha(d: dict) -> dict:
         if resumen:
             cambios["resumen_humano"] = resumen[:4000]
             cambios["resumen_borrador"] = resumen[:4000]
-            cambios["borrador_confianza"] = "pendiente_verificacion"
+            cambios["borrador_confianza"] = "pendiente"
             cambios["borrador_advertencias"] = list(ficha.get("advertencias") or [])
     if not _texto(d.get("materia")) and _texto(d.get("banco_datos")):
-        cambios["materia"] = _texto(d["banco_datos"])[:250]
+        cambios["materia"] = _texto(d["banco_datos"])[:40]
     return cambios
 
 
