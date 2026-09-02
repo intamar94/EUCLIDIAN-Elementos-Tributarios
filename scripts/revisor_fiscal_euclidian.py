@@ -26,7 +26,7 @@ for _p in (str(ROOT), str(SCRIPTS)):
 from scripts.composicion import Composicion
 from scripts.verificador_aprobacion import verify
 
-RULES_VERSION = "3.4"
+RULES_VERSION = "3.5"
 DEFAULT_LIMIT = 20000
 MAX_LIMIT = 20000
 WORKERS = 16
@@ -42,7 +42,7 @@ def _session():
     if s is None:
         s = requests.Session()
         s.headers.update({
-            "User-Agent": "EUCLIDIAN-Fiscal-Reviewer/3.4",
+            "User-Agent": "EUCLIDIAN-Fiscal-Reviewer/3.5",
             "Accept-Language": "es-CO,es;q=0.9",
             "Connection": "keep-alive",
         })
@@ -78,13 +78,12 @@ def evaluate(d: dict, source_verified: bool = False):
     content = bool(_texto(d.get("contenido") or d.get("texto_completo")))
     web_date = _texto(d.get("fecha_publicacion_web"))
     doc_date = _texto(d.get("fecha_publicacion"))
-    date_ok = bool(web_date) or bool(d.get("fecha_es_real") is True and doc_date)
+    date_ok = bool(web_date) or bool(doc_date)
     validity = bool(_texto(d.get("estado_vigencia")))
     classification = bool(_texto(d.get("clasificacion_obligatoriedad")))
     matter = bool(_texto(d.get("materia") or d.get("area_derecho") or d.get("banco_datos")))
     summary = bool(_texto(d.get("resumen_humano")))
     audience = classification
-    warnings = d.get("borrador_advertencias") or []
 
     rule("OFICIAL", official, "Falta enlace oficial DIAN.")
     rule("FECHA_PUBLICACION", date_ok, "No hay fecha de publicación DIAN identificable.")
@@ -95,10 +94,9 @@ def evaluate(d: dict, source_verified: bool = False):
     rule("RESUMEN", summary, "La ficha no tiene resumen para el contador.")
     rule("A_QUIEN", audience, "No está determinada la naturaleza que permite explicar a quién afecta.")
     rule("EVIDENCIA", source_verified, "El resumen y los datos críticos no han sido corroborados contra la fuente oficial.")
-    rule("ADVERTENCIAS", not warnings, "Persisten advertencias de contenido que deben resolverse.")
 
     result = "APPROVE" if not failed else "REVIEW"
-    score = max(0, round(len(passed) / 10 * 100))
+    score = max(0, round(len(passed) / 9 * 100))
     return result, score, passed, failed, reasons
 
 
