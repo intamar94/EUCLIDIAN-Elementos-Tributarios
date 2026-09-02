@@ -6,9 +6,13 @@ on:
   workflow_dispatch:
     inputs:
       limite:
-        description: 'Documentos a revisar por ejecución (máximo 500)'
+        description: 'Documentos a revisar por ejecución (hasta 20000)'
         required: false
-        default: '500'
+        default: '20000'
+      workers:
+        description: 'Verificaciones concurrentes (1-32)'
+        required: false
+        default: '16'
 
 permissions:
   contents: read
@@ -30,8 +34,8 @@ jobs:
         run: pip install -r scripts/requirements.txt
       - name: Pruebas del revisor fiscal
         run: python -m unittest discover -s tests -p 'test_*.py' -v
-      - name: Ejecutar revisión fiscal
+      - name: Ejecutar revisión fiscal turbo
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
-        run: python scripts/revisor_fiscal_euclidian.py --limit ${{ inputs.limite || '500' }}
+        run: python scripts/revisor_fiscal_euclidian.py --limit ${{ inputs.limite || '20000' }} --workers ${{ inputs.workers || '16' }}
