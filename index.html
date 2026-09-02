@@ -36,16 +36,15 @@ body{background:#f3f0e8}
 .fecha-actual{display:block;font-family:'IBM Plex Mono',monospace;font-size:14px;letter-spacing:.04em;color:#6c735f;text-transform:capitalize}
 .cab-cifras,.cab-util .derecha{display:none}
 
-#controles{padding:0 28px 4px}
-#controles .filtros-directos{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto;align-items:center;gap:16px;padding:10px 0 14px;border-top:1px solid #b83b2f}
+#controles{padding:12px 28px 8px}
+#controles .filtros-directos{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto;align-items:center;gap:18px;padding:0 0 14px;border:0}
 #controles .filtro{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:10px;min-width:0}
 #controles .filtros-directos .rotulo{margin:0;white-space:nowrap}
 #controles .filtros-directos select{width:100%;min-height:42px;box-sizing:border-box}
 #controles .filtros-directos .limpiar{margin:0;white-space:nowrap}
 #controles .mas{display:none}
 
-/* Separadores uniformes: una sola linea fina, con la misma proporción y peso. */
-#barra{display:flex;align-items:center;justify-content:space-between;gap:16px;border-bottom:1px solid #b83b2f;padding:8px 28px 10px;margin:0;position:relative;box-sizing:border-box}
+#barra{display:flex;align-items:center;justify-content:space-between;gap:16px;border:0;padding:12px 28px 14px;margin:0;position:relative;box-sizing:border-box}
 #barra:after{display:none}
 #barra label{display:flex;align-items:center;gap:8px;white-space:nowrap}
 
@@ -75,13 +74,13 @@ body{background:#f3f0e8}
   .banner-euclidian .ilustracion{height:auto}
   .cab-util{margin-top:10px;padding-bottom:10px}
   .fecha-actual{font-size:12px;letter-spacing:.02em}
-  #controles{padding:0 12px 4px}
-  #controles .filtros-directos{display:grid;grid-template-columns:1fr;gap:10px;padding:9px 0 12px}
+  #controles{padding:10px 12px 6px}
+  #controles .filtros-directos{display:grid;grid-template-columns:1fr;gap:10px;padding:0 0 10px}
   #controles .filtro{display:grid;grid-template-columns:112px minmax(0,1fr);align-items:center;gap:8px}
   #controles .filtros-directos .rotulo{margin:0}
   #controles .filtros-directos> .filtro select{width:100%;min-height:48px}
   #controles .filtros-directos .limpiar{width:100%;margin-top:0}
-  #barra{gap:8px;padding:7px 12px 9px}
+  #barra{gap:8px;padding:10px 12px 12px}
   #barra label{gap:6px}
   #barra label select{max-width:190px}
 }
