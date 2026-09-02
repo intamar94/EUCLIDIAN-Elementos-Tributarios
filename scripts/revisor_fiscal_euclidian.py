@@ -26,7 +26,7 @@ for _p in (str(ROOT), str(SCRIPTS)):
 from scripts.composicion import Composicion
 from scripts.verificador_aprobacion import verify
 
-RULES_VERSION = "3.3"
+RULES_VERSION = "3.4"
 DEFAULT_LIMIT = 20000
 MAX_LIMIT = 20000
 WORKERS = 16
@@ -42,7 +42,7 @@ def _session():
     if s is None:
         s = requests.Session()
         s.headers.update({
-            "User-Agent": "EUCLIDIAN-Fiscal-Reviewer/3.3",
+            "User-Agent": "EUCLIDIAN-Fiscal-Reviewer/3.4",
             "Accept-Language": "es-CO,es;q=0.9",
             "Connection": "keep-alive",
         })
@@ -115,22 +115,24 @@ def _verify_one(row):
 
 
 def _load_pending(sb, limit):
-    """Supabase REST suele limitar una respuesta a 1000 filas; paginamos."""
+    """Carga pendientes con paginación por clave primaria para evitar OFFSET costoso."""
     rows = []
     page_size = 1000
-    offset = 0
+    last_id = None
     while len(rows) < limit:
         take = min(page_size, limit - len(rows))
-        batch = (sb.table("documentos_tributarios")
+        q = (sb.table("documentos_tributarios")
             .select("*")
             .is_("revisado_fiscal_en", "null")
-            .order("fecha_scraped", desc=False)
-            .range(offset, offset + take - 1)
-            .execute().data or [])
+            .order("id", desc=False)
+            .limit(take))
+        if last_id:
+            q = q.gt("id", last_id)
+        batch = q.execute().data or []
         if not batch:
             break
         rows.extend(batch)
-        offset += len(batch)
+        last_id = batch[-1].get("id")
         if len(batch) < take:
             break
     return rows
