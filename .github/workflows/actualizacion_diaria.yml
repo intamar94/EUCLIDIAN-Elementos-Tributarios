@@ -5,9 +5,13 @@ on:
   schedule:
     - cron: '15 06 * * *'
 
+permissions:
+  contents: read
+
 jobs:
   actualizar:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -15,8 +19,20 @@ jobs:
           python-version: '3.11'
       - name: Instalar dependencias
         run: pip install -r scripts/requirements.txt
-      - name: Sincronizar catálogo
+      - name: Sincronizar publicaciones actuales DIAN
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python scripts/sincronizador_dian.py
+      - name: Descubrir fuentes históricas oficiales
+        run: python scripts/descubrimiento_fuentes.py --limite 1000
+      - name: Actualizar catálogo histórico local
         run: python scripts/actualizacion_diaria.py
+      - name: Enriquecer fechas y contenido oficial en Supabase
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python scripts/enriquecedor.py --limite 500 --minutos 20
       - name: Exportar índice consultable
         run: python scripts/catalogo_historico.py --entrada descubrimiento_fuentes.json --salida historico_index.json
       - name: Publicar artefactos del histórico
