@@ -4,8 +4,8 @@
  * cada ficha esta en fichas.js, que se carga antes.
  */
 let CLAVE = sessionStorage.getItem('euclidian_clave') || '';
-/* Tres ejes que se combinan libremente, mas tema, año y orden. */
-const F = { estado:'pendientes', prioridad:'', naturaleza:'',
+/* La biblioteca visible al cliente parte siempre de documentos publicados. */
+const F = { estado:'aprobados', prioridad:'', naturaleza:'',
             periodo:'2026', tema:'', orden:'recientes', pagina:1 };
 
 function entrar(e){
@@ -204,7 +204,7 @@ function marcarActivos(){
   // El orden no cuenta: no reduce la lista, solo la reacomoda.
   const n = [
     F.prioridad, F.naturaleza, F.tema,
-    F.estado !== 'pendientes' ? F.estado : '',
+    F.estado !== 'aprobados' ? F.estado : '',
     F.periodo !== '2026' ? F.periodo : '',
   ].filter(Boolean).length;
   const marca = document.getElementById('activos');
@@ -215,14 +215,13 @@ function marcarActivos(){
 
 function limpiar(){
   F.prioridad = ''; F.naturaleza = ''; F.tema = '';
-  F.estado = 'pendientes'; F.periodo = '2026'; F.pagina = 1;
+  F.estado = 'aprobados'; F.periodo = '2026'; F.pagina = 1;
   document.getElementById('selTema').value = '';
   const anio = document.getElementById('selAnio');
   if (anio) anio.value = '';
-  ['gPrioridad','gNaturaleza','gEstado','gPeriodo'].forEach(g=>{
+  ['gPrioridad','gNaturaleza','gEstado','gPeriodo'].forEach(g=>
     document.querySelectorAll('#'+g+' button').forEach((b,i)=>
       b.setAttribute('aria-pressed', String(i === 0)));
-  });
   cargar();
 }
 
