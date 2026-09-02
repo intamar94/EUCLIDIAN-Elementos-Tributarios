@@ -29,23 +29,18 @@ class Enriquecedor(LectorDocumento,Alertas):
         self._resumen(); self._faltantes()
     def _faltantes(self):
         try:
-            q=self.db.table("documentos_tributarios").select("id",count="exact").eq("fecha_es_real",False)
-            if self.anio:q=q.gte("fecha_publicacion",f"{self.anio}-01-01").lte("fecha_publicacion",f"{self.anio}-12-31")
+            q=self.db.table("documentos_tributarios").select("id",count="exact").is_("fecha_publicacion_web","null")
+            if self.anio:q=q.gte("anio_publicacion",self.anio).lte("anio_publicacion",self.anio)
             r=q.limit(1).execute(); quedan=r.count or 0
         except Exception:return
-        log.info("Quedan %d documentos pendientes de fecha real.",quedan)
+        log.info("Quedan %d documentos pendientes de fecha de publicación web.",quedan)
         if quedan:log.info("A %d/lote son unas %d corridas, antes de descontar reintentos.",self.limite,-(-quedan//max(self.limite,1)))
     def _sin_tiempo(self):return bool(self.minutos and (time.monotonic()-self.inicio)>self.minutos*60)
     def _pendientes(self):
-        q=self.db.table("documentos_tributarios").select("id,numero_resolucion,enlace_oficial,tipo_documento,contenido,temas,fecha_publicacion,enriquecido_en").eq("fecha_es_real",False)
-        if self.anio:q=q.gte("fecha_publicacion",f"{self.anio}-01-01").lte("fecha_publicacion",f"{self.anio}-12-31")
+        q=self.db.table("documentos_tributarios").select("id,numero_resolucion,enlace_oficial,tipo_documento,contenido,temas,fecha_publicacion,enriquecido_en,fecha_publicacion_web").is_("fecha_publicacion_web","null")
+        if self.anio:q=q.gte("anio",self.anio).lte("anio",self.anio)
         try:
-            r=q.is_("enriquecido_en","null").order("fecha_publicacion",desc=True).limit(self.limite).execute(); datos=r.data or []
-            if len(datos)<self.limite:
-                restante=self.limite-len(datos)
-                corte=(datetime.now(timezone.utc)-__import__('datetime').timedelta(days=RETRY_DIAS)).isoformat()
-                r2=q.not_.is_("enriquecido_en","null").lt("enriquecido_en",corte).order("enriquecido_en",desc=False).limit(restante).execute(); datos += r2.data or []
-            return datos
+            r=q.order("fecha_publicacion",desc=True).limit(self.limite).execute(); return r.data or []
         except Exception as e:log.error("No se pudo leer la lista: %s",str(e)[:200]);sys.exit(1)
     def _enriquecer(self,doc,i,total):
         try:r=self.s.get(doc["enlace_oficial"],timeout=TIMEOUT,allow_redirects=True);r.encoding=r.apparent_encoding or "utf-8"
@@ -60,10 +55,10 @@ class Enriquecedor(LectorDocumento,Alertas):
         else:self.stats["fecha_no_hallada"]+=1
         fecha_web=self._fecha_publicacion_web(texto)
         if fecha_web:
-            campos["fecha_publicacion_web"]=fecha_web.isoformat();self.stats["fecha_web_hallada"]+=1
-        else:self.stats["fecha_web_no_hallada"]+=1
-        if fecha_web:campos["anio_publicacion"]=fecha_web.year
-        elif fecha:campos["anio_publicacion"]=fecha.year
+            campos["fecha_publicacion_web"]=fecha_web.isoformat();campos["anio_publicacion"]=fecha_web.year;self.stats["fecha_web_hallada"]+=1
+        else:
+            self.stats["fecha_web_no_hallada"]+=1
+            if fecha:campos["anio_publicacion"]=fecha.year
         diario=self._diario_oficial(texto)
         if diario:campos["diario_oficial"]=diario[:120];self.stats["con_diario_oficial"]+=1
         entidad=self._entidad(texto)
@@ -82,12 +77,7 @@ class Enriquecedor(LectorDocumento,Alertas):
         if estado:campos["estado_vigencia"]=estado;campos["motivo_cambio_estado"]=motivo[:500];self.stats[f"estado_{estado}"]+=1
         if self.dry_run:return
         try:
-            # Un enriquecimiento nuevo invalida una revisión anterior: el
-            # revisor debe volver a comprobar el documento con los datos
-            # actualizados de la fuente oficial.
-            campos["revisado_fiscal_en"]=None
-            campos["revisado_por_humano"]=False
-            campos["publicado_cliente"]=False
+            campos["revisado_fiscal_en"]=None;campos["revisado_por_humano"]=False;campos["publicado_cliente"]=False
             self.db.table("documentos_tributarios").update(campos).eq("id",doc["id"]).execute();self.stats["actualizados"]+=1
         except Exception as e:self.stats["error_guardado"]+=1;log.error("No se pudo guardar %s: %s",doc["numero_resolucion"],str(e)[:160]);return
         self._alertas(doc,campos,anotaciones,retro,zonas)
