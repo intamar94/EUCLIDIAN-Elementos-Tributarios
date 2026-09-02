@@ -81,7 +81,12 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'falta_configuracion' });
   }
 
-  const periodo = PERIODOS[req.query.periodo] !== undefined ? req.query.periodo : '2026';
+  const periodoSolicitado = String(req.query.periodo || '2026');
+  // Un año de cuatro cifras es un filtro exacto. Los demás valores usan
+  // los periodos predefinidos para mantener los filtros actuales.
+  const periodo = /^\d{4}$/.test(periodoSolicitado)
+    ? periodoSolicitado
+    : (PERIODOS[periodoSolicitado] !== undefined ? periodoSolicitado : '2026');
   const estado = ESTADOS[req.query.estado] !== undefined ? req.query.estado : 'pendientes';
   const tema = req.query.tema || '';
   const prioridad = PRIORIDADES[req.query.prioridad] ? req.query.prioridad : '';
@@ -94,7 +99,9 @@ export default async function handler(req, res) {
     Authorization: `Bearer ${SUPABASE_KEY}`,
   };
 
-  let filtro = PERIODOS[periodo] ? PERIODOS[periodo] : 'id=not.is.null';
+  let filtro;
+  if (/^\d{4}$/.test(periodo)) filtro = `anio=eq.${periodo}`;
+  else filtro = PERIODOS[periodo] ? PERIODOS[periodo] : 'id=not.is.null';
   if (ESTADOS[estado]) filtro += '&' + ESTADOS[estado];
   if (PRIORIDADES[prioridad]) filtro += '&' + PRIORIDADES[prioridad];
   if (NATURALEZAS[naturaleza]) filtro += '&' + NATURALEZAS[naturaleza];
