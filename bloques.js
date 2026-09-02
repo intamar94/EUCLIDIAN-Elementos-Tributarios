@@ -55,7 +55,6 @@ function bloqueBorrador(d){
       <span class="confianza ${c}">confianza ${c}</span></div>
     <p>${esc(d.resumen_borrador)}</p>
     ${ojo}
-    <button class="usar" onclick="usarBorrador('${d.id}')">Usar este texto y editarlo</button>
   </div>`;
 }
 
@@ -129,11 +128,6 @@ function bloqueDatos(d){
 
 function ficha(d){
   const temas = (d.temas||[]).filter(t=>!t.startsWith('dian:') && t!=='boletin_mensual');
-  // Dos grupos, cada uno con un rotulo que dice la verdad.
-  //
-  // Antes iban todas juntas bajo "A quien le compete", y eso prometia
-  // algo que las etiquetas no dan: ninguna dice a que contribuyentes
-  // aplica. Ese dato no esta en el documento y no se va a inventar.
   const fuerza = [
     `<span class="${d.estado_vigencia!=='vigente' ? 'alerta'
         : d.clasificacion_obligatoriedad==='obligatorio_dian_y_contribuyentes' ? 'obliga'
@@ -150,13 +144,7 @@ function ficha(d){
     ? `<ul>${d.descriptores.slice(0,6).map(x=>`<li>${esc(x)}</li>`).join('')}</ul>` : '';
 
   const lateral = [bloquePlazo(d), bloqueRelaciones(d)].filter(Boolean).join('');
-
   const s = señal(d);
-
-  // "Nuevo" primero: quien entra cada semana quiere ver lo que llego,
-  // no volver a recorrer todo. Y el nivel de detalle se declara, porque
-  // en el archivo completo no todos los documentos estan igual de
-  // trabajados y fingir que si seria enganar.
   const marcaNueva = d.es_nuevo ? '<span class="nuevo">Nuevo</span>' : '';
   const marcaDetalle = (d.nivel_detalle === 'solo_listado')
     ? '<span class="detalle-parcial" title="Aún no se ha abierto el documento oficial">Sin abrir</span>'
@@ -198,22 +186,8 @@ function ficha(d){
             <div class="marcas">${materias}</div>
           </div>` : ''}
         </div>
-        <div class="escribir">
-          <label for="r-${d.id}">En palabras simples
-            <span class="contador" id="c-${d.id}">${(d.resumen_humano||'').length||0}</span></label>
-          <textarea id="r-${d.id}"
-            placeholder="Qué cambió, a quién le toca y qué hay que hacer."
-            oninput="contar('${d.id}')" onblur="guardarResumen('${d.id}')">${esc(d.resumen_humano||'')}</textarea>
-          <div class="pista">Si lo dejas vacío, el correo sale con el texto de la DIAN tal cual.
-            <b>Lo que escribas aquí es lo que hace este boletín distinto.</b></div>
-          ${d.resumen_humano?'<div class="redactado">✓ redactado</div>':''}
-        </div>
       </div>
       ${lateral ? `<aside class="lateral">${lateral}</aside>` : ''}
-    </div>
-    <div class="acciones">
-      <button class="si" onclick="decidir('${d.id}','aprobar')">Aprobar</button>
-      <button onclick="decidir('${d.id}','descartar')">Descartar</button>
     </div>
   </article>`;
 }
