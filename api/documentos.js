@@ -12,14 +12,12 @@ const baseHeaders={apikey:SUPABASE_KEY,Authorization:`Bearer ${SUPABASE_KEY}`};
 async function contar(filtro=''){
   const r=await fetch(`${SUPABASE_URL}/rest/v1/documentos_tributarios?select=id&${filtro}`,{headers:{...baseHeaders,Prefer:'count=exact'},cache:'no-store'});
   if(!r.ok)throw new Error((await r.text()).slice(0,250));
-  const cr=r.headers.get('content-range')||'*/0';
-  return parseInt(cr.split('/')[1],10)||0;
+  const cr=r.headers.get('content-range')||'*/0'; return parseInt(cr.split('/')[1],10)||0;
 }
 async function fechaExtrema(desc=true){
   const order=desc?'fecha_publicacion.desc.nullslast,id.desc':'fecha_publicacion.asc.nullslast,id.asc';
   const r=await fetch(`${SUPABASE_URL}/rest/v1/documentos_tributarios?select=fecha_publicacion&aprobado_para_email=eq.true&order=${order}&limit=1`,{headers:baseHeaders,cache:'no-store'});
-  if(!r.ok)return null;
-  const d=await r.json(); return d[0]?.fecha_publicacion||null;
+  if(!r.ok)return null; const d=await r.json(); return d[0]?.fecha_publicacion||null;
 }
 
 export default async function handler(req,res){
@@ -33,17 +31,16 @@ export default async function handler(req,res){
   if(tema)filtro+=`&temas=cs.{${encodeURIComponent(tema)}}`;
   const primera=(pagina-1)*POR_PAGINA;
   try{
-    const r=await fetch(`${SUPABASE_URL}/rest/v1/documentos_tributarios?select=*&${filtro}&order=${orden}`,{headers:{...baseHeaders,Prefer:'count=exact'},Range:`${primera}-${primera+POR_PAGINA-1}`,cache:'no-store'});
+    const r=await fetch(`${SUPABASE_URL}/rest/v1/documentos_tributarios?select=*&${filtro}&order=${orden}`,{
+      headers:{...baseHeaders,Prefer:'count=exact',Range:`${primera}-${primera+POR_PAGINA-1}`},cache:'no-store'
+    });
     if(!r.ok){const detalle=await r.text();return res.status(502).json({error:'supabase',detalle:detalle.slice(0,300)});}
     const documentos=await r.json();
-    const cr=r.headers.get('content-range')||'*/0';
-    const total=parseInt(cr.split('/')[1],10)||0;
+    const cr=r.headers.get('content-range')||'*/0'; const total=parseInt(cr.split('/')[1],10)||0;
     const [baseTotal,publicados,fechaMasReciente,fechaMasAntigua,importantes,informativas,obligatorias,conceptos]=await Promise.all([
       contar(''),contar('aprobado_para_email=eq.true'),fechaExtrema(true),fechaExtrema(false),
-      contar('aprobado_para_email=eq.true&prioridad=eq.importante'),
-      contar('aprobado_para_email=eq.true&prioridad=eq.informativa'),
-      contar('aprobado_para_email=eq.true&clasificacion_obligatoriedad=eq.obligatorio_dian_y_contribuyentes'),
-      contar('aprobado_para_email=eq.true&clasificacion_obligatoriedad=eq.obligatorio_dian_solo')
+      contar('aprobado_para_email=eq.true&prioridad=eq.importante'),contar('aprobado_para_email=eq.true&prioridad=eq.informativa'),
+      contar('aprobado_para_email=eq.true&clasificacion_obligatoriedad=eq.obligatorio_dian_y_contribuyentes'),contar('aprobado_para_email=eq.true&clasificacion_obligatoriedad=eq.obligatorio_dian_solo')
     ]);
     const temas=[...new Set(documentos.flatMap(d=>Array.isArray(d.temas)?d.temas:[]))].filter(Boolean).sort((a,b)=>String(a).localeCompare(String(b),'es'));
     res.setHeader('Cache-Control','no-store');
