@@ -22,8 +22,8 @@ except ImportError:
     from composicion import Composicion
     from verificador_aprobacion import verify
 
-RULES_VERSION = "3.0"
-PAGE = 250
+RULES_VERSION = "3.1"
+PAGE = 500
 
 
 def _texto(v):
@@ -56,7 +56,9 @@ def evaluate(d: dict, source_verified: bool = False):
 
     official = bool(_texto(d.get("enlace_oficial")))
     content = bool(_texto(d.get("contenido") or d.get("texto_completo")))
-    date_ok = d.get("fecha_es_real") is True
+    web_date = _texto(d.get("fecha_publicacion_web"))
+    doc_date = _texto(d.get("fecha_publicacion"))
+    date_ok = bool(web_date) or bool(d.get("fecha_es_real") is True and doc_date)
     validity = bool(_texto(d.get("estado_vigencia")))
     classification = bool(_texto(d.get("clasificacion_obligatoriedad")))
     matter = bool(_texto(d.get("materia") or d.get("area_derecho") or d.get("banco_datos")))
@@ -65,7 +67,7 @@ def evaluate(d: dict, source_verified: bool = False):
     warnings = d.get("borrador_advertencias") or []
 
     rule("OFICIAL", official, "Falta enlace oficial DIAN.")
-    rule("FECHA", date_ok, "Fecha no verificada.")
+    rule("FECHA_PUBLICACION", date_ok, "No hay fecha de publicación DIAN identificable.")
     rule("CONTENIDO", content, "No hay contenido suficiente.")
     rule("VIGENCIA", validity, "Estado de vigencia no determinado.")
     rule("CLASIFICACION", classification, "No está determinada la naturaleza/obligatoriedad del documento.")
@@ -94,13 +96,16 @@ def main():
 
     sb = create_client(url, key)
     session = requests.Session()
-    session.headers.update({"User-Agent":"EUCLIDIAN-Fiscal-Reviewer/3.0","Accept-Language":"es-CO,es;q=0.9"})
+    session.headers.update({"User-Agent":"EUCLIDIAN-Fiscal-Reviewer/3.1","Accept-Language":"es-CO,es;q=0.9"})
 
+    # revisado_por_humano representa la aprobación final para el cliente.
+    # revisado_fiscal_en representa que el revisor ya procesó el documento,
+    # incluso si quedó bloqueado en REVIEW. Esto evita que los mismos REVIEW
+    # ocupen el primer lote indefinidamente y permite recorrer todo el corpus.
     rows = (
         sb.table("documentos_tributarios")
         .select("*")
-        .eq("publicado_cliente", False)
-        .eq("revisado_por_humano", False)
+        .is_("revisado_fiscal_en", "null")
         .order("fecha_scraped", desc=False)
         .limit(args.limit)
         .execute().data or []
@@ -114,26 +119,23 @@ def main():
             sb.table("documentos_tributarios").update(cambios).eq("id", d["id"]).execute()
             d.update(cambios)
 
-        if not _texto(d.get("resumen_humano")):
-            result, score, passed, failed, reasons = evaluate(d, False)
-        else:
-            try:
-                source_ok, source_errors = verify(session, d)
-            except Exception as exc:
-                source_ok, source_errors = False, [f"Error verificando fuente oficial: {str(exc)[:180]}"]
-            if source_errors:
-                d["borrador_advertencias"] = source_errors[:12]
-            result, score, passed, failed, reasons = evaluate(d, source_ok)
-            if source_errors:
-                reasons.extend(source_errors[:5])
-                if result == "APPROVE":
-                    result = "REVIEW"
-                    score = min(score, 90)
-                    failed.append("FUENTE_OFICIAL")
+        try:
+            source_ok, source_errors = verify(session, d)
+        except Exception as exc:
+            source_ok, source_errors = False, [f"Error verificando fuente oficial: {str(exc)[:180]}"]
+        if source_errors:
+            d["borrador_advertencias"] = source_errors[:12]
+        result, score, passed, failed, reasons = evaluate(d, source_ok)
+        if source_errors:
+            reasons.extend(source_errors[:5])
+            if result == "APPROVE":
+                result = "REVIEW"
+                score = min(score, 90)
+                failed.append("FUENTE_OFICIAL")
 
         counts[result] += 1
+        now = datetime.now(timezone.utc).isoformat()
         if result == "APPROVE":
-            now = datetime.now(timezone.utc).isoformat()
             sb.table("revisor_fiscal_euclidian_evaluaciones").upsert({
                 "documento_id":d["id"],"resultado":"APPROVE","puntuacion":score,
                 "reglas_pasadas":passed,"reglas_fallidas":[],"motivos":[],
@@ -155,7 +157,9 @@ def main():
                 "motivos":motivos,"version_reglas":RULES_VERSION
             },on_conflict="documento_id").execute()
             sb.table("documentos_tributarios").update({
+                "revisado_por_humano":False,
                 "publicado_cliente":False,
+                "revisado_fiscal_en":now,
                 "aprobado_para_email":False,
                 "observaciones_revisor":" | ".join(motivos)[:4000],
                 "borrador_confianza":"no_aprobado",
