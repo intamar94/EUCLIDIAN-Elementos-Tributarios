@@ -3,16 +3,9 @@
 // La clave de servicio vive solo aca, en el servidor. Nunca llega al
 // navegador.
 //
-// Los filtros son tres ejes que no se pisan:
-//
-//   estado      en que va el trabajo   por revisar / aprobados / todos
-//   prioridad   que tan urgente es     accion / importante / informativa
-//   naturaleza  que clase de documento obligatorias / conceptos
-//
-// Antes habia una sola lista donde "Plazo o retroactivas" y "Accion
-// requerida" eran casi el mismo grupo por dos caminos distintos, y
-// "Obligatorias" se cruzaba con "Importantes". Habia que entender dos
-// sistemas para buscar una cosa.
+// La vista publica solo muestra documentos que han superado el Revisor Fiscal
+// y estan marcados como publicado_cliente. Los documentos pendientes siguen
+// siendo internos y no deben aparecer en la biblioteca del cliente.
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY;
@@ -23,8 +16,6 @@ const POR_PAGINA = 25;
 const ESTADOS = {
   pendientes: 'revisado_por_humano=eq.false',
   nuevos:     'es_nuevo=is.true',
-  // "Aprobado" significa aprobado por el Revisor Fiscal y publicado al
-  // cliente. No depende de aprobado_para_email, que es otro proceso.
   aprobados:  'revisado_por_humano=eq.true&publicado_cliente=eq.true',
   todos:      '',
 };
@@ -40,14 +31,11 @@ const NATURALEZAS = {
   conceptos:    'clasificacion_obligatoriedad=eq.obligatorio_dian_solo',
 };
 
-// Periodos. El archivo completo va desde 1931; filtrar por 2026 era una
-// decision nuestra, no del lector. Un contador que busca doctrina sobre
-// firmeza necesita los de 2019 igual que los de este año.
 const PERIODOS = {
-  '2026':    'anio=eq.2026',
+  '2026':     'anio=eq.2026',
   'recientes':'anio=gte.2024',
-  'decada':  'anio=gte.2016',
-  'todo':    '',
+  'decada':   'anio=gte.2016',
+  'todo':     '',
 };
 
 const ORDENES = {
@@ -82,12 +70,17 @@ export default async function handler(req, res) {
   }
 
   const periodoSolicitado = String(req.query.periodo || '2026');
-  // Un año de cuatro cifras es un filtro exacto. Los demás valores usan
-  // los periodos predefinidos para mantener los filtros actuales.
   const periodo = /^\d{4}$/.test(periodoSolicitado)
     ? periodoSolicitado
     : (PERIODOS[periodoSolicitado] !== undefined ? periodoSolicitado : '2026');
-  const estado = ESTADOS[req.query.estado] !== undefined ? req.query.estado : 'pendientes';
+
+  // La biblioteca del cliente debe abrir siempre en documentos publicados.
+  // La bandeja interna puede pedir pendientes/todos explicitamente.
+  const estadoSolicitado = req.query.estado;
+  const estado = ESTADOS[estadoSolicitado] !== undefined
+    ? estadoSolicitado
+    : 'aprobados';
+
   const tema = req.query.tema || '';
   const prioridad = PRIORIDADES[req.query.prioridad] ? req.query.prioridad : '';
   const naturaleza = NATURALEZAS[req.query.naturaleza] ? req.query.naturaleza : '';
