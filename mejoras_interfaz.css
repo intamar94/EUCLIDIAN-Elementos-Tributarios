@@ -1,0 +1,84 @@
+/* EUCLIDIAN — lectura uniforme */
+#lista article,
+#lista article h2,
+#lista article p,
+#lista article li,
+#lista article label,
+#lista article textarea,
+#lista article button,
+#lista article .datos,
+#lista article .pista,
+#lista article .respuesta,
+#lista article .borrador,
+#lista article .plazo,
+#lista article .rel,
+#lista article .oficial{
+  font-family:'IBM Plex Sans',Arial,sans-serif;
+}
+
+#lista article h2{
+  font-family:'IBM Plex Sans',Arial,sans-serif;
+  font-weight:600;
+  letter-spacing:-.015em;
+}
+
+#lista article .codigo,
+#lista article .interno,
+#lista article .fecha,
+#lista article .cinta,
+#lista article .resp-cab,
+#lista article .borrador-cab,
+#lista article .plazo-cab,
+#lista article .rel b,
+#lista article .oficial summary,
+#lista article .escribir label,
+#lista article .redactado,
+#lista article .marcas span{
+  font-family:'IBM Plex Sans',Arial,sans-serif;
+}
+
+.resumen-lectura{
+  margin:0 0 12px;
+  padding:13px 14px;
+  background:#f8f6ef;
+  border:1px solid var(--linea);
+  border-left:3px solid var(--orienta);
+  border-radius:3px;
+}
+.resumen-cab{
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:6px;
+  color:var(--tinta);
+  font-size:12px;
+  font-weight:600;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+}
+.resumen-cab small{
+  color:var(--tenue);
+  font-size:10px;
+  font-weight:400;
+  letter-spacing:.02em;
+  text-transform:none;
+}
+.resumen-lectura p{
+  margin:0;
+  color:#28332C;
+  font-size:15px;
+  line-height:1.55;
+}
+.total-documentos{
+  max-width:var(--ancho,980px);
+  margin:0 auto 8px;
+  padding:0 2px;
+  color:var(--tenue);
+  font:500 12px 'IBM Plex Sans',Arial,sans-serif;
+}
+@media(max-width:620px){
+  .resumen-lectura p{font-size:14px;line-height:1.5}
+  .resumen-cab{font-size:11px}
+  .resumen-cab small{font-size:9px}
+}
