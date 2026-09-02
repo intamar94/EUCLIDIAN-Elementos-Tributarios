@@ -37,16 +37,16 @@ body{background:#f3f0e8}
 .cab-cifras,.cab-util .derecha{display:none}
 
 #controles{padding-top:0}
-#controles .filtros-directos{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto;align-items:center;gap:16px;padding:12px 0 16px;border-top:2px solid #b83b2f}
+#controles .filtros-directos{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto;align-items:center;gap:16px;padding:10px 0 14px;border-top:1px solid #b83b2f}
 #controles .filtro{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:10px;min-width:0}
 #controles .filtros-directos .rotulo{margin:0;white-space:nowrap}
 #controles .filtros-directos select{width:100%;min-height:42px;box-sizing:border-box}
 #controles .filtros-directos .limpiar{margin:0;white-space:nowrap}
 #controles .mas{display:none}
 
-/* Separación limpia y simétrica entre filtros/orden y contenido. */
-#barra{display:flex;align-items:center;justify-content:space-between;gap:16px;border-bottom:2px solid #b83b2f;padding:8px 0 10px;margin:0;position:relative;box-sizing:border-box}
-#barra:after{content:"";display:block;height:2px;background:#b83b2f;position:absolute;left:0;right:0;bottom:-8px}
+/* Separadores uniformes: una sola linea fina, con la misma proporción y peso. */
+#barra{display:flex;align-items:center;justify-content:space-between;gap:16px;border-bottom:1px solid #b83b2f;padding:8px 0 10px;margin:0;position:relative;box-sizing:border-box}
+#barra:after{display:none}
 #barra label{display:flex;align-items:center;gap:8px;white-space:nowrap}
 
 @media(min-width:900px){
@@ -76,7 +76,7 @@ body{background:#f3f0e8}
   .cab-util{margin-top:10px;padding-bottom:10px}
   .fecha-actual{font-size:12px;letter-spacing:.02em}
   #controles{padding:0 0 4px}
-  #controles .filtros-directos{display:grid;grid-template-columns:1fr;gap:10px;padding:10px 0 12px}
+  #controles .filtros-directos{display:grid;grid-template-columns:1fr;gap:10px;padding:9px 0 12px}
   #controles .filtro{display:grid;grid-template-columns:112px minmax(0,1fr);align-items:center;gap:8px}
   #controles .filtros-directos .rotulo{margin:0}
   #controles .filtros-directos> .filtro select{width:100%;min-height:48px}
