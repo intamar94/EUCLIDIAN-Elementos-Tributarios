@@ -6,6 +6,7 @@ from scripts.revisor_fiscal_euclidian import evaluate
 BASE = {
     "enlace_oficial": "https://normograma.dian.gov.co/dian/compilacion/docs/oficio_dian_13000_2026.htm",
     "contenido": "Contenido oficial suficiente.",
+    "fecha_publicacion": "2026-08-21",
     "fecha_es_real": True,
     "estado_vigencia": "vigente",
     "clasificacion_obligatoriedad": "obligatorio_dian_y_contribuyentes",
