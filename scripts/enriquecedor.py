@@ -13,12 +13,12 @@ except ImportError:
 logging.basicConfig(level=logging.INFO,format="%(asctime)s  %(levelname)-7s %(message)s",datefmt="%H:%M:%S")
 log=logging.getLogger("euclidian")
 SUPABASE_URL=os.getenv("SUPABASE_URL"); SUPABASE_KEY=os.getenv("SUPABASE_SERVICE_KEY")
-TIMEOUT=30; PAUSA=0.8; RETRY_DIAS=7
+TIMEOUT=30; PAUSA=0.2; RETRY_DIAS=7
 
 class Enriquecedor(LectorDocumento,Alertas):
     def __init__(self,limite=150,anio=None,dry_run=False,minutos=0):
         self.minutos=minutos; self.inicio=time.monotonic(); self.limite=limite; self.anio=anio; self.dry_run=dry_run; self.stats=Counter()
-        self.s=requests.Session(); self.s.headers.update({"User-Agent":"Mozilla/5.0 Chrome/122.0 Safari/537.36","Accept-Language":"es-CO,es;q=0.9"})
+        self.s=requests.Session(); self.s.headers.update({"User-Agent":"EUCLIDIAN/3.1 (lector oficial DIAN)","Accept-Language":"es-CO,es;q=0.9"})
         if not SUPABASE_URL or not SUPABASE_KEY: log.error("Faltan SUPABASE_URL o SUPABASE_SERVICE_KEY"); sys.exit(1)
         self.db=create_client(SUPABASE_URL,SUPABASE_KEY)
     def correr(self):
@@ -40,18 +40,15 @@ class Enriquecedor(LectorDocumento,Alertas):
         q=self.db.table("documentos_tributarios").select("id,numero_resolucion,enlace_oficial,tipo_documento,contenido,temas,fecha_publicacion,enriquecido_en").eq("fecha_es_real",False)
         if self.anio:q=q.gte("fecha_publicacion",f"{self.anio}-01-01").lte("fecha_publicacion",f"{self.anio}-12-31")
         try:
-            # Prioridad 1: nunca procesados. Prioridad 2: fallidos hace >=7 días.
-            r=q.is_("enriquecido_en","null").order("fecha_publicacion",desc=True).limit(self.limite).execute()
-            datos=r.data or []
+            r=q.is_("enriquecido_en","null").order("fecha_publicacion",desc=True).limit(self.limite).execute(); datos=r.data or []
             if len(datos)<self.limite:
                 restante=self.limite-len(datos)
                 corte=(datetime.now(timezone.utc)-__import__('datetime').timedelta(days=RETRY_DIAS)).isoformat()
-                r2=q.not_.is_("enriquecido_en","null").lt("enriquecido_en",corte).order("enriquecido_en",desc=False).limit(restante).execute()
-                datos += r2.data or []
+                r2=q.not_.is_("enriquecido_en","null").lt("enriquecido_en",corte).order("enriquecido_en",desc=False).limit(restante).execute(); datos += r2.data or []
             return datos
         except Exception as e:log.error("No se pudo leer la lista: %s",str(e)[:200]);sys.exit(1)
     def _enriquecer(self,doc,i,total):
-        try:r=self.s.get(doc["enlace_oficial"],timeout=TIMEOUT);r.encoding=r.apparent_encoding or "utf-8"
+        try:r=self.s.get(doc["enlace_oficial"],timeout=TIMEOUT,allow_redirects=True);r.encoding=r.apparent_encoding or "utf-8"
         except requests.RequestException as e:self.stats["error_red"]+=1;log.warning("[%d/%d] %s red: %s",i,total,doc["numero_resolucion"],str(e)[:70]);return
         if r.status_code!=200:self.stats["http_error"]+=1;log.warning("[%d/%d] %s HTTP %s",i,total,doc["numero_resolucion"],r.status_code);return
         soup=BeautifulSoup(r.text,"html.parser")
@@ -61,6 +58,12 @@ class Enriquecedor(LectorDocumento,Alertas):
         fecha=self._fecha(texto)
         if fecha:campos.update({"fecha_publicacion":fecha.isoformat(),"fecha_es_real":True});self.stats["fecha_hallada"]+=1
         else:self.stats["fecha_no_hallada"]+=1
+        fecha_web=self._fecha_publicacion_web(texto)
+        if fecha_web:
+            campos["fecha_publicacion_web"]=fecha_web.isoformat();self.stats["fecha_web_hallada"]+=1
+        else:self.stats["fecha_web_no_hallada"]+=1
+        if fecha_web:campos["anio_publicacion"]=fecha_web.year
+        elif fecha:campos["anio_publicacion"]=fecha.year
         diario=self._diario_oficial(texto)
         if diario:campos["diario_oficial"]=diario[:120];self.stats["con_diario_oficial"]+=1
         entidad=self._entidad(texto)
@@ -78,7 +81,14 @@ class Enriquecedor(LectorDocumento,Alertas):
         estado,motivo=self._estado(anotaciones)
         if estado:campos["estado_vigencia"]=estado;campos["motivo_cambio_estado"]=motivo[:500];self.stats[f"estado_{estado}"]+=1
         if self.dry_run:return
-        try:self.db.table("documentos_tributarios").update(campos).eq("id",doc["id"]).execute();self.stats["actualizados"]+=1
+        try:
+            # Un enriquecimiento nuevo invalida una revisión anterior: el
+            # revisor debe volver a comprobar el documento con los datos
+            # actualizados de la fuente oficial.
+            campos["revisado_fiscal_en"]=None
+            campos["revisado_por_humano"]=False
+            campos["publicado_cliente"]=False
+            self.db.table("documentos_tributarios").update(campos).eq("id",doc["id"]).execute();self.stats["actualizados"]+=1
         except Exception as e:self.stats["error_guardado"]+=1;log.error("No se pudo guardar %s: %s",doc["numero_resolucion"],str(e)[:160]);return
         self._alertas(doc,campos,anotaciones,retro,zonas)
     def _resumen(self):
