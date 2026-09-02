@@ -10,49 +10,17 @@ async function entrar(e){
   CLAVE=valor;
   if(btn){btn.disabled=true;btn.textContent='COMPROBANDO…';}
   if(mal) mal.textContent='';
-  try{
-    await cargar(true);
-  }catch(err){
-    CLAVE='';
-    sessionStorage.removeItem('euclidian_clave');
-    if(mal) mal.textContent=err.message || 'No se pudo comprobar el acceso.';
-  }finally{
-    if(btn){btn.disabled=false;btn.textContent='ENTRAR';}
-  }
+  try{await cargar(true);}catch(err){CLAVE='';sessionStorage.removeItem('euclidian_clave');if(mal)mal.textContent=err.message||'No se pudo comprobar el acceso.';}
+  finally{if(btn){btn.disabled=false;btn.textContent='ENTRAR';}}
 }
-
 function contar(id){const t=document.getElementById('r-'+id),c=document.getElementById('c-'+id);if(!t||!c)return;const n=t.value.trim().length;c.textContent=n?n+' / 320':'0';c.className='contador'+(n>320?' largo':'');}
 function usarBorrador(id){const t=document.getElementById('r-'+id),b=document.querySelector(`article[data-id="${id}"] .borrador p`);if(!t||!b)return;t.value=b.textContent.trim();contar(id);t.focus();}
 async function guardarResumen(id){const t=document.getElementById('r-'+id);if(!t)return;const valor=t.value.trim();if(t.dataset.guardado===valor)return;try{const r=await fetch('/api/decidir',{method:'POST',headers:{'Content-Type':'application/json','x-clave':CLAVE},body:JSON.stringify({id,decision:'devolver',resumen:valor})});if(!r.ok)throw new Error('no se guardó');t.dataset.guardado=valor;t.style.borderColor='';const art=t.closest('article');if(art)art.classList.toggle('escrito',!!valor);}catch(e){t.style.borderColor='var(--regla)';}}
-
 async function cargar(autenticar=false){
-  const lista=document.getElementById('lista'),btn=document.getElementById('btnRecargar'),mal=document.getElementById('mal');
-  if(btn)btn.disabled=true;
-  if(lista)lista.innerHTML='<div class="aviso">Leyendo…</div>';
-  document.getElementById('paginas').innerHTML='';
-  const controller=new AbortController();
-  const timer=setTimeout(()=>controller.abort(),15000);
-  try{
-    const q=new URLSearchParams({estado:F.estado,orden:F.orden,periodo:F.periodo,pagina:F.pagina});
-    if(F.tema)q.set('tema',F.tema);if(F.prioridad)q.set('prioridad',F.prioridad);if(F.naturaleza)q.set('naturaleza',F.naturaleza);
-    const r=await fetch('/api/documentos?'+q,{headers:{'x-clave':CLAVE},cache:'no-store',signal:controller.signal});
-    if(r.status===401)throw new Error('Clave incorrecta.');
-    const data=await r.json().catch(()=>({error:'Respuesta inválida del servidor.'}));
-    if(!r.ok)throw new Error(data.detalle||data.error||'No se pudo leer la base.');
-    sessionStorage.setItem('euclidian_clave',CLAVE);
-    document.getElementById('puerta').hidden=true;if(mal)mal.textContent='';document.getElementById('cab').hidden=false;document.getElementById('controles').hidden=false;document.getElementById('barra').hidden=false;
-    const np=document.getElementById('nPend'),na=document.getElementById('nApr');if(np)np.textContent=data.pendientes;if(na)na.textContent=data.aprobados;
-    pintar('gPrioridad',data.prioridad||{});pintar('gNaturaleza',data.naturaleza||{});pintar('gEstado',data.estado||{});pintar('gPeriodo',data.periodos||{});marcarActivos();poblarTemas(data.temas||[]);
-    if(!data.documentos.length){lista.innerHTML=F.estado==='aprobados'?'<div class="aviso"><b>Nada aprobado aún</b>Aprueba documentos y aparecerán aquí.</div>':'<div class="aviso"><b>Nada por aquí</b>Prueba con otro filtro.</div>';return data;}
-    lista.innerHTML=data.documentos.map(ficha).join('');paginacion(data);window.scrollTo({top:0,behavior:'smooth'});return data;
-  }catch(e){
-    if(e.name==='AbortError')throw new Error('El servidor tardó demasiado en responder. Inténtalo de nuevo.');
-    if(autenticar){if(lista)lista.innerHTML='';throw e;}
-    if(lista)lista.innerHTML=`<div class="error">No se pudo leer la base.<code>${esc(e.message)}</code></div>`;
-    throw e;
-  }finally{clearTimeout(timer);if(btn)btn.disabled=false;}
-}
-
+  const lista=document.getElementById('lista'),btn=document.getElementById('btnRecargar'),mal=document.getElementById('mal');if(btn)btn.disabled=true;if(lista)lista.innerHTML='<div class="aviso">Leyendo…</div>';document.getElementById('paginas').innerHTML='';
+  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),15000);
+  try{const q=new URLSearchParams({estado:F.estado,orden:F.orden,periodo:F.periodo,pagina:F.pagina});if(F.tema)q.set('tema',F.tema);if(F.prioridad)q.set('prioridad',F.prioridad);if(F.naturaleza)q.set('naturaleza',F.naturaleza);const r=await fetch('/api/documentos?'+q,{headers:{'x-clave':CLAVE},cache:'no-store',signal:controller.signal});if(r.status===401)throw new Error('Clave incorrecta.');const data=await r.json().catch(()=>({error:'Respuesta inválida del servidor.'}));if(!r.ok)throw new Error(data.detalle||data.error||'No se pudo leer la base.');sessionStorage.setItem('euclidian_clave',CLAVE);document.getElementById('puerta').hidden=true;if(mal)mal.textContent='';document.getElementById('cab').hidden=false;document.getElementById('controles').hidden=false;document.getElementById('barra').hidden=false;const np=document.getElementById('nPend'),na=document.getElementById('nApr');if(np)np.textContent=data.pendientes;if(na)na.textContent=data.aprobados;pintar('gPrioridad',data.prioridad||{});pintar('gNaturaleza',data.naturaleza||{});pintar('gEstado',data.estado||{});pintar('gPeriodo',data.periodos||{});marcarActivos();poblarTemas(data.temas||[]);if(!data.documentos.length){lista.innerHTML=F.estado==='aprobados'?'<div class="aviso"><b>Nada aprobado aún</b>Aprueba documentos y aparecerán aquí.</div>':'<div class="aviso"><b>Nada por aquí</b>Prueba con otro filtro.</div>';return data;}lista.innerHTML=data.documentos.map(ficha).join('');paginacion(data);window.scrollTo({top:0,behavior:'smooth'});return data;
+  }catch(e){if(e.name==='AbortError')throw new Error('El servidor tardó demasiado en responder. Inténtalo de nuevo.');if(autenticar){if(lista)lista.innerHTML='';throw e;}if(lista)lista.innerHTML=`<div class="error">No se pudo leer la base.<code>${esc(e.message)}</code></div>`;throw e;}finally{clearTimeout(timer);if(btn)btn.disabled=false;}}
 function pintar(grupo,conteos){document.querySelectorAll('#'+grupo+' button').forEach(b=>{const marca=b.querySelector('b');if(marca){const n=conteos[b.dataset.v];marca.textContent=n===undefined?'':n;}});}
 function poblarTemas(temas){const sel=document.getElementById('selTema');if(!sel)return;const actual=sel.value;const orden=[...temas].sort((a,b)=>nombreTema(a).localeCompare(nombreTema(b),'es'));sel.innerHTML='<option value="">Todos los temas</option>'+orden.map(t=>`<option value="${t}">${nombreTema(t)}</option>`).join('');sel.value=actual;}
 function seleccionarAnio(anio){F.periodo=anio||'2026';F.pagina=1;document.querySelectorAll('#gPeriodo button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.v===F.periodo)));marcarActivos();cargar();}
@@ -62,6 +30,6 @@ async function decidir(id,decision){const art=document.querySelector(`article[da
 function marcarActivos(){const n=[F.prioridad,F.naturaleza,F.tema,F.estado!=='aprobados'?F.estado:'',F.periodo!=='2026'?F.periodo:''].filter(Boolean).length;const marca=document.getElementById('activos');if(marca)marca.textContent=n?n:'';const btn=document.getElementById('btnLimpiar');if(btn)btn.hidden=n===0;}
 function limpiar(){F.prioridad='';F.naturaleza='';F.tema='';F.estado='aprobados';F.periodo='2026';F.pagina=1;document.getElementById('selTema').value='';const anio=document.getElementById('selAnio');if(anio)anio.value='';cargar();}
 function grupoClic(grupo,campo){document.getElementById(grupo).addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;F[campo]=b.dataset.v;F.pagina=1;if(campo==='periodo'){const anio=document.getElementById('selAnio');if(anio)anio.value=/^\d{4}$/.test(F.periodo)?F.periodo:'';}document.querySelectorAll('#'+grupo+' button').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));cargar();});}
-grupos=['gPrioridad','gNaturaleza','gEstado','gPeriodo'].forEach((g,i)=>grupoClic(g,['prioridad','naturaleza','estado','periodo'][i]));
+const grupos=['gPrioridad','gNaturaleza','gEstado','gPeriodo'];grupos.forEach((g,i)=>grupoClic(g,['prioridad','naturaleza','estado','periodo'][i]));
 document.getElementById('selAnio').addEventListener('change',e=>seleccionarAnio(e.target.value));document.getElementById('selTema').addEventListener('change',e=>{F.tema=e.target.value;F.pagina=1;cargar();});document.getElementById('selOrden').addEventListener('change',e=>{F.orden=e.target.value;F.pagina=1;cargar();});
 if(CLAVE)cargar().catch(()=>{});else document.getElementById('puerta').hidden=false;
