@@ -4,7 +4,7 @@
  * cada ficha esta en fichas.js, que se carga antes.
  */
 let CLAVE = sessionStorage.getItem('euclidian_clave') || '';
-/* Tres ejes que se combinan libremente, mas tema y orden. */
+/* Tres ejes que se combinan libremente, mas tema, año y orden. */
 const F = { estado:'pendientes', prioridad:'', naturaleza:'',
             periodo:'2026', tema:'', orden:'recientes', pagina:1 };
 
@@ -128,6 +128,17 @@ function poblarTemas(temas){
   sel.value = actual;
 }
 
+/* Selector de año: el año elegido se convierte en un periodo exacto en la
+   API. El resto de periodos sigue funcionando como antes. */
+function seleccionarAnio(anio){
+  F.periodo = anio || '2026';
+  F.pagina = 1;
+  document.querySelectorAll('#gPeriodo button').forEach(b=>
+    b.setAttribute('aria-pressed', String(b.dataset.v === F.periodo)));
+  marcarActivos();
+  cargar();
+}
+
 /* Antes se traian 60 documentos sin decir que habia mas. Quien llegaba
    al final creia haberlo visto todo. */
 function paginacion(data){
@@ -137,8 +148,6 @@ function paginacion(data){
 
   const primero = (pagina-1)*porPagina + 1;
   const ultimo = Math.min(pagina*porPagina, total);
-  // El rango vive arriba, junto al orden: es lo mismo que se lee antes
-  // de empezar a mirar, no despues de recorrer toda la lista.
   const r = document.getElementById('rango');
   if (r) r.textContent = `${primero}–${ultimo} de ${total}`;
   let html = '';
@@ -191,9 +200,6 @@ async function decidir(id, decision){
 }
 
 /* ═══════════ controles ═══════════ */
-/* Cuantos filtros hay puestos, y como quitarlos. Sin esto es facil
-   quedarse mirando una lista corta sin recordar que hay un tema
-   seleccionado dentro del panel. */
 function marcarActivos(){
   // El orden no cuenta: no reduce la lista, solo la reacomoda.
   const n = [
@@ -211,6 +217,8 @@ function limpiar(){
   F.prioridad = ''; F.naturaleza = ''; F.tema = '';
   F.estado = 'pendientes'; F.periodo = '2026'; F.pagina = 1;
   document.getElementById('selTema').value = '';
+  const anio = document.getElementById('selAnio');
+  if (anio) anio.value = '';
   ['gPrioridad','gNaturaleza','gEstado','gPeriodo'].forEach(g=>{
     document.querySelectorAll('#'+g+' button').forEach((b,i)=>
       b.setAttribute('aria-pressed', String(i === 0)));
@@ -223,6 +231,10 @@ function grupoClic(grupo, campo){
     const b = e.target.closest('button'); if(!b) return;
     F[campo] = b.dataset.v;
     F.pagina = 1;
+    if (campo === 'periodo') {
+      const anio = document.getElementById('selAnio');
+      if (anio) anio.value = /^\d{4}$/.test(F.periodo) ? F.periodo : '';
+    }
     document.querySelectorAll('#'+grupo+' button').forEach(x=>
       x.setAttribute('aria-pressed', String(x===b)));
     cargar();
@@ -233,6 +245,7 @@ grupoClic('gNaturaleza','naturaleza');
 grupoClic('gEstado','estado');
 grupoClic('gPeriodo','periodo');
 
+document.getElementById('selAnio').addEventListener('change', e=> seleccionarAnio(e.target.value));
 document.getElementById('selTema').addEventListener('change', e=>{
   F.tema = e.target.value; F.pagina = 1; cargar();
 });
