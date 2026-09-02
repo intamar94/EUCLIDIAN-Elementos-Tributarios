@@ -7,24 +7,33 @@ DEPARTAMENTOS=["Amazonas","Antioquia","Arauca","Atlántico","Bolívar","Boyacá"
 
 class LectorDocumento:
     def _fecha(self,texto):
+        """Fecha propia del acto/concepto, no la fecha de publicación web."""
         cab=texto[:5000]
         patrones=[
             r"\(\s*([a-zA-ZáéíóúÁÉÍÓÚ]+)\s+(\d{1,2})\s*\)",
             r"\(\s*(\d{1,2})\s+de\s+([a-zA-ZáéíóúÁÉÍÓÚ]+)\s*\)",
-            r"Diario Oficial[^\n]{0,100}?de\s+(\d{1,2})\s+de\s+([a-zA-ZáéíóúÁÉÍÓÚ]+)\s+de\s+((?:19|20)\d{2})",
             r"Dad[oa][^\n]{0,100}?(\d{1,2})\s+de\s+([a-zA-ZáéíóúÁÉÍÓÚ]+)\s+de\s+((?:19|20)\d{2})",
             r"(?:expedid[oa]|suscrit[oa]|fecha)\s*(?:el|a|:)\s*(\d{1,2})\s+de\s+([a-zA-ZáéíóúÁÉÍÓÚ]+)\s+de\s+((?:19|20)\d{2})",
+            r"Diario Oficial[^\n]{0,100}?de\s+(\d{1,2})\s+de\s+([a-zA-ZáéíóúÁÉÍÓÚ]+)\s+de\s+((?:19|20)\d{2})",
         ]
         anios=re.findall(r"\b(?:19|20)\d{2}\b",cab[:1500])
         anio=anios[0] if anios else None
         for idx,p in enumerate(patrones):
             m=re.search(p,cab,re.I)
             if not m: continue
-            if idx==0 and anio: f=a_fecha(m.group(2),m.group(1),anio)
-            elif idx==1 and anio: f=a_fecha(m.group(1),m.group(2),anio)
-            else: f=a_fecha(m.group(1),m.group(2),m.group(3))
+            if idx in (0,1) and anio:
+                f=a_fecha(m.group(2),m.group(1),anio) if idx==0 else a_fecha(m.group(1),m.group(2),anio)
+            else:
+                f=a_fecha(m.group(1),m.group(2),m.group(3))
             if f:return f
         return None
+
+    def _fecha_publicacion_web(self,texto):
+        """Fecha en que la DIAN indica que publicó el documento en su web."""
+        m=re.search(r"Publicado\s+en\s+la\s+p[aá]gina\s+web\s+de\s+la\s+DIAN\s*:\s*(\d{1,2})\s+de\s+([a-zA-ZáéíóúÁÉÍÓÚ]+)\s+de\s+((?:19|20)\d{2})", texto[:7000], re.I)
+        if not m:
+            return None
+        return a_fecha(m.group(1),m.group(2),m.group(3))
 
     def _diario_oficial(self,texto):
         m=re.search(r"Diario Oficial\s*(?:No\.?|N[uú]mero)?\s*([\d.]+)\s*de\s+(\d{1,2})\s+de\s+([a-zA-ZáéíóúÁÉÍÓÚ]+)\s+de\s+((?:19|20)\d{2})",texto[:5000],re.I)
