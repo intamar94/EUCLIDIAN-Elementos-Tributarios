@@ -2,13 +2,13 @@ name: EUCLIDIAN — Revisor Fiscal
 
 on:
   schedule:
-    - cron: '*/15 * * * *'
+    - cron: '*/5 * * * *'
   workflow_dispatch:
     inputs:
       limite:
-        description: 'Documentos a evaluar por ejecución'
+        description: 'Documentos a revisar por ejecución (máximo 500)'
         required: false
-        default: '500'
+        default: '250'
 
 permissions:
   contents: read
@@ -20,7 +20,7 @@ concurrency:
 jobs:
   revisar:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v6
@@ -34,4 +34,4 @@ jobs:
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
-        run: python scripts/revisor_fiscal_euclidian.py --limit ${{ inputs.limite || '500' }}
+        run: python scripts/revisor_fiscal_euclidian.py --limit ${{ inputs.limite || '250' }}
