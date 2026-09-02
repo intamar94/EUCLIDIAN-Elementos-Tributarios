@@ -1,15 +1,15 @@
-"""EUCLIDIAN — Revisor Fiscal final.
+"""EUCLIDIAN — Revisor Fiscal final, turbo y trazable.
 
-El revisor no es un simple detector de campos. Prepara la ficha para contador,
-comprueba que los datos críticos existan, contrasta el resumen con la fuente
-oficial DIAN y solo entonces publica el documento en la biblioteca.
-
-La bandera de email NO participa en la publicación de la biblioteca.
+Procesa el corpus completo por lotes grandes, verifica cada documento contra
+el Normograma DIAN y solo publica cuando la evidencia oficial es suficiente.
+La concurrencia acelera la lectura de fuentes sin relajar ninguna regla.
 """
 from __future__ import annotations
 
 import argparse
 import os
+import threading
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 
 import requests
@@ -22,12 +22,28 @@ except ImportError:
     from composicion import Composicion
     from verificador_aprobacion import verify
 
-RULES_VERSION = "3.1"
-PAGE = 500
+RULES_VERSION = "3.2"
+DEFAULT_LIMIT = 20000
+MAX_LIMIT = 20000
+WORKERS = 16
+_thread_local = threading.local()
 
 
 def _texto(v):
     return str(v or "").strip()
+
+
+def _session():
+    s = getattr(_thread_local, "session", None)
+    if s is None:
+        s = requests.Session()
+        s.headers.update({
+            "User-Agent": "EUCLIDIAN-Fiscal-Reviewer/3.2",
+            "Accept-Language": "es-CO,es;q=0.9",
+            "Connection": "keep-alive",
+        })
+        _thread_local.session = s
+    return s
 
 
 def preparar_ficha(d: dict) -> dict:
@@ -82,12 +98,27 @@ def evaluate(d: dict, source_verified: bool = False):
     return result, score, passed, failed, reasons
 
 
+def _verify_one(row):
+    d = dict(row)
+    cambios = preparar_ficha(d)
+    if cambios:
+        d.update(cambios)
+    try:
+        source_ok, source_errors = verify(_session(), d)
+    except Exception as exc:
+        source_ok, source_errors = False, [f"Error verificando fuente oficial: {str(exc)[:180]}"]
+    return d, cambios, source_ok, source_errors
+
+
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--limit", type=int, default=PAGE)
+    ap.add_argument("--limit", type=int, default=DEFAULT_LIMIT)
+    ap.add_argument("--workers", type=int, default=WORKERS)
     args = ap.parse_args()
-    if args.limit < 1 or args.limit > 500:
-        raise SystemExit("--limit debe estar entre 1 y 500")
+    if args.limit < 1 or args.limit > MAX_LIMIT:
+        raise SystemExit(f"--limit debe estar entre 1 y {MAX_LIMIT}")
+    if args.workers < 1 or args.workers > 32:
+        raise SystemExit("--workers debe estar entre 1 y 32")
 
     url = os.environ.get("SUPABASE_URL")
     key = os.environ.get("SUPABASE_SERVICE_KEY")
@@ -95,13 +126,6 @@ def main():
         raise SystemExit("Missing SUPABASE_URL or SUPABASE_SERVICE_KEY")
 
     sb = create_client(url, key)
-    session = requests.Session()
-    session.headers.update({"User-Agent":"EUCLIDIAN-Fiscal-Reviewer/3.1","Accept-Language":"es-CO,es;q=0.9"})
-
-    # revisado_por_humano representa la aprobación final para el cliente.
-    # revisado_fiscal_en representa que el revisor ya procesó el documento,
-    # incluso si quedó bloqueado en REVIEW. Esto evita que los mismos REVIEW
-    # ocupen el primer lote indefinidamente y permite recorrer todo el corpus.
     rows = (
         sb.table("documentos_tributarios")
         .select("*")
@@ -111,62 +135,81 @@ def main():
         .execute().data or []
     )
 
-    counts = {"APPROVE":0,"REVIEW":0}
-    for original in rows:
-        d = dict(original)
-        cambios = preparar_ficha(d)
-        if cambios:
-            sb.table("documentos_tributarios").update(cambios).eq("id", d["id"]).execute()
-            d.update(cambios)
+    print(f"TURBO_INICIO universo={len(rows)} workers={args.workers} reglas={RULES_VERSION}", flush=True)
+    counts = {"APPROVE": 0, "REVIEW": 0}
 
-        try:
-            source_ok, source_errors = verify(session, d)
-        except Exception as exc:
-            source_ok, source_errors = False, [f"Error verificando fuente oficial: {str(exc)[:180]}"]
-        if source_errors:
-            d["borrador_advertencias"] = source_errors[:12]
-        result, score, passed, failed, reasons = evaluate(d, source_ok)
-        if source_errors:
-            reasons.extend(source_errors[:5])
+    # Primero hacemos las lecturas/verificaciones en paralelo. Las escrituras
+    # siguen siendo individuales y trazables para no perder auditoría.
+    with ThreadPoolExecutor(max_workers=args.workers) as pool:
+        futures = {pool.submit(_verify_one, row): row for row in rows}
+        for n, future in enumerate(as_completed(futures), 1):
+            original = futures[future]
+            try:
+                d, cambios, source_ok, source_errors = future.result()
+            except Exception as exc:
+                d = dict(original)
+                cambios = {}
+                source_ok = False
+                source_errors = [f"Error inesperado del revisor: {str(exc)[:180]}"]
+
+            if cambios:
+                sb.table("documentos_tributarios").update(cambios).eq("id", d["id"]).execute()
+
+            if source_errors:
+                d["borrador_advertencias"] = source_errors[:12]
+            result, score, passed, failed, reasons = evaluate(d, source_ok)
+            if source_errors:
+                reasons.extend(source_errors[:5])
+                if result == "APPROVE":
+                    result = "REVIEW"
+                    score = min(score, 90)
+                    failed.append("FUENTE_OFICIAL")
+
+            counts[result] += 1
+            now = datetime.now(timezone.utc).isoformat()
             if result == "APPROVE":
-                result = "REVIEW"
-                score = min(score, 90)
-                failed.append("FUENTE_OFICIAL")
+                sb.table("revisor_fiscal_euclidian_evaluaciones").upsert({
+                    "documento_id": d["id"],
+                    "resultado": "APPROVE",
+                    "puntuacion": score,
+                    "reglas_pasadas": passed,
+                    "reglas_fallidas": [],
+                    "motivos": [],
+                    "version_reglas": RULES_VERSION,
+                }, on_conflict="documento_id").execute()
+                sb.table("documentos_tributarios").update({
+                    "revisado_por_humano": True,
+                    "publicado_cliente": True,
+                    "revisado_fiscal_en": now,
+                    "observaciones_revisor": None,
+                    "borrador_confianza": "alta",
+                    "borrador_advertencias": [],
+                }).eq("id", d["id"]).execute()
+            else:
+                motivos = reasons[:12]
+                sb.table("revisor_fiscal_euclidian_evaluaciones").upsert({
+                    "documento_id": d["id"],
+                    "resultado": "REVIEW",
+                    "puntuacion": score,
+                    "reglas_pasadas": passed,
+                    "reglas_fallidas": failed,
+                    "motivos": motivos,
+                    "version_reglas": RULES_VERSION,
+                }, on_conflict="documento_id").execute()
+                sb.table("documentos_tributarios").update({
+                    "revisado_por_humano": False,
+                    "publicado_cliente": False,
+                    "revisado_fiscal_en": now,
+                    "aprobado_para_email": False,
+                    "observaciones_revisor": " | ".join(motivos)[:4000],
+                    "borrador_confianza": "no_aprobado",
+                    "borrador_advertencias": motivos,
+                }).eq("id", d["id"]).execute()
 
-        counts[result] += 1
-        now = datetime.now(timezone.utc).isoformat()
-        if result == "APPROVE":
-            sb.table("revisor_fiscal_euclidian_evaluaciones").upsert({
-                "documento_id":d["id"],"resultado":"APPROVE","puntuacion":score,
-                "reglas_pasadas":passed,"reglas_fallidas":[],"motivos":[],
-                "version_reglas":RULES_VERSION
-            },on_conflict="documento_id").execute()
-            sb.table("documentos_tributarios").update({
-                "revisado_por_humano":True,
-                "publicado_cliente":True,
-                "revisado_fiscal_en":now,
-                "observaciones_revisor":None,
-                "borrador_confianza":"alta",
-                "borrador_advertencias":[],
-            }).eq("id",d["id"]).execute()
-        else:
-            motivos = reasons[:12]
-            sb.table("revisor_fiscal_euclidian_evaluaciones").upsert({
-                "documento_id":d["id"],"resultado":"REVIEW","puntuacion":score,
-                "reglas_pasadas":passed,"reglas_fallidas":failed,
-                "motivos":motivos,"version_reglas":RULES_VERSION
-            },on_conflict="documento_id").execute()
-            sb.table("documentos_tributarios").update({
-                "revisado_por_humano":False,
-                "publicado_cliente":False,
-                "revisado_fiscal_en":now,
-                "aprobado_para_email":False,
-                "observaciones_revisor":" | ".join(motivos)[:4000],
-                "borrador_confianza":"no_aprobado",
-                "borrador_advertencias":motivos,
-            }).eq("id",d["id"]).execute()
+            if n % 100 == 0 or n == len(rows):
+                print(f"TURBO_PROGRESO {n}/{len(rows)} aprobados={counts['APPROVE']} bloqueados={counts['REVIEW']}", flush=True)
 
-    print({"evaluated":len(rows),"counts":counts,"rules_version":RULES_VERSION})
+    print({"evaluated": len(rows), "counts": counts, "rules_version": RULES_VERSION, "workers": args.workers}, flush=True)
 
 
 if __name__ == "__main__":
