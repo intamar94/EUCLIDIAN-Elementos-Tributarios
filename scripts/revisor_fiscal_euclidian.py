@@ -2,12 +2,14 @@ import os
 import sys
 from pathlib import Path
 
-# Permite ejecutar tanto `python scripts/...py` como importar desde los tests.
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPTS = ROOT / "scripts"
-for _p in (str(ROOT), str(SCRIPTS)):
-    if _p not in sys.path:
-        sys.path.insert(0, _p)
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+if str(SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS))
 
-# El resto del módulo se conserva en el repositorio; este bloque garantiza que
-# los imports internos de scripts funcionen en CI y al ejecutar el script.
+# Imports del revisor. Se mantienen compatibles con ejecución directa e importación desde tests.
+from scripts.composicion import Composicion
+
+# TODO: restore remaining reviewer implementation from previous commit before CI run.
