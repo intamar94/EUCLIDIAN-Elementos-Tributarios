@@ -17,7 +17,7 @@ function rangoTotal(r){
 
 async function contar(cabeceras,filtro){
   const r=await fetch(`${SUPABASE_URL}/rest/v1/documentos_tributarios?select=id&${filtro}`,{
-    headers:{...cabeceras,Prefer:'count=exact'},Range:'0-0'
+    headers:{...cabeceras,Prefer:'count=exact',Range:'0-0'}
   });
   return r.ok?rangoTotal(r):0;
 }
@@ -33,8 +33,6 @@ export default async function handler(req,res){
   const orden=ORDENES[req.query.orden]||ORDENES.recientes;
   const pagina=Math.max(1,parseInt(req.query.pagina,10)||1);
 
-  // Publicación profesional: revisado por el Revisor Fiscal y publicado.
-  // NO depende de la bandera de email.
   let filtro='publicado_cliente=eq.true&revisado_por_humano=eq.true';
   if(desde)filtro+=`&fecha_publicacion=gte.${encodeURIComponent(desde)}`;
   if(PRIORIDADES[prioridad])filtro+='&'+PRIORIDADES[prioridad];
@@ -45,8 +43,7 @@ export default async function handler(req,res){
   const cabeceras={apikey:SUPABASE_KEY,Authorization:`Bearer ${SUPABASE_KEY}`};
   try{
     const r=await fetch(`${SUPABASE_URL}/rest/v1/documentos_tributarios?select=*&${filtro}&order=${orden}`,{
-      headers:{...cabeceras,Prefer:'count=exact'},
-      Range:`${primera}-${primera+POR_PAGINA-1}`
+      headers:{...cabeceras,Prefer:'count=exact',Range:`${primera}-${primera+POR_PAGINA-1}`}
     });
     if(!r.ok){const detalle=await r.text();return res.status(502).json({error:'supabase',detalle:detalle.slice(0,300)});}
 
