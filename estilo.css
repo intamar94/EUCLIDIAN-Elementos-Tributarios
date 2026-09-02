@@ -5,21 +5,41 @@
  */
 
 :root{
-  --alerta:#B23A32;
+  /* ── SISTEMA DE COLOR ──────────────────────────────────────────
+     Un color, un significado. Se repite igual en toda la pagina para
+     que el ojo lo aprenda y deje de leer etiquetas.
+
+       rojo         detente, actua
+       azul oscuro  te obliga
+       azul claro   orienta, no obliga
+       verde        paso por criterio humano
+       gris         informacion verificable
+
+     Los dos azules son el mismo color a distinta intensidad, y eso
+     dice algo: obligar y orientar son grados de lo mismo. El violeta
+     y el ocre se descartaron por confundirse con el rojo en pantalla
+     con poco brillo.
+
+     Regla de desempate: cuando algo es rojo y azul a la vez —una
+     resolucion obligatoria que ademas quedo suspendida— gana el rojo.
+     La accion manda sobre la clasificacion. */
+
+  --alerta:#B23A32;       /* detente, actua */
   --alerta-suave:#FBEAE9;
-  --obliga:#2C4C8F;
+  --obliga:#2C4C8F;       /* te obliga */
   --obliga-suave:#EAEFF7;
-  --orienta:#3D82B8;
+  --orienta:#3D82B8;      /* orienta, no obliga */
   --orienta-suave:#E8F1F8;
-  --humano:#2F6B4F;
+  --humano:#2F6B4F;       /* paso por criterio humano */
   --humano-suave:#E9F2EC;
 
-  --papel:#EDF1E9;
+  --papel:#EDF1E9;        /* papel de libro contable */
   --ficha:#FAFBF8;
   --tinta:#17211C;
   --tenue:#5E6B62;
   --linea:#D2DACB;
 
+  /* nombres antiguos, para no romper reglas que aun los usan */
   --regla:var(--alerta);
   --azul:var(--obliga);
   --verde:var(--humano);
@@ -48,6 +68,9 @@ header{
 }
 .cab{display:flex;flex-wrap:wrap;align-items:flex-end;gap:14px;padding:14px 0 11px}
 @media (max-width:700px){
+  /* En telefono: la marca y las cifras comparten renglon, y la fecha
+     con el boton van debajo. Menos alto de cabecera es mas espacio
+     para lo que importa, que son los documentos. */
   .cab{gap:8px 16px;padding:11px 0 9px;align-items:center}
   .marca{font-size:17px}
   .sub{display:none}
@@ -72,71 +95,66 @@ header{
   padding:6px 13px;border-radius:2px;cursor:pointer;white-space:nowrap;
 }
 .recargar:hover{border-color:var(--tinta)}
+
+/* Los enlaces van en gris subrayado. El azul quedo reservado para la
+   fuerza vinculante, y usarlo tambien para "esto se toca" mezclaba dos
+   significados en un mismo tono. */
+a{color:var(--tinta);text-decoration:underline;text-underline-offset:2px;
+  text-decoration-color:var(--linea)}
+a:hover{text-decoration-color:var(--tinta)}
 .recargar[disabled]{opacity:.5;cursor:wait}
 
 /* ══════════════ controles ══════════════ */
+/* Solo la prioridad queda a la vista. Lo demas se despliega, porque
+   antes los tres grupos ocupaban la pantalla entera y habia que
+   desplazarse para ver el primer documento. */
 .controles{padding:10px 0 6px}
-.tiras{
-  display:flex;gap:7px;overflow-x:auto;padding-bottom:3px;
-  scrollbar-width:none;-webkit-overflow-scrolling:touch;
+
+/* Una sola tira que se desplaza de lado en pantallas angostas: mas
+   compacto que dejar que los botones salten de renglon. */
+/* Solo "Accion requerida" lleva color al estar activo: es el unico
+   filtro que señala algo que hay que atender. */
+
+/* ── buscador ──
+   Lo primero de la pantalla. Un contador que quiere "el Concepto 1057"
+   no puede navegar 17.595 fichas, y sin esto la unica via era filtrar a
+   ciegas hasta topárselo. */
+.buscador{display:flex;gap:8px;padding:12px 0 4px;align-items:stretch}
+.buscador input{
+  flex:1;min-width:0;padding:11px 14px;
+  border:1px solid var(--linea);border-radius:2px;background:var(--ficha);
+  color:var(--tinta);font-family:'IBM Plex Sans',sans-serif;font-size:15px;
 }
-.tiras::-webkit-scrollbar{display:none}
-.tiras button{
-  flex:0 0 auto;
-  font-family:'IBM Plex Mono',monospace;font-size:11.5px;letter-spacing:.05em;
-  text-transform:uppercase;padding:7px 13px;border:1px solid var(--linea);
-  background:var(--ficha);color:var(--tenue);border-radius:2px;cursor:pointer;
+.buscador input:focus{outline:2px solid var(--obliga);outline-offset:1px}
+.buscador input::placeholder{color:#9AA79E}
+.buscador button{
+  padding:11px 20px;border:1px solid var(--tinta);background:var(--tinta);
+  color:var(--papel);border-radius:2px;cursor:pointer;
+  font-family:'IBM Plex Sans',sans-serif;font-size:14px;font-weight:500;
   white-space:nowrap;
 }
-.tiras button b{font-weight:600;opacity:.75;margin-left:5px}
-.tiras button:hover{border-color:var(--tenue)}
-.tiras button[aria-pressed="true"]{background:var(--tinta);color:var(--papel);border-color:var(--tinta)}
-.tiras button[aria-pressed="true"] b{opacity:.9}
-.tiras button:focus-visible{outline:2px solid var(--azul);outline-offset:2px}
-.tiras button.pri-accion[aria-pressed="true"]{background:var(--alerta);border-color:var(--alerta)}
+.buscador button:hover{background:#000}
+.buscador .limpiar-busca{
+  background:transparent;color:var(--tenue);border-color:var(--linea);
+  padding:11px 15px;font-size:16px;
+}
+.buscador .limpiar-busca:hover{background:transparent;border-color:var(--alerta);color:var(--alerta)}
+.buscador .limpiar-busca[hidden]{display:none}
+@media (max-width:560px){
+  .buscador{flex-wrap:wrap}
+  .buscador input{flex:1 1 100%}
+}
 
-/* ── el panel de filtros ── */
-.mas{margin-top:10px}
-.mas summary{
-  cursor:pointer;list-style:none;display:inline-flex;align-items:center;gap:7px;
-  font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.08em;
-  text-transform:uppercase;color:var(--tenue);
-  padding:7px 13px;border:1px solid var(--linea);border-radius:2px;
-  background:var(--ficha);
-}
-.mas summary::-webkit-details-marker{display:none}
-.mas summary::after{content:'▾';font-size:9px;opacity:.7}
-.mas[open] summary::after{content:'▴'}
-.mas summary:hover{border-color:var(--tenue);color:var(--tinta)}
-.mas[open] summary{background:var(--tinta);color:var(--papel);border-color:var(--tinta)}
 
-.panel{
-  margin-top:9px;padding:14px 15px 15px;
-  background:var(--ficha);border:1px solid var(--linea);border-radius:2px;
-}
-.panel .rotulo{
-  display:block;font-family:'IBM Plex Mono',monospace;font-size:9.5px;
-  letter-spacing:.13em;text-transform:uppercase;color:var(--tenue);
-  margin:0 0 7px;
-}
-.panel .rotulo + .tiras{margin-bottom:15px}
-.panel .tiras{flex-wrap:wrap;overflow-x:visible}
+/* ══════════════ pantallas grandes ══════════════
+   Todo estaba calibrado para el telefono y en un monitor quedaba
+   diminuto. Se escala el conjunto, no pieza por pieza, para que las
+   proporciones se conserven.
 
-.selectores{display:flex;gap:10px;flex-wrap:wrap}
-.selectores label{
-  flex:1;min-width:190px;display:block;
-  font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.13em;
-  text-transform:uppercase;color:var(--tenue);
-}
-.selectores select{
-  display:block;width:100%;margin-top:6px;
-  padding:8px 10px;border:1px solid var(--linea);
-  background:var(--papel);color:var(--tinta);border-radius:2px;
-  font-family:'IBM Plex Sans',sans-serif;font-size:13.5px;
-}
-.selectores select:focus{outline:2px solid var(--azul);outline-offset:1px}
-
-/* ══════════════ pantallas grandes ══════════════ */
+   El corte esta en 900px y no en 1100 a proposito: cuando alguien pide
+   "sitio de escritorio" en el navegador del telefono, este finge una
+   pantalla de unos 980px. Con el umbral en 1100 esos estilos no se
+   activaban y todo se veia todavia mas pequeño. */
 @media (min-width:900px){
   html{font-size:17px}
   body{font-size:17px}
@@ -157,4 +175,105 @@ header{
 @media (min-width:1500px){
   html{font-size:18px}
   :root{--ancho:1420px}
+}
+
+/* ── barra sobre la lista ──
+   El orden no filtra: cambia como se ve lo que ya se eligio. Por eso
+   sale del panel de filtros y se pone junto a la lista, donde surte
+   efecto. */
+
+/* El tema es un eje mas del panel, no un campo con etiqueta aparte. */
+
+/* ══════════════ contexto ══════════════
+   Una linea que dice que se esta viendo. Con tres puertas al archivo
+   —tema, año, urgencia— lo que hace falta no es ver cual boton quedo
+   marcado, sino que hay en pantalla y como volver. */
+.contexto{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  flex-wrap:wrap;padding:11px 0 3px;
+  font-family:'IBM Plex Sans',sans-serif;font-size:14px;color:var(--tenue);
+}
+.contexto[hidden]{display:none}
+.contexto b{color:var(--tinta);font-weight:600}
+.contexto button{
+  border:1px solid var(--linea);background:var(--ficha);color:var(--tenue);
+  padding:6px 13px;border-radius:2px;cursor:pointer;
+  font-family:'IBM Plex Sans',sans-serif;font-size:13px;white-space:nowrap;
+}
+.contexto button:hover{border-color:var(--tinta);color:var(--tinta)}
+
+
+/* ══════════════ menús ══════════════
+   Tres puertas al archivo: tema, año, urgencia. Cada boton dice QUE se
+   elige y QUE hay elegido ahora, para no tener que abrirlo solo para
+   averiguarlo. Antes eran filas de botones marcados y con tres ejes
+   costaba ver donde estaba uno parado. */
+.menus{display:flex;gap:9px;flex-wrap:wrap;padding:11px 0 2px}
+.menu{position:relative;flex:1;min-width:170px}
+
+.menu-boton{
+  width:100%;display:flex;align-items:center;gap:9px;
+  padding:10px 13px;border:1px solid var(--linea);background:var(--ficha);
+  border-radius:2px;cursor:pointer;text-align:left;
+  font-family:'IBM Plex Sans',sans-serif;
+}
+.menu-boton:hover{border-color:var(--tenue)}
+.menu-que{
+  font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--tenue);
+}
+.menu-valor{
+  flex:1;font-size:14px;color:var(--tinta);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.menu-flecha{font-size:9px;color:var(--tenue)}
+.menu-boton[aria-expanded="true"]{border-color:var(--tinta)}
+.menu-boton[aria-expanded="true"] .menu-flecha{transform:rotate(180deg)}
+
+/* Cuando hay algo elegido, el boton lo dice con color: azul, que en
+   este sistema significa clasificacion, no alarma. */
+.menu.puesto .menu-boton{border-color:var(--obliga);background:var(--obliga-suave)}
+.menu.puesto .menu-valor{color:var(--obliga);font-weight:500}
+
+.menu-panel{
+  position:absolute;top:calc(100% + 5px);left:0;right:0;z-index:40;
+  max-height:62vh;overflow-y:auto;
+  background:var(--ficha);border:1px solid var(--tinta);border-radius:2px;
+  box-shadow:0 10px 28px rgba(23,33,28,.16);padding:7px;
+}
+.menu-panel[hidden]{display:none}
+.menu-titulo{
+  font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--tenue);
+  padding:11px 9px 5px;border-top:1px solid var(--linea);margin-top:5px;
+}
+.menu-panel > .menu-titulo:first-child{border-top:0;margin-top:0}
+
+.opcion{
+  width:100%;display:flex;align-items:center;justify-content:space-between;
+  gap:10px;padding:9px 11px;border:0;background:transparent;
+  color:var(--tinta);border-radius:2px;cursor:pointer;text-align:left;
+  font-family:'IBM Plex Sans',sans-serif;font-size:14px;
+}
+.opcion b{
+  font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:500;
+  color:var(--tenue);
+}
+.opcion:hover{background:var(--papel)}
+.opcion[aria-pressed="true"]{background:var(--tinta);color:var(--papel)}
+.opcion[aria-pressed="true"] b{color:rgba(237,241,233,.7)}
+
+/* Los años caben de a varios por renglon: son etiquetas cortas. */
+.rejilla{display:flex;flex-wrap:wrap;gap:5px;padding:3px 4px 6px}
+.rejilla .opcion.breve{
+  width:auto;flex:0 0 auto;gap:6px;padding:7px 11px;
+  border:1px solid var(--linea);
+  font-family:'IBM Plex Mono',monospace;font-size:12.5px;
+}
+.rejilla .opcion.breve:hover{border-color:var(--tinta);background:transparent}
+.rejilla .opcion.breve[aria-pressed="true"]{border-color:var(--tinta)}
+
+@media (max-width:640px){
+  .menu{flex:1 1 100%}
+  .menu-panel{position:static;max-height:none;box-shadow:none;margin-top:5px}
 }
