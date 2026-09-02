@@ -26,7 +26,7 @@ for _p in (str(ROOT), str(SCRIPTS)):
 from scripts.composicion import Composicion
 from scripts.verificador_aprobacion import verify
 
-RULES_VERSION = "3.2"
+RULES_VERSION = "3.3"
 DEFAULT_LIMIT = 20000
 MAX_LIMIT = 20000
 WORKERS = 16
@@ -42,7 +42,7 @@ def _session():
     if s is None:
         s = requests.Session()
         s.headers.update({
-            "User-Agent": "EUCLIDIAN-Fiscal-Reviewer/3.2",
+            "User-Agent": "EUCLIDIAN-Fiscal-Reviewer/3.3",
             "Accept-Language": "es-CO,es;q=0.9",
             "Connection": "keep-alive",
         })
@@ -114,6 +114,39 @@ def _verify_one(row):
     return d, cambios, source_ok, source_errors
 
 
+def _load_pending(sb, limit):
+    """Supabase REST suele limitar una respuesta a 1000 filas; paginamos."""
+    rows = []
+    page_size = 1000
+    offset = 0
+    while len(rows) < limit:
+        take = min(page_size, limit - len(rows))
+        batch = (sb.table("documentos_tributarios")
+            .select("*")
+            .is_("revisado_fiscal_en", "null")
+            .order("fecha_scraped", desc=False)
+            .range(offset, offset + take - 1)
+            .execute().data or [])
+        if not batch:
+            break
+        rows.extend(batch)
+        offset += len(batch)
+        if len(batch) < take:
+            break
+    return rows
+
+
+def _guardar_cambios(sb, d, cambios):
+    if not cambios:
+        return True
+    try:
+        sb.table("documentos_tributarios").update(cambios).eq("id", d["id"]).execute()
+        return True
+    except Exception as exc:
+        print(f"TURBO_ESCRITURA_ERROR id={d.get('id')} error={str(exc)[:220]}", flush=True)
+        return False
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--limit", type=int, default=DEFAULT_LIMIT)
@@ -130,17 +163,10 @@ def main():
         raise SystemExit("Missing SUPABASE_URL or SUPABASE_SERVICE_KEY")
 
     sb = create_client(url, key)
-    rows = (
-        sb.table("documentos_tributarios")
-        .select("*")
-        .is_("revisado_fiscal_en", "null")
-        .order("fecha_scraped", desc=False)
-        .limit(args.limit)
-        .execute().data or []
-    )
+    rows = _load_pending(sb, args.limit)
 
     print(f"TURBO_INICIO universo={len(rows)} workers={args.workers} reglas={RULES_VERSION}", flush=True)
-    counts = {"APPROVE": 0, "REVIEW": 0}
+    counts = {"APPROVE": 0, "REVIEW": 0, "ERROR": 0}
 
     with ThreadPoolExecutor(max_workers=args.workers) as pool:
         futures = {pool.submit(_verify_one, row): row for row in rows}
@@ -149,13 +175,13 @@ def main():
             try:
                 d, cambios, source_ok, source_errors = future.result()
             except Exception as exc:
-                d = dict(original)
-                cambios = {}
-                source_ok = False
-                source_errors = [f"Error inesperado del revisor: {str(exc)[:180]}"]
+                counts["ERROR"] += 1
+                print(f"TURBO_ERROR id={original.get('id')} error={str(exc)[:220]}", flush=True)
+                continue
 
-            if cambios:
-                sb.table("documentos_tributarios").update(cambios).eq("id", d["id"]).execute()
+            if not _guardar_cambios(sb, d, cambios):
+                counts["ERROR"] += 1
+                continue
 
             if source_errors:
                 d["borrador_advertencias"] = source_errors[:12]
@@ -167,49 +193,54 @@ def main():
                     score = min(score, 90)
                     failed.append("FUENTE_OFICIAL")
 
-            counts[result] += 1
             now = datetime.now(timezone.utc).isoformat()
-            if result == "APPROVE":
-                sb.table("revisor_fiscal_euclidian_evaluaciones").upsert({
-                    "documento_id": d["id"],
-                    "resultado": "APPROVE",
-                    "puntuacion": score,
-                    "reglas_pasadas": passed,
-                    "reglas_fallidas": [],
-                    "motivos": [],
-                    "version_reglas": RULES_VERSION,
-                }, on_conflict="documento_id").execute()
-                sb.table("documentos_tributarios").update({
-                    "revisado_por_humano": True,
-                    "publicado_cliente": True,
-                    "revisado_fiscal_en": now,
-                    "observaciones_revisor": None,
-                    "borrador_confianza": "alta",
-                    "borrador_advertencias": [],
-                }).eq("id", d["id"]).execute()
-            else:
-                motivos = reasons[:12]
-                sb.table("revisor_fiscal_euclidian_evaluaciones").upsert({
-                    "documento_id": d["id"],
-                    "resultado": "REVIEW",
-                    "puntuacion": score,
-                    "reglas_pasadas": passed,
-                    "reglas_fallidas": failed,
-                    "motivos": motivos,
-                    "version_reglas": RULES_VERSION,
-                }, on_conflict="documento_id").execute()
-                sb.table("documentos_tributarios").update({
-                    "revisado_por_humano": False,
-                    "publicado_cliente": False,
-                    "revisado_fiscal_en": now,
-                    "aprobado_para_email": False,
-                    "observaciones_revisor": " | ".join(motivos)[:4000],
-                    "borrador_confianza": "no_aprobado",
-                    "borrador_advertencias": motivos,
-                }).eq("id", d["id"]).execute()
+            try:
+                if result == "APPROVE":
+                    sb.table("revisor_fiscal_euclidian_evaluaciones").upsert({
+                        "documento_id": d["id"],
+                        "resultado": "APPROVE",
+                        "puntuacion": score,
+                        "reglas_pasadas": passed,
+                        "reglas_fallidas": [],
+                        "motivos": [],
+                        "version_reglas": RULES_VERSION,
+                    }, on_conflict="documento_id").execute()
+                    sb.table("documentos_tributarios").update({
+                        "revisado_por_humano": True,
+                        "publicado_cliente": True,
+                        "revisado_fiscal_en": now,
+                        "observaciones_revisor": None,
+                        "borrador_confianza": "alta",
+                        "borrador_advertencias": [],
+                    }).eq("id", d["id"]).execute()
+                else:
+                    motivos = reasons[:12]
+                    sb.table("revisor_fiscal_euclidian_evaluaciones").upsert({
+                        "documento_id": d["id"],
+                        "resultado": "REVIEW",
+                        "puntuacion": score,
+                        "reglas_pasadas": passed,
+                        "reglas_fallidas": failed,
+                        "motivos": motivos,
+                        "version_reglas": RULES_VERSION,
+                    }, on_conflict="documento_id").execute()
+                    sb.table("documentos_tributarios").update({
+                        "revisado_por_humano": False,
+                        "publicado_cliente": False,
+                        "revisado_fiscal_en": now,
+                        "aprobado_para_email": False,
+                        "observaciones_revisor": " | ".join(motivos)[:4000],
+                        "borrador_confianza": "no_aprobado",
+                        "borrador_advertencias": motivos,
+                    }).eq("id", d["id"]).execute()
+                counts[result] += 1
+            except Exception as exc:
+                counts["ERROR"] += 1
+                print(f"TURBO_ESCRITURA_FINAL_ERROR id={d.get('id')} error={str(exc)[:220]}", flush=True)
+                continue
 
             if n % 100 == 0 or n == len(rows):
-                print(f"TURBO_PROGRESO {n}/{len(rows)} aprobados={counts['APPROVE']} bloqueados={counts['REVIEW']}", flush=True)
+                print(f"TURBO_PROGRESO {n}/{len(rows)} aprobados={counts['APPROVE']} bloqueados={counts['REVIEW']} errores={counts['ERROR']}", flush=True)
 
     print({"evaluated": len(rows), "counts": counts, "rules_version": RULES_VERSION, "workers": args.workers}, flush=True)
 
