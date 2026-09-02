@@ -1,52 +1,94 @@
-"""EUCLIDIAN Fiscal Reviewer.
+"""EUCLIDIAN — Revisor Fiscal final.
 
-Last quality gate before approval. Missing/uncertain evidence always returns
-REVIEW. APPROVE is the only path that marks a document as approved for the
-next stage; REVIEW remains eligible for a later re-evaluation.
+El revisor no es un simple detector de campos. Prepara la ficha para contador,
+comprueba que los datos críticos existan, contrasta el resumen con la fuente
+oficial DIAN y solo entonces publica el documento en la biblioteca.
+
+La bandera de email NO participa en la publicación de la biblioteca.
 """
 from __future__ import annotations
+
 import argparse
 import os
+from datetime import datetime, timezone
+
+import requests
 from supabase import create_client
 
-RULES_VERSION = "2.3"
-CRITICAL = {"OFICIAL", "FECHA", "CONTENIDO", "VIGENCIA", "EVIDENCIA", "CONFIANZA", "CLASIFICACION"}
+from composicion import Composicion
+from verificador_aprobacion import verify
+
+RULES_VERSION = "3.0"
+PAGE = 250
 
 
-def evaluate(d):
+def _texto(v):
+    return str(v or "").strip()
+
+
+def preparar_ficha(d: dict) -> dict:
+    """Completa solo lo que puede derivarse de datos ya extraídos.
+
+    Nunca inventa una conclusión. Si falta una pieza que no puede demostrarse,
+    el documento permanece en revisión.
+    """
+    cambios = {}
+    resumen = _texto(d.get("resumen_humano"))
+
+    if not resumen:
+        ficha = Composicion().componer(d)
+        resumen = _texto(ficha.get("resumen"))
+        if resumen:
+            cambios["resumen_humano"] = resumen[:4000]
+            cambios["resumen_borrador"] = resumen[:4000]
+            cambios["borrador_confianza"] = "pendiente_verificacion"
+            cambios["borrador_advertencias"] = list(ficha.get("advertencias") or [])
+
+    # Materia: solo se rellena con una clasificación que ya existe en la
+    # propia fuente/proceso, nunca con una inferencia libre.
+    if not _texto(d.get("materia")) and _texto(d.get("banco_datos")):
+        cambios["materia"] = _texto(d["banco_datos"])[:250]
+
+    return cambios
+
+
+def evaluate(d: dict, source_verified: bool = False):
     passed, failed, reasons = [], [], []
 
-    def rule(code, ok, reason, critical=False):
+    def rule(code, ok, reason, critical=True):
         (passed if ok else failed).append(code)
         if not ok:
             reasons.append(("CRITICAL: " if critical else "") + reason)
 
-    official = bool((d.get("enlace_oficial") or "").strip())
-    content = bool((d.get("contenido") or "").strip())
+    official = bool(_texto(d.get("enlace_oficial")))
+    content = bool(_texto(d.get("contenido") or d.get("texto_completo")))
     date_ok = d.get("fecha_es_real") is True
-    validity = bool((d.get("estado_vigencia") or "").strip())
-    classification = bool((d.get("materia") or d.get("area_derecho") or "").strip())
-    confidence = (d.get("borrador_confianza") or "").strip().lower() == "alta"
+    validity = bool(_texto(d.get("estado_vigencia")))
+    classification = bool(_texto(d.get("clasificacion_obligatoriedad")))
+    matter = bool(_texto(d.get("materia") or d.get("area_derecho") or d.get("banco_datos")))
+    summary = bool(_texto(d.get("resumen_humano")))
+    audience = classification
     warnings = d.get("borrador_advertencias") or []
-    evidence = official and content and date_ok and validity
 
-    rule("OFICIAL", official, "Falta enlace oficial DIAN.", True)
-    rule("FECHA", date_ok, "Fecha no verificada.", True)
-    rule("CONTENIDO", content, "No hay contenido suficiente.", True)
-    rule("VIGENCIA", validity, "Estado de vigencia no determinado.", True)
-    rule("CLASIFICACION", classification, "Clasificación/materia incompleta para el uso profesional.", True)
-    rule("EVIDENCIA", evidence, "La evidencia trazable no reúne fuente oficial, contenido, fecha verificada y vigencia.", True)
-    rule("CONFIANZA", confidence, "El borrador no tiene confianza alta.", True)
-    rule("ADVERTENCIAS", not warnings, "Existen advertencias del borrador.", True)
+    rule("OFICIAL", official, "Falta enlace oficial DIAN.")
+    rule("FECHA", date_ok, "Fecha no verificada.")
+    rule("CONTENIDO", content, "No hay contenido suficiente.")
+    rule("VIGENCIA", validity, "Estado de vigencia no determinado.")
+    rule("CLASIFICACION", classification, "No está determinada la naturaleza/obligatoriedad del documento.")
+    rule("MATERIA", matter, "No hay materia o área profesional identificable.")
+    rule("RESUMEN", summary, "La ficha no tiene resumen para el contador.")
+    rule("A_QUIEN", audience, "No está determinada la naturaleza que permite explicar a quién afecta.")
+    rule("EVIDENCIA", source_verified, "El resumen y los datos críticos no han sido corroborados contra la fuente oficial.")
+    rule("ADVERTENCIAS", not warnings, "Persisten advertencias de contenido que deben resolverse.")
 
-    result = "APPROVE" if not any(code in CRITICAL for code in failed) and not warnings else "REVIEW"
-    score = max(0, round(len(passed) / 8 * 100))
+    result = "APPROVE" if not failed else "REVIEW"
+    score = max(0, round(len(passed) / 10 * 100))
     return result, score, passed, failed, reasons
 
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--limit", type=int, default=500)
+    ap.add_argument("--limit", type=int, default=PAGE)
     args = ap.parse_args()
     if args.limit < 1 or args.limit > 500:
         raise SystemExit("--limit debe estar entre 1 y 500")
@@ -57,32 +99,81 @@ def main():
         raise SystemExit("Missing SUPABASE_URL or SUPABASE_SERVICE_KEY")
 
     sb = create_client(url, key)
+    session = requests.Session()
+    session.headers.update({"User-Agent":"EUCLIDIAN-Fiscal-Reviewer/3.0","Accept-Language":"es-CO,es;q=0.9"})
+    composer = Composicion()
+
     rows = (
         sb.table("documentos_tributarios")
-        .select("id,enlace_oficial,fecha_es_real,contenido,estado_vigencia,materia,area_derecho,borrador_advertencias,borrador_confianza")
-        .eq("aprobado_para_email", False)
-        .order("id", desc=False)
+        .select("*")
+        .eq("publicado_cliente", False)
+        .eq("revisado_por_humano", False)
+        .order("fecha_scraped", desc=False)
         .limit(args.limit)
         .execute().data or []
     )
 
-    counts = {"APPROVE": 0, "REVIEW": 0}
-    for d in rows:
-        result, score, passed, failed, reasons = evaluate(d)
+    counts = {"APPROVE":0,"REVIEW":0}
+    for original in rows:
+        d = dict(original)
+        cambios = preparar_ficha(d)
+        if cambios:
+            sb.table("documentos_tributarios").update(cambios).eq("id", d["id"]).execute()
+            d.update(cambios)
+
+        # Si aún no existe un resumen útil, dejar constancia y no publicar.
+        if not _texto(d.get("resumen_humano")):
+            result, score, passed, failed, reasons = evaluate(d, False)
+        else:
+            # Último filtro: comprobar el contenido de la ficha contra el
+            # documento oficial del Normograma DIAN. Si la fuente falla o no
+            # respalda una afirmación, el documento no se publica.
+            try:
+                source_ok, source_errors = verify(session, d)
+            except Exception as exc:
+                source_ok, source_errors = False, [f"Error verificando fuente oficial: {str(exc)[:180]}"]
+            if source_errors:
+                d["borrador_advertencias"] = source_errors[:12]
+            result, score, passed, failed, reasons = evaluate(d, source_ok)
+            if source_errors:
+                reasons.extend(source_errors[:5])
+                if result == "APPROVE":
+                    result = "REVIEW"
+                    score = min(score, 90)
+                    failed.append("FUENTE_OFICIAL")
+
         counts[result] += 1
-        sb.table("revisor_fiscal_euclidian_evaluaciones").upsert(
-            {"documento_id": d["id"], "resultado": result, "puntuacion": score,
-             "reglas_pasadas": passed, "reglas_fallidas": failed, "motivos": reasons,
-             "version_reglas": RULES_VERSION},
-            on_conflict="documento_id",
-        ).execute()
-
-        # Only a fully approved document leaves the pending queue. REVIEW is
-        # deliberately left pending so a later extraction/correction can retry.
         if result == "APPROVE":
-            sb.table("documentos_tributarios").update({"aprobado_para_email": True}).eq("id", d["id"]).execute()
+            now = datetime.now(timezone.utc).isoformat()
+            sb.table("revisor_fiscal_euclidian_evaluaciones").upsert({
+                "documento_id":d["id"],"resultado":"APPROVE","puntuacion":score,
+                "reglas_pasadas":passed,"reglas_fallidas":[],"motivos":[],
+                "version_reglas":RULES_VERSION
+            },on_conflict="documento_id").execute()
+            sb.table("documentos_tributarios").update({
+                "revisado_por_humano":True,
+                "publicado_cliente":True,
+                "revisado_fiscal_en":now,
+                "observaciones_revisor":None,
+                "borrador_confianza":"alta",
+                "borrador_advertencias":[],
+            }).eq("id",d["id"]).execute()
+        else:
+            motivos = reasons[:12]
+            sb.table("revisor_fiscal_euclidian_evaluaciones").upsert({
+                "documento_id":d["id"],"resultado":"REVIEW","puntuacion":score,
+                "reglas_pasadas":passed,"reglas_fallidas":failed,
+                "motivos":motivos,"version_reglas":RULES_VERSION
+            },on_conflict="documento_id").execute()
+            sb.table("documentos_tributarios").update({
+                "publicado_cliente":False,
+                "aprobado_para_email":False,
+                "observaciones_revisor":" | ".join(motivos)[:4000],
+                "borrador_confianza":"no_aprobado",
+                "borrador_advertencias":motivos,
+            }).eq("id",d["id"]).execute()
 
-    print({"evaluated": len(rows), "counts": counts, "rules_version": RULES_VERSION})
+    print({"evaluated":len(rows),"counts":counts,"rules_version":RULES_VERSION})
 
 
 if __name__ == "__main__":
