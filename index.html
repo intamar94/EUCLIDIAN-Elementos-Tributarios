@@ -16,73 +16,63 @@ body{background:#f3f0e8}
 #puerta{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:28px 16px;box-sizing:border-box;background:repeating-linear-gradient(to bottom,#f4f1e9 0,#f4f1e9 31px,#e5e0d5 32px)}
 #puerta[hidden]{display:none}
 #puerta form{width:min(720px,100%);box-sizing:border-box;background:#fbfaf5;border:1px solid #ded8cb;border-radius:22px;overflow:hidden;box-shadow:0 18px 45px rgba(61,54,42,.12);text-align:center;padding:0 48px 42px}
-#puerta .ilustracion{display:block;width:calc(100% + 96px);height:auto;max-height:360px;object-fit:cover;margin:0 -48px;border-bottom:2px solid #b83b2f;background:#f4f1e9}
+#puerta .ilustracion{display:block;width:calc(100% + 96px);height:auto;margin:0 -48px;border-bottom:2px solid #b83b2f;background:#f4f1e9}
 #puerta .marca{font-family:Spectral,Georgia,serif;font-size:54px;letter-spacing:.03em;line-height:1;margin-top:30px;color:#202020}
 #puerta .marca em{font-style:normal;color:#b83b2f}
 #puerta .sub{font-family:'IBM Plex Sans',sans-serif;text-transform:uppercase;letter-spacing:.28em;font-size:14px;color:#6c735f;margin-top:13px}
 #puerta p{font-family:'IBM Plex Sans',sans-serif;text-transform:uppercase;letter-spacing:.18em;font-size:13px;color:#777568;margin:42px 0 16px}
-#puerta input{width:100%;height:58px;box-sizing:border-box;border:1px solid #c8c1b4;border-radius:10px;background:#fffdf8;padding:0 18px;font-family:'IBM Plex Sans',sans-serif;font-size:17px;color:#282723;box-shadow:inset 0 1px 2px rgba(0,0,0,.03)}
+#puerta input{width:100%;height:58px;box-sizing:border-box;border:1px solid #c8c1b4;border-radius:10px;background:#fffdf8;padding:0 18px;font-family:'IBM Plex Sans',sans-serif;font-size:17px;color:#282723}
 #puerta input:focus{outline:2px solid #b83b2f;outline-offset:2px}
-#puerta button{width:100%;height:58px;margin-top:18px;border:0;border-radius:10px;background:#b83b2f;color:#fff;font-family:'IBM Plex Sans',sans-serif;font-size:16px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;cursor:pointer;box-shadow:0 5px 12px rgba(120,40,30,.18)}
-#puerta button:hover{background:#a93228}
+#puerta button{width:100%;height:58px;margin-top:18px;border:0;border-radius:10px;background:#b83b2f;color:#fff;font-family:'IBM Plex Sans',sans-serif;font-size:16px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;cursor:pointer}
 #puerta .mal{font-family:'IBM Plex Sans',sans-serif;color:#b83b2f;font-size:13px;margin-top:12px;min-height:18px}
 
-/* Cabecera de la bandeja: marca arriba, ilustración debajo, como un banner. */
-#cab[hidden]{display:none}
-#cab{padding:22px 0 0}
+#cab{display:block;background:#f3f0e8;padding:16px 0 0}
 .banner-euclidian{width:min(1180px,calc(100% - 32px));margin:0 auto;background:#fbfaf5;border:1px solid #ded8cb;border-radius:18px;overflow:hidden;box-shadow:0 10px 28px rgba(61,54,42,.08)}
-.banner-marca{text-align:center;padding:18px 20px 15px;background:#f7f4ec}
-.banner-marca .marca{font-family:Spectral,Georgia,serif;font-size:44px;letter-spacing:.03em;line-height:1;color:#202020}
+.banner-marca{text-align:center;padding:16px 20px 14px;background:#f7f4ec}
+.banner-marca .marca{font-family:Spectral,Georgia,serif;font-size:48px;letter-spacing:.03em;line-height:1;color:#202020}
 .banner-marca .marca em{font-style:normal;color:#b83b2f}
 .banner-marca .sub{font-family:'IBM Plex Sans',sans-serif;text-transform:uppercase;letter-spacing:.25em;font-size:11px;color:#6c735f;margin-top:7px}
-.banner-euclidian .ilustracion{display:block;width:100%;height:190px;object-fit:cover;object-position:center 46%;border-top:1px solid #ded8cb}
-.cab-util{width:min(1180px,calc(100% - 32px));margin:12px auto 0;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:0 2px 4px}
-.fecha-actual{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.04em;color:#6c735f;text-transform:capitalize}
-.cab-util .derecha{display:flex;align-items:center;gap:12px}
-.cab-util .sello{font-family:'IBM Plex Mono',monospace;font-size:11px;color:#777568}
-.cab-util .recargar{min-height:40px;padding:0 18px;border:1px solid #b8b0a2;border-radius:9px;background:#fbfaf5;color:#282723;font-family:'IBM Plex Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer}
-.cab-util .recargar:hover{background:#eeeae1}
-.cab-util .recargar:disabled{opacity:.55;cursor:wait}
-.cab-cifras{display:flex;gap:18px;align-items:center;margin-left:auto}
-.cab-cifras div{display:flex;align-items:baseline;gap:6px}
-.cab-cifras b{font-family:'IBM Plex Mono',monospace;font-size:15px;color:#282723}
-.cab-cifras span{font-family:'IBM Plex Sans',sans-serif;font-size:11px;color:#777568}
+.banner-euclidian .ilustracion{display:block;width:100%;height:auto;margin:0;border-top:1px solid #ded8cb}
+.cab-util{width:min(1180px,calc(100% - 32px));margin:13px auto 0;padding:0 2px 12px}
+.fecha-actual{display:block;font-family:'IBM Plex Mono',monospace;font-size:14px;letter-spacing:.04em;color:#6c735f;text-transform:capitalize}
+.cab-cifras,.cab-util .derecha{display:none}
 
-/* Solo los filtros que ayudan a localizar un documento. */
-#controles .filtros-directos{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:14px 0 8px}
-#controles .filtros-directos .rotulo{margin:0}
+#controles .filtros-directos{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 0 16px;border-top:2px solid #b83b2f}
+#controles .filtros-directos .rotulo{margin:0;white-space:nowrap}
 #controles .filtros-directos select{min-height:42px}
 #controles .filtros-directos .limpiar{margin-left:4px}
 #controles .mas{display:none}
 
 @media(min-width:900px){
   #puerta form{width:min(860px,100%);padding:0 60px 52px}
-  #puerta .ilustracion{width:calc(100% + 120px);margin:0 -60px;max-height:440px}
+  #puerta .ilustracion{width:calc(100% + 120px);margin:0 -60px}
   #puerta .marca{font-size:64px;margin-top:36px}
   #puerta .sub{font-size:15px}
   #puerta p{font-size:14px;margin:48px 0 18px}
   #puerta input,#puerta button{height:64px;font-size:18px}
-  .banner-marca .marca{font-size:52px}
-  .banner-euclidian .ilustracion{height:220px}
+  #cab{padding-top:22px}
+  .banner-marca .marca{font-size:58px}
 }
 @media(max-width:620px){
   #puerta{padding:12px}
   #puerta form{padding:0 22px 28px;border-radius:16px}
-  #puerta .ilustracion{width:calc(100% + 44px);margin:0 -22px;max-height:235px}
+  #puerta .ilustracion{width:calc(100% + 44px);margin:0 -22px}
   #puerta .marca{font-size:39px;margin-top:24px}
   #puerta .sub{font-size:11px;letter-spacing:.22em}
   #puerta p{margin-top:30px}
   #cab{padding-top:10px}
   .banner-euclidian,.cab-util{width:calc(100% - 20px)}
   .banner-euclidian{border-radius:14px}
-  .banner-marca{padding:14px 12px 12px}
+  .banner-marca{padding:12px 10px 10px}
   .banner-marca .marca{font-size:36px}
   .banner-marca .sub{font-size:9px;letter-spacing:.18em}
-  .banner-euclidian .ilustracion{height:125px}
-  .cab-util{flex-wrap:wrap;gap:8px}
-  .cab-cifras{order:3;width:100%;margin-left:0}
-  .cab-util .sello{display:none}
-  .cab-util .recargar{min-height:38px}
+  .banner-euclidian .ilustracion{height:auto}
+  .cab-util{margin-top:10px;padding-bottom:10px}
+  .fecha-actual{font-size:12px;letter-spacing:.02em}
+  #controles .filtros-directos{display:grid;grid-template-columns:1fr;gap:12px;padding:12px 0 16px}
+  #controles .filtro{display:grid;grid-template-columns:112px minmax(0,1fr);align-items:center;gap:8px}
+  #controles .filtros-directos> .rotulo{display:none}
+  #controles .filtros-directos> .filtro select{width:100%;min-height:48px}
 }
 </style>
 </head>
@@ -107,35 +97,15 @@ body{background:#f3f0e8}
     </div>
     <img class="ilustracion" src="/euclides.png" alt="Euclides explicando la DIAN a sus discípulos" width="1400" height="770">
   </div>
-  <div class="cab-util">
-    <span class="fecha-actual" id="fechaActual"></span>
-    <div class="cab-cifras">
-      <div><b id="nPend">·</b><span>por revisar</span></div>
-      <div><b id="nApr">·</b><span>aprobados</span></div>
-    </div>
-    <div class="derecha">
-      <span class="sello" id="sello"></span>
-      <button class="recargar" id="btnRecargar" onclick="cargar()">Actualizar</button>
-    </div>
-  </div>
+  <div class="cab-util"><span class="fecha-actual" id="fechaActual"></span></div>
 </header>
 
 <div class="controles marco" hidden id="controles">
   <div class="filtros-directos">
-    <span class="rotulo">Año</span>
-    <select id="selAnio" aria-label="Elegir año"></select>
-    <span class="rotulo">Sobre qué trata</span>
-    <select id="selTema" aria-label="Elegir tema">
-      <option value="">Todos los temas</option>
-    </select>
+    <div class="filtro"><span class="rotulo">Año</span><select id="selAnio" aria-label="Elegir año"><option value="">Cualquier año</option></select></div>
+    <div class="filtro"><span class="rotulo">Sobre qué trata</span><select id="selTema" aria-label="Elegir tema"><option value="">Todos los temas</option></select></div>
     <button class="limpiar" id="btnLimpiar" hidden onclick="limpiar()">Quitar filtros</button>
-
-    <!-- Elementos internos conservados para compatibilidad con bandeja.js; no se muestran. -->
-    <div hidden id="gPrioridad"></div>
-    <div hidden id="gNaturaleza"></div>
-    <div hidden id="gEstado"></div>
-    <div hidden id="gPeriodo"></div>
-    <i hidden id="activos"></i>
+    <div hidden id="gPrioridad"></div><div hidden id="gNaturaleza"></div><div hidden id="gEstado"></div><div hidden id="gPeriodo"></div><i hidden id="activos"></i>
   </div>
 </div>
 
@@ -148,12 +118,9 @@ body{background:#f3f0e8}
   const sel=document.getElementById('selAnio');
   const y=new Date().getFullYear();
   sel.innerHTML='<option value="">Cualquier año</option>';
-  for(let a=y;a>=1931;a--){
-    const o=document.createElement('option');
-    o.value=String(a); o.textContent=String(a); sel.appendChild(o);
-  }
-  const f=new Intl.DateTimeFormat('es-CO',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
-  document.getElementById('fechaActual').textContent=f.format(new Date());
+  for(let a=y;a>=1931;a--){const o=document.createElement('option');o.value=String(a);o.textContent=String(a);sel.appendChild(o)}
+  const actualizar=()=>{const d=new Date();const f=new Intl.DateTimeFormat('es-CO',{weekday:'long',day:'numeric',month:'long',year:'numeric'});const hora=new Intl.DateTimeFormat('es-CO',{hour:'2-digit',minute:'2-digit',hour12:false}).format(d);document.getElementById('fechaActual').textContent=f.format(d)+' · '+hora};
+  actualizar(); setInterval(actualizar,60000);
 })();
 </script>
 <script src="/temas.js" defer></script>
