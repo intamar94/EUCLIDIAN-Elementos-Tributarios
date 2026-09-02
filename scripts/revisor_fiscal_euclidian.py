@@ -15,8 +15,12 @@ from datetime import datetime, timezone
 import requests
 from supabase import create_client
 
-from composicion import Composicion
-from verificador_aprobacion import verify
+try:
+    from scripts.composicion import Composicion
+    from scripts.verificador_aprobacion import verify
+except ImportError:
+    from composicion import Composicion
+    from verificador_aprobacion import verify
 
 RULES_VERSION = "3.0"
 PAGE = 250
@@ -27,14 +31,8 @@ def _texto(v):
 
 
 def preparar_ficha(d: dict) -> dict:
-    """Completa solo lo que puede derivarse de datos ya extraídos.
-
-    Nunca inventa una conclusión. Si falta una pieza que no puede demostrarse,
-    el documento permanece en revisión.
-    """
     cambios = {}
     resumen = _texto(d.get("resumen_humano"))
-
     if not resumen:
         ficha = Composicion().componer(d)
         resumen = _texto(ficha.get("resumen"))
@@ -43,12 +41,8 @@ def preparar_ficha(d: dict) -> dict:
             cambios["resumen_borrador"] = resumen[:4000]
             cambios["borrador_confianza"] = "pendiente_verificacion"
             cambios["borrador_advertencias"] = list(ficha.get("advertencias") or [])
-
-    # Materia: solo se rellena con una clasificación que ya existe en la
-    # propia fuente/proceso, nunca con una inferencia libre.
     if not _texto(d.get("materia")) and _texto(d.get("banco_datos")):
         cambios["materia"] = _texto(d["banco_datos"])[:250]
-
     return cambios
 
 
@@ -101,7 +95,6 @@ def main():
     sb = create_client(url, key)
     session = requests.Session()
     session.headers.update({"User-Agent":"EUCLIDIAN-Fiscal-Reviewer/3.0","Accept-Language":"es-CO,es;q=0.9"})
-    composer = Composicion()
 
     rows = (
         sb.table("documentos_tributarios")
@@ -121,13 +114,9 @@ def main():
             sb.table("documentos_tributarios").update(cambios).eq("id", d["id"]).execute()
             d.update(cambios)
 
-        # Si aún no existe un resumen útil, dejar constancia y no publicar.
         if not _texto(d.get("resumen_humano")):
             result, score, passed, failed, reasons = evaluate(d, False)
         else:
-            # Último filtro: comprobar el contenido de la ficha contra el
-            # documento oficial del Normograma DIAN. Si la fuente falla o no
-            # respalda una afirmación, el documento no se publica.
             try:
                 source_ok, source_errors = verify(session, d)
             except Exception as exc:
