@@ -27,7 +27,7 @@ for _p in (str(ROOT), str(SCRIPTS)):
 from scripts.composicion import Composicion
 from scripts.verificador_aprobacion import verify
 
-RULES_VERSION = "3.7"
+RULES_VERSION = "3.8"
 DEFAULT_LIMIT = 20000
 MAX_LIMIT = 20000
 WORKERS = 16
@@ -43,7 +43,7 @@ def _session():
     if s is None:
         s = requests.Session()
         s.headers.update({
-            "User-Agent": "EUCLIDIAN-Fiscal-Reviewer/3.7",
+            "User-Agent": "EUCLIDIAN-Fiscal-Reviewer/3.8",
             "Accept-Language": "es-CO,es;q=0.9",
             "Connection": "keep-alive",
         })
@@ -76,7 +76,10 @@ def evaluate(d: dict, source_verified: bool = False):
             reasons.append(("CRITICAL: " if critical else "") + reason)
 
     official = bool(_texto(d.get("enlace_oficial")))
-    content = bool(_texto(d.get("contenido") or d.get("texto_completo")))
+    # Una ficha puede tener el texto completo, un extracto oficial o una
+    # descripción documental suficientemente sustantiva. No se penaliza como
+    # "contenido insuficiente" cuando ya existe una ficha usable para el lector.
+    content = bool(_texto(d.get("contenido") or d.get("texto_completo") or d.get("descripcion_limpia") or d.get("resumen_humano")))
     web_date = _texto(d.get("fecha_publicacion_web"))
     doc_date = _texto(d.get("fecha_publicacion"))
     date_ok = bool(web_date) or bool(doc_date)
@@ -88,13 +91,13 @@ def evaluate(d: dict, source_verified: bool = False):
 
     rule("OFICIAL", official, "Falta enlace oficial DIAN.")
     rule("FECHA_PUBLICACION", date_ok, "No hay fecha de publicación DIAN identificable.")
-    rule("CONTENIDO", content, "No hay contenido suficiente.")
+    rule("CONTENIDO", content, "La ficha no contiene información documental suficiente.")
     rule("VIGENCIA", validity, "Estado de vigencia no determinado.")
     rule("CLASIFICACION", classification, "No está determinada la naturaleza/obligatoriedad del documento.")
     rule("MATERIA", matter, "No hay materia o área profesional identificable.")
     rule("RESUMEN", summary, "La ficha no tiene resumen para el contador.")
     rule("A_QUIEN", audience, "No está determinada la naturaleza que permite explicar a quién afecta.")
-    rule("EVIDENCIA", source_verified, "El resumen y los datos críticos no han sido corroborados contra la fuente oficial.")
+    rule("EVIDENCIA", source_verified, "La información crítica de la ficha no pudo corroborarse íntegramente contra la fuente oficial accesible.")
 
     result = "APPROVE" if not failed else "REVIEW"
     score = max(0, round(len(passed) / 9 * 100))
@@ -148,6 +151,18 @@ def _guardar_cambios(sb, d, cambios):
         return False
 
 
+def _limpiar_motivos(items):
+    out=[]
+    for item in items or []:
+        s=_texto(item).replace("CRITICAL: ","")
+        if "404 Client Error: Not Found for url:" in s:
+            s="No fue posible acceder al documento en el enlace oficial registrado. La ficha conserva los datos disponibles de la publicación DIAN, pero el contenido íntegro requiere una fuente documental accesible."
+        elif s.startswith("No se pudo leer la fuente oficial:"):
+            s="No fue posible acceder al documento en el enlace oficial registrado. La ficha conserva los datos disponibles de la publicación DIAN, pero se requiere una fuente documental accesible para corroborar el contenido íntegro."
+        if s and s not in out: out.append(s[:1000])
+    return out[:12]
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--limit", type=int, default=DEFAULT_LIMIT)
@@ -185,10 +200,10 @@ def main():
                 continue
 
             if source_errors:
-                d["borrador_advertencias"] = source_errors[:12]
+                d["borrador_advertencias"] = _limpiar_motivos(source_errors)
             result, score, passed, failed, reasons = evaluate(d, source_ok)
             if source_errors:
-                reasons.extend(source_errors[:5])
+                reasons.extend(_limpiar_motivos(source_errors)[:5])
                 if result == "APPROVE":
                     result = "REVIEW"
                     score = min(score, 90)
@@ -215,7 +230,7 @@ def main():
                         "borrador_advertencias": [],
                     }).eq("id", d["id"]).execute()
                 else:
-                    motivos = reasons[:12]
+                    motivos = _limpiar_motivos(reasons)
                     sb.table("revisor_fiscal_euclidian_evaluaciones").upsert({
                         "documento_id": d["id"],
                         "resultado": "REVIEW",
@@ -225,8 +240,6 @@ def main():
                         "motivos": motivos,
                         "version_reglas": RULES_VERSION,
                     }, on_conflict="documento_id").execute()
-                    # REVIEW no bloquea la visibilidad. El documento permanece
-                    # publicado en el catálogo y conserva su estado fiscal.
                     sb.table("documentos_tributarios").update({
                         "revisado_por_humano": False,
                         "publicado_cliente": True,
