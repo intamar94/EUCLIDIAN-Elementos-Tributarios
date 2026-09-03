@@ -43,16 +43,32 @@ function bloqueBorrador(d){
   </div>`;
 }
 
+function textoMotivo(m){
+  const s=String(m||'').trim();
+  if(!s)return '';
+  return s
+    .replace(/^CRITICAL:\s*/i,'')
+    .replace(/No se pudo leer la fuente oficial:\s*404 Client Error: Not Found for url:\s*\S+/i,'No fue posible acceder al documento en el enlace oficial registrado. La ficha conserva los datos disponibles de la publicación DIAN, pero el contenido íntegro requiere una fuente documental accesible.')
+    .replace(/No se pudo leer la fuente oficial:\s*\S+/i,'No fue posible acceder al documento en el enlace oficial registrado. La ficha conserva los datos disponibles de la publicación DIAN, pero el contenido íntegro requiere una fuente documental accesible.')
+    .replace(/\s+/g,' ');
+}
+
 function bloqueDiagnostico(d){
-  const revisado = !!d.revisado_fiscal_en;
-  const aprobado = !!d.aprobado_para_email;
-  const observacion = esc(d.observaciones_revisor || '').slice(0,900);
-  const estado = aprobado ? 'Aprobada' : revisado ? 'Revisada · requiere atención' : 'Pendiente de revisión';
-  const clase = aprobado ? 'diagnostico-ok' : revisado ? 'diagnostico-revision' : 'diagnostico-pendiente';
+  const revisado=!!d.revisado_fiscal_en;
+  const resultado=String(d.evaluacion_resultado||'').toUpperCase();
+  const aprobado=resultado==='APPROVE' || (!!d.aprobado_para_email && resultado!=='REVIEW');
+  const puntuacion=d.evaluacion_puntuacion;
+  const fallidas=Array.isArray(d.evaluacion_reglas_fallidas)?d.evaluacion_reglas_fallidas:[];
+  const motivos=(Array.isArray(d.evaluacion_motivos)?d.evaluacion_motivos:[]).map(textoMotivo).filter(Boolean);
+  const estado=aprobado?'Aprobada':revisado?'Revisada · requiere atención':'Pendiente de revisión';
+  const clase=aprobado?'diagnostico-ok':revisado?'diagnostico-revision':'diagnostico-pendiente';
+  const score=puntuacion!==null && puntuacion!==undefined ? `<div class="diagnostico-score"><strong>${esc(puntuacion)}/100</strong><span>evaluación fiscal</span></div>` : '';
+  const reglas=fallidas.length ? `<div class="diagnostico-reglas"><span>Aspectos pendientes</span><div>${fallidas.map(x=>`<span>${esc(String(x).replace(/^FUENTE_OFICIAL$/,'Evidencia oficial'))}</span>`).join('')}</div></div>` : '';
+  const detalle=motivos.length ? `<ul class="diagnostico-motivos">${motivos.slice(0,5).map(x=>`<li>${esc(x)}</li>`).join('')}</ul>` : `<p>La ficha fue revisada y no presenta observaciones adicionales.</p>`;
   return `<div class="diagnostico ${clase}">
     <div class="diagnostico-cab"><strong>Diagnóstico fiscal</strong><span>${estado}</span></div>
-    ${revisado ? `<div class="diagnostico-meta">Revisada: ${fechaCorta(d.revisado_fiscal_en)}</div>` : ''}
-    ${observacion ? `<p>${observacion}</p>` : '<p>Sin observaciones del Revisor Fiscal.</p>'}
+    <div class="diagnostico-resumen">${score}${revisado?`<div class="diagnostico-meta">Revisada: ${fechaCorta(d.revisado_fiscal_en)}</div>`:''}</div>
+    ${reglas}${detalle}
   </div>`;
 }
 
