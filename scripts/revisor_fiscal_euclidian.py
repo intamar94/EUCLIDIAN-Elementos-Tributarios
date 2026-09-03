@@ -1,8 +1,9 @@
 """EUCLIDIAN — Revisor Fiscal final, turbo y trazable.
 
 Procesa el corpus completo por lotes grandes, verifica cada documento contra
-el Normograma DIAN y solo publica cuando la evidencia oficial es suficiente.
-La concurrencia acelera la lectura de fuentes sin relajar ninguna regla.
+el Normograma DIAN y mantiene todo documento visible en el catálogo.
+La revisión fiscal determina confianza y aprobación, pero nunca oculta
+información del catálogo por una incidencia de verificación.
 """
 from __future__ import annotations
 
@@ -26,7 +27,7 @@ for _p in (str(ROOT), str(SCRIPTS)):
 from scripts.composicion import Composicion
 from scripts.verificador_aprobacion import verify
 
-RULES_VERSION = "3.5"
+RULES_VERSION = "3.6"
 DEFAULT_LIMIT = 20000
 MAX_LIMIT = 20000
 WORKERS = 16
@@ -42,7 +43,7 @@ def _session():
     if s is None:
         s = requests.Session()
         s.headers.update({
-            "User-Agent": "EUCLIDIAN-Fiscal-Reviewer/3.5",
+            "User-Agent": "EUCLIDIAN-Fiscal-Reviewer/3.6",
             "Accept-Language": "es-CO,es;q=0.9",
             "Connection": "keep-alive",
         })
@@ -224,9 +225,13 @@ def main():
                         "motivos": motivos,
                         "version_reglas": RULES_VERSION,
                     }, on_conflict="documento_id").execute()
+                    # REVIEW ya no bloquea la visibilidad. El documento queda
+                    # publicado en el catálogo, pero conserva su estado fiscal
+                    # y no queda aprobado para comunicaciones que requieran
+                    # alta confianza.
                     sb.table("documentos_tributarios").update({
                         "revisado_por_humano": False,
-                        "publicado_cliente": False,
+                        "publicado_cliente": True,
                         "revisado_fiscal_en": now,
                         "aprobado_para_email": False,
                         "observaciones_revisor": " | ".join(motivos)[:4000],
@@ -240,7 +245,7 @@ def main():
                 continue
 
             if n % 100 == 0 or n == len(rows):
-                print(f"TURBO_PROGRESO {n}/{len(rows)} aprobados={counts['APPROVE']} bloqueados={counts['REVIEW']} errores={counts['ERROR']}", flush=True)
+                print(f"TURBO_PROGRESO {n}/{len(rows)} aprobados={counts['APPROVE']} revisiones={counts['REVIEW']} errores={counts['ERROR']}", flush=True)
 
     print({"evaluated": len(rows), "counts": counts, "rules_version": RULES_VERSION, "workers": args.workers}, flush=True)
 
