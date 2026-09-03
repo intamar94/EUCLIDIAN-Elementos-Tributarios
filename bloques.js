@@ -48,8 +48,8 @@ function textoMotivo(m){
   if(!s)return '';
   return s
     .replace(/^CRITICAL:\s*/i,'')
-    .replace(/No se pudo leer la fuente oficial:\s*404 Client Error: Not Found for url:\s*\S+/i,'No fue posible acceder al documento en el enlace oficial registrado. La ficha conserva los datos disponibles de la publicación DIAN, pero el contenido íntegro requiere una fuente documental accesible.')
-    .replace(/No se pudo leer la fuente oficial:\s*\S+/i,'No fue posible acceder al documento en el enlace oficial registrado. La ficha conserva los datos disponibles de la publicación DIAN, pero el contenido íntegro requiere una fuente documental accesible.')
+    .replace(/No se pudo leer la fuente oficial:\s*404 Client Error: Not Found for url:\s*\S+/i,'La fuente individual registrada no está accesible actualmente. La ficha conserva la información corroborada en el índice oficial DIAN.')
+    .replace(/No se pudo leer la fuente oficial:\s*\S+/i,'La fuente individual registrada no está accesible actualmente. La ficha conserva la información corroborada en el índice oficial DIAN.')
     .replace(/\s+/g,' ');
 }
 
@@ -70,6 +70,24 @@ function bloqueDiagnostico(d){
     <div class="diagnostico-resumen">${score}${revisado?`<div class="diagnostico-meta">Revisada: ${fechaCorta(d.revisado_fiscal_en)}</div>`:''}</div>
     ${reglas}${detalle}
   </div>`;
+}
+
+function bloqueFuentes(d){
+  const individual=d.enlace_oficial;
+  const verificacion=d.fuente_verificacion_url;
+  const estado=d.estado_fuente_verificacion;
+  const indice='https://www.dian.gov.co/Contribuyentes-Plus/Paginas/Normatividad.aspx';
+  const fallback=verificacion||indice;
+  const individualNoDisponible=estado==='indice_oficial_dian';
+  const individualHtml=individual ? (individualNoDisponible
+    ? `<div class="fuente-item"><span class="fuente-estado">Fuente individual</span><span class="fuente-no">No accesible actualmente</span><a href="${esc(individual)}" target="_blank" rel="noopener">Intentar abrir documento DIAN</a></div>`
+    : `<div class="fuente-item"><span class="fuente-estado">Documento individual DIAN</span><a href="${esc(individual)}" target="_blank" rel="noopener">Abrir fuente primaria</a></div>`) : '';
+  return `<details class="fuentes"><summary>Fuentes y trazabilidad</summary>
+    ${individualHtml}
+    <div class="fuente-item"><span class="fuente-estado">Índice oficial DIAN</span><a href="${esc(fallback)}" target="_blank" rel="noopener">Ver publicación en Normatividad DIAN</a></div>
+    ${estado==='indice_oficial_dian' ? `<p class="fuente-nota">Número, fecha, tema y tesis/descripción se corroboran contra el registro oficial DIAN. El contenido íntegro solo se considera corroborado cuando la fuente individual es accesible.</p>` : ''}
+    ${d.fuente_verificada_en ? `<div class="fuente-fecha">Verificación de fuente: ${fechaCorta(d.fuente_verificada_en)}</div>` : ''}
+  </details>`;
 }
 
 function bloquePlazo(d){
@@ -107,15 +125,18 @@ function bloqueDatos(d){
   const filas = [];
   if(d.diario_oficial) filas.push(`<div><strong>Diario Oficial</strong> ${esc(d.diario_oficial)}</div>`);
   if(d.fecha_entrada_vigencia && d.fecha_es_real) filas.push(`<div><strong>Rige desde</strong> ${fechaCorta(d.fecha_entrada_vigencia)}</div>`);
+  if(d.fecha_fin_vigencia) filas.push(`<div><strong>Vigencia hasta</strong> ${fechaCorta(d.fecha_fin_vigencia)}</div>`);
   if(d.tiene_efectos_retroactivos && (d.anos_afectados||[]).length) filas.push(`<div><strong>Menciona años</strong> ${d.anos_afectados.join(', ')}</div>`);
   if((d.zonas_afectadas||[]).length) filas.push(`<div><strong>Aplica en</strong> ${d.zonas_afectadas.slice(0,6).map(esc).join(', ')}</div>`);
-  if((d.fuentes_formales||[]).length) filas.push(`<div><strong>Interpreta</strong> ${d.fuentes_formales.slice(0,3).map(esc).join(' · ')}</div>`);
+  if((d.fuentes_formales||[]).length) filas.push(`<div><strong>Interpreta</strong> ${d.fuentes_formales.slice(0,6).map(esc).join(' · ')}</div>`);
   if(d.fecha_publicacion_web && d.fecha_publicacion_web !== d.fecha_publicacion) filas.push(`<div><strong>Publicada en la web</strong> ${fechaCorta(d.fecha_publicacion_web)}</div>`);
   if(d.banco_datos) filas.push(`<div><strong>Tema DIAN</strong> ${esc(d.banco_datos)}</div>`);
   if(d.dependencia_emisora) filas.push(`<div><strong>Emitida por</strong> ${esc(d.dependencia_emisora)}</div>`);
-  if((d.jurisprudencia_citada||[]).length) filas.push(`<div><strong>Cita jurisprudencia</strong> ${d.jurisprudencia_citada.slice(0,4).map(esc).join(' · ')}</div>`);
-  if((d.doctrina_citada||[]).length) filas.push(`<div><strong>Se apoya en</strong> ${d.doctrina_citada.slice(0,3).map(esc).join(' · ')}</div>`);
-  if(d.motivo_cambio_estado) filas.push(`<div><strong>Estado</strong> ${esc(d.motivo_cambio_estado).slice(0,160)}</div>`);
+  if((d.jurisprudencia_citada||[]).length) filas.push(`<div><strong>Cita jurisprudencia</strong> ${d.jurisprudencia_citada.slice(0,6).map(esc).join(' · ')}</div>`);
+  if((d.doctrina_citada||[]).length) filas.push(`<div><strong>Se apoya en</strong> ${d.doctrina_citada.slice(0,6).map(esc).join(' · ')}</div>`);
+  if(d.motivo_cambio_estado) filas.push(`<div><strong>Motivo de estado</strong> ${esc(d.motivo_cambio_estado).slice(0,240)}</div>`);
+  if(d.area_derecho) filas.push(`<div><strong>Área jurídica</strong> ${esc(d.area_derecho)}</div>`);
+  if(d.precision_fecha) filas.push(`<div><strong>Precisión de fecha</strong> ${esc(d.precision_fecha)}</div>`);
   return filas.length ? `<div class="datos">${filas.join('')}</div>` : '';
 }
 
@@ -126,11 +147,12 @@ function ficha(d){
     d.tiene_efectos_retroactivos ? '<span class="alerta">afecta años pasados</span>' : '',
   ].filter(Boolean).join('');
   const materias = [d.materia ? `<span class="materia">${esc(d.materia)}</span>` : '', ...temas.slice(0,6).map(t=>`<span>${nombreTema(t)}</span>`)].filter(Boolean).join('');
-  const descriptores = (d.descriptores||[]).length ? `<ul>${d.descriptores.slice(0,6).map(x=>`<li>${esc(x)}</li>`).join('')}</ul>` : '';
+  const descriptores = (d.descriptores||[]).length ? `<ul>${d.descriptores.slice(0,8).map(x=>`<li>${esc(x)}</li>`).join('')}</ul>` : '';
   const lateral = [bloquePlazo(d), bloqueRelaciones(d)].filter(Boolean).join('');
   const s = señal(d);
   const marcaNueva = d.es_nuevo ? '<span class="nuevo">Nuevo</span>' : '';
   const marcaDetalle = (d.nivel_detalle === 'solo_listado') ? '<span class="detalle-parcial" title="Aún no se ha abierto el documento oficial">Sin abrir</span>' : (d.nivel_detalle === 'leido') ? '<span class="detalle-parcial" title="Documento leído; falta la ficha en palabras simples">Sin ficha</span>' : '';
+  const resumen = d.resumen_humano || d.resumen_borrador || d.descripcion_limpia || d.contenido || '';
   return `<article data-id="${d.id}" class="t-${s.tono}${d.resumen_humano?' escrito':''}${d.es_nuevo?' nuevo-doc':''}>
     <div class="cintas">${marcaNueva}<span class="cinta">${s.rotulo}</span>${marcaDetalle}</div>
     <div class="fila-id">${glifo(d)}<a class="codigo" href="${esc(d.enlace_oficial)}" target="_blank" rel="noopener">${esc(d.numero_resolucion)}</a>${d.numero_interno?`<span class="interno">int ${esc(d.numero_interno)}</span>`:''}${fechaFicha(d)}</div>
@@ -138,11 +160,13 @@ function ficha(d){
     <div class="cuerpo">
       <div class="principal">
         ${bloqueDiagnostico(d)}
+        ${resumen ? `<div class="resumen-ficha"><span class="resumen-rotulo">Resumen</span><p>${esc(resumen)}</p></div>` : ''}
         ${bloqueRespuesta(d)}
         ${bloqueBorrador(d)}
         ${bloqueSinFicha(d)}
         ${bloqueDatos(d)}
-        <details class="oficial"><summary><span class="abrir">Ver cómo lo dice la DIAN</span></summary><p>${esc(d.descripcion_limpia||d.contenido||'').slice(0,1200)}</p>${descriptores}</details>
+        ${bloqueFuentes(d)}
+        <details class="oficial"><summary><span class="abrir">Ver cómo lo dice la DIAN</span></summary><p>${esc(d.descripcion_limpia||d.contenido||'').slice(0,1600)}</p>${descriptores}</details>
         <div class="clasificacion"><div class="grupo-marcas"><span class="clas-rotulo">Qué fuerza tiene</span><div class="marcas">${fuerza}</div></div>${materias ? `<div class="grupo-marcas"><span class="clas-rotulo">De qué trata</span><div class="marcas">${materias}</div></div>` : ''}</div>
       </div>
       ${lateral ? `<aside class="lateral">${lateral}</aside>` : ''}
