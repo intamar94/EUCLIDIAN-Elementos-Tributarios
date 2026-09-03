@@ -24,7 +24,7 @@ class RevisorFiscalTests(unittest.TestCase):
         self.assertEqual(failed, [])
         self.assertEqual(reasons, [])
 
-    def test_missing_classification_returns_review(self):
+    def test_missing_classification_returns_review_without_visibility_block(self):
         doc = dict(BASE)
         doc["clasificacion_obligatoriedad"] = None
         result, _, _, failed, _ = evaluate(doc, True)
@@ -32,25 +32,24 @@ class RevisorFiscalTests(unittest.TestCase):
         self.assertIn("CLASIFICACION", failed)
         self.assertIn("A_QUIEN", failed)
 
-    def test_missing_evidence_returns_review(self):
-        doc = dict(BASE)
-        result, _, _, failed, _ = evaluate(doc, False)
+    def test_missing_evidence_returns_review_without_visibility_block(self):
+        result, _, _, failed, _ = evaluate(BASE, False)
         self.assertEqual(result, "REVIEW")
         self.assertIn("EVIDENCIA", failed)
 
-    def test_missing_summary_returns_review(self):
+    def test_missing_summary_returns_review_without_visibility_block(self):
         doc = dict(BASE)
         doc["resumen_humano"] = None
         result, _, _, failed, _ = evaluate(doc, True)
         self.assertEqual(result, "REVIEW")
         self.assertIn("RESUMEN", failed)
 
-    def test_warning_returns_review(self):
+    def test_warning_does_not_block(self):
         doc = dict(BASE)
         doc["borrador_advertencias"] = ["Fecha ambigua"]
         result, _, _, failed, _ = evaluate(doc, True)
-        self.assertEqual(result, "REVIEW")
-        self.assertIn("ADVERTENCIAS", failed)
+        self.assertEqual(result, "APPROVE")
+        self.assertNotIn("ADVERTENCIAS", failed)
 
 
 if __name__ == "__main__":
