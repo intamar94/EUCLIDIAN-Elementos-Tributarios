@@ -56,10 +56,11 @@ def _index_urls(session):
             with _index_lock:_index_cache[url]=found
             out.extend(found)
         except Exception as exc:
-            log.warning("INDICE_DIAn_ERROR url=%s error=%s",url,str(exc)[:120])
+            log.warning("INDICE_DIAN_ERROR url=%s error=%s",url,str(exc)[:120])
     return out
 
 def discover_official_url(session,doc):
+    """Encuentra una URL individual vigente cuando la URL almacenada quedó obsoleta."""
     number=norm(doc.get("numero_resolucion")); title=norm(doc.get("titulo")); internal=norm(doc.get("numero_interno"))
     tokens=[x for x in re.findall(r"\d{3,9}",number) if x]
     variants=set(tokens)
@@ -110,6 +111,8 @@ def verify(session,doc):
         source,final,discovered=discover_official_url(session,doc)
         if source:
             log.info("FUENTE_ALTERNATIVA documento=%s url=%s",doc.get("numero_resolucion"),discovered)
+            # El llamador puede persistir discovered como nueva URL canónica.
+            doc["_fuente_oficial_descubierta"]=discovered
         else:
             return False,[f"No se pudo leer la fuente oficial: {str(exc)[:150]}"]
     fp=urlparse(final)
@@ -135,7 +138,6 @@ def verify(session,doc):
     if thesis and len(thesis)>=25:
         tw=words(thesis)
         if not tw or len(tw&words(source))/len(tw)<0.40:errors.append("La tesis jurídica no tiene suficiente respaldo textual.")
-    # Estos campos son metadatos interpretativos: su ausencia literal en la página no invalida el documento.
     if doc.get("entidad_emisora") and not evidence(source,doc.get("entidad_emisora")):log.debug("METADATO_SIN_CITA entidad=%s",doc.get("entidad_emisora"))
     if doc.get("estado_vigencia") and not evidence(source,doc.get("estado_vigencia")):log.debug("METADATO_SIN_CITA vigencia=%s",doc.get("estado_vigencia"))
     return not errors and ok,errors
@@ -155,10 +157,14 @@ def iter_docs(db,limit=None):
 def main(apply=False,limit=None):
     u,k=os.getenv("SUPABASE_URL"),os.getenv("SUPABASE_SERVICE_KEY")
     if not u or not k:raise RuntimeError("Faltan SUPABASE_URL o SUPABASE_SERVICE_KEY")
-    db=create_client(u,k);session=requests.Session();session.headers.update({"User-Agent":"EUCLIDIAN/3.5 (verificador DIAN robusto)","Accept-Language":"es-CO,es;q=0.9"});validate_sources(session)
+    db=create_client(u,k);session=requests.Session();session.headers.update({"User-Agent":"EUCLIDIAN/3.6 (verificador DIAN robusto)","Accept-Language":"es-CO,es;q=0.9"});validate_sources(session)
     total=good=bad=0;reasons={}
     for doc in iter_docs(db,limit):
         total+=1;ok,errors=verify(session,doc)
+        if apply:
+            discovered=doc.pop("_fuente_oficial_descubierta",None)
+            if discovered:
+                db.table("documentos_tributarios").update({"enlace_oficial":discovered}).eq("id",doc["id"]).execute()
         if ok:
             good+=1
             if apply:db.table("documentos_tributarios").update({"aprobado_para_email":True,"borrador_confianza":"alta","borrador_advertencias":[]}).eq("id",doc["id"]).execute()
