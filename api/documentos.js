@@ -27,15 +27,16 @@ const CAMPOS = [
   'tesis_juridica','tesis_respuesta','problema_juridico','fuentes_formales','descriptores','doctrina_citada',
   'jurisprudencia_citada','modifica_a','modificado_por','nivel_alerta','prioridad','revisado_por_humano',
   'publicado_cliente','aprobado_para_email','revisado_fiscal_en','observaciones_revisor','anio','anio_publicacion',
-  'precision_fecha','es_nuevo','nivel_detalle','created_at'
+  'precision_fecha','es_nuevo','nivel_detalle','created_at','fuente_verificacion_url','estado_fuente_verificacion',
+  'fuente_verificada_en'
 ].join(',');
 
 function normalizarDiagnostico(value){
   if(!value)return value;
   return String(value)
     .replace(/CRITICAL:\s*/g,'')
-    .replace(/No se pudo leer la fuente oficial:\s*404 Client Error: Not Found for url:\s*\S+/gi,'No fue posible acceder al documento en el enlace oficial registrado. Se requiere una fuente documental accesible para corroborar el contenido íntegro.')
-    .replace(/No se pudo leer la fuente oficial:\s*\S+/gi,'No fue posible acceder al documento en el enlace oficial registrado. Se requiere una fuente documental accesible para corroborar el contenido íntegro.');
+    .replace(/No se pudo leer la fuente oficial:\s*404 Client Error: Not Found for url:\s*\S+/gi,'No fue posible acceder al documento en el enlace oficial registrado. La ficha conserva los datos disponibles de la publicación DIAN, pero el contenido íntegro requiere una fuente documental accesible.')
+    .replace(/No se pudo leer la fuente oficial:\s*\S+/gi,'No fue posible acceder al documento en el enlace oficial registrado. La ficha conserva los datos disponibles de la publicación DIAN, pero el contenido íntegro requiere una fuente documental accesible.');
 }
 
 export default async function handler(req,res){
@@ -65,8 +66,6 @@ export default async function handler(req,res){
     const rango=rDocs.headers.get('content-range')||'*/0';
     const total=parseInt(rango.split('/')[1],10)||0;
 
-    // La evaluación fiscal vive en una tabla separada. Se incorpora a cada ficha
-    // para que el cliente pueda mostrar resultado, puntuación, reglas y evidencia.
     if(documentos.length){
       const ids=documentos.map(d=>d.id).filter(Boolean);
       const inFilter=`in.(${ids.join(',')})`;
@@ -85,6 +84,12 @@ export default async function handler(req,res){
             d.evaluacion_version_reglas=e.version_reglas||null;
           }
           d.observaciones_revisor=normalizarDiagnostico(d.observaciones_revisor);
+          // Para fichas antiguas sin trazabilidad explícita, el estado de fuente
+          // se mantiene derivado del dato ya revisado; no se presenta EUCLIDIAN
+          // como una tercera fuente.
+          if(!d.fuente_verificacion_url && d.estado_fuente_verificacion==='indice_oficial_dian'){
+            d.fuente_verificacion_url='https://www.dian.gov.co/Contribuyentes-Plus/Paginas/Normatividad.aspx';
+          }
         }
       }
     }
