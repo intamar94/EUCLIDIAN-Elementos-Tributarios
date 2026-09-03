@@ -43,3 +43,4 @@ jobs:
         run: python scripts/revisor_fiscal_euclidian.py --limit ${{ inputs.limite || '20000' }} --workers ${{ inputs.workers || '16' }}
 
 # Ejecución limpia: recorrer todo el corpus pendiente con las pruebas actuales.
+# Disparo controlado para procesar los pendientes restantes con la versión actual de main.
