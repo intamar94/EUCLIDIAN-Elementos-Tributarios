@@ -1,0 +1,30 @@
+/* EUCLIDIAN — detalle documental */
+.detalle-seccion{margin:11px 0 0;border-top:1px dashed var(--linea);padding-top:9px}
+.detalle-seccion>summary{cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 12px;background:#F7F6F0;border:1px solid var(--linea);border-radius:3px;font-family:'IBM Plex Sans',sans-serif;font-size:13px;color:var(--tinta)}
+.detalle-seccion>summary::-webkit-details-marker{display:none}
+.detalle-seccion>summary::after{content:'+';font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--tenue)}
+.detalle-seccion[open]>summary::after{content:'−'}
+.detalle-seccion>summary:hover{border-color:var(--tinta)}
+.ficha-datos{display:grid;grid-template-columns:minmax(0,1fr);gap:0;margin-top:6px;padding:2px 2px 4px}
+.ficha-dato{display:grid;grid-template-columns:minmax(135px,30%) minmax(0,1fr);gap:12px;padding:8px 5px;border-bottom:1px solid #E4E2DA;font-size:12.5px;line-height:1.45;min-width:0}
+.ficha-dato:last-child{border-bottom:0}
+.ficha-dato>span{font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--tenue)}
+.ficha-dato>strong{font-family:'IBM Plex Sans',sans-serif;font-weight:400;color:var(--tinta);overflow-wrap:anywhere}
+.ficha-dato.principal{background:#F0F3ED;border-left:3px solid var(--humano);padding-left:8px}
+.ficha-dato.principal>strong{font-weight:600}
+.ficha-lista>strong{line-height:1.55}
+.detalle-vacio{margin:10px 5px;font-size:12px;color:var(--tenue)}
+.fecha-principal{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.04em;color:var(--humano);margin-left:8px;white-space:nowrap}
+.rel-fecha{color:var(--tenue)}
+.rel-mas{color:var(--tenue)}
+.fuentes.detalle-seccion{margin-top:11px}
+.fuentes .fuente-item{background:transparent}
+.oficial{margin-top:11px}
+.oficial p{max-height:420px;overflow:auto;padding-right:4px}
+
+@media(max-width:620px){
+  .detalle-seccion>summary{padding:10px 11px;font-size:12.5px}
+  .ficha-dato{grid-template-columns:1fr;gap:3px;padding:8px 4px}
+  .ficha-dato>span{font-size:9px}
+  .fecha-principal{display:block;margin:4px 0 0;font-size:9px;white-space:normal}
+}
