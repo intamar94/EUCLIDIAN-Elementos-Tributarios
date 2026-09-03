@@ -42,4 +42,4 @@ jobs:
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
         run: python scripts/revisor_fiscal_euclidian.py --limit ${{ inputs.limite || '20000' }} --workers ${{ inputs.workers || '16' }}
 
-# El revisor debe recorrer todo el corpus; cada ejecución continúa donde quedó.
+# Ejecución limpia: recorrer todo el corpus pendiente con las pruebas actuales.
