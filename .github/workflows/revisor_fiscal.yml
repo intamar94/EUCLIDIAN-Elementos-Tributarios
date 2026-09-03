@@ -42,5 +42,6 @@ jobs:
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
         run: python scripts/revisor_fiscal_euclidian.py --limit ${{ inputs.limite || '20000' }} --workers ${{ inputs.workers || '16' }}
 
-# Ejecución limpia: recorrer todo el corpus pendiente con las pruebas actuales.
-# Disparo controlado para procesar los pendientes restantes con la versión actual de main.
+# La cola se basa en revisado_fiscal_en. Las fichas que pierden una fuente
+# individual se reinician para que una nueva URL DIAN descubierta pueda quedar
+# persistida y sustituir el enlace obsoleto durante la siguiente revisión.
