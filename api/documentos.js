@@ -26,7 +26,8 @@ const CAMPOS = [
   'tiene_efectos_retroactivos','anos_afectados','zonas_afectadas','plazos_mencionados','anotaciones_vigencia',
   'tesis_juridica','tesis_respuesta','problema_juridico','fuentes_formales','descriptores','doctrina_citada',
   'jurisprudencia_citada','modifica_a','modificado_por','nivel_alerta','prioridad','revisado_por_humano',
-  'publicado_cliente','aprobado_para_email','anio','anio_publicacion','precision_fecha','es_nuevo','nivel_detalle','created_at'
+  'publicado_cliente','aprobado_para_email','revisado_fiscal_en','observaciones_revisor','anio','anio_publicacion',
+  'precision_fecha','es_nuevo','nivel_detalle','created_at'
 ].join(',');
 export default async function handler(req,res){
   if(CLAVE&&req.headers['x-clave']!==CLAVE)return res.status(401).json({error:'clave_incorrecta'});
@@ -59,6 +60,6 @@ export default async function handler(req,res){
     const total=parseInt(rango.split('/')[1],10)||0;
     let resumen={};try{resumen=(await rResumen.json())||{};}catch(e){}
     res.setHeader('Cache-Control','no-store');
-    return res.status(200).json({documentos,total,pagina,porPagina:POR_PAGINA,paginas:Math.max(1,Math.ceil(total/25)),estado:resumen.estado||{},prioridad:resumen.prioridad||{},naturaleza:resumen.naturaleza||{},temas:resumen.temas||[],periodo,periodos:resumen.periodos||{},actualizado:resumen.actualizado||null,pendientes:(resumen.estado||{}).pendientes??0,aprobados:(resumen.estado||{}).aprobados??0});
+    return res.status(200).json({documentos,total,pagina,porPagina:POR_PAGINA,paginas:Math.max(1,Math.ceil(total/POR_PAGINA)),estado:resumen.estado||{},prioridad:resumen.prioridad||{},naturaleza:resumen.naturaleza||{},temas:resumen.temas||[],periodo,periodos:resumen.periodos||{},actualizado:resumen.actualizado||null,pendientes:(resumen.estado||{}).pendientes??0,aprobados:(resumen.estado||{}).aprobados??0});
   }catch(e){return res.status(500).json({error:'fallo_lectura',detalle:String(e).slice(0,200)});}
 }
