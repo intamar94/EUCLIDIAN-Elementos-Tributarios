@@ -1,6 +1,6 @@
 /* EUCLIDIAN — navegacion de la bandeja. */
 let CLAVE = sessionStorage.getItem('euclidian_clave') || '';
-const F = { estado:'todos', prioridad:'', naturaleza:'', periodo:'todo', tema:'', orden:'recientes', pagina:1 };
+const F = { estado:'todos', prioridad:'', naturaleza:'', periodo:'2026', tema:'', orden:'recientes', pagina:1 };
 
 async function entrar(e){
   e.preventDefault();
@@ -9,7 +9,7 @@ async function entrar(e){
   if(!valor) return;
   CLAVE=valor;
   if(btn){btn.disabled=true;btn.textContent='COMPROBANDO…';}
-  if(mal) mal.textContent='';
+  if(mal)mal.textContent='';
   try{await cargar(true);}catch(err){CLAVE='';sessionStorage.removeItem('euclidian_clave');if(mal)mal.textContent=err.message||'No se pudo comprobar el acceso.';}
   finally{if(btn){btn.disabled=false;btn.textContent='ENTRAR';}}
 }
