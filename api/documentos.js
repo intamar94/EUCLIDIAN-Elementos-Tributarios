@@ -26,7 +26,7 @@ export default async function handler(req,res){
   if(ESTADOS[estado])filtro+='&'+ESTADOS[estado]; if(PRIORIDADES[prioridad])filtro+='&'+PRIORIDADES[prioridad]; if(NATURALEZAS[naturaleza])filtro+='&'+NATURALEZAS[naturaleza]; if(tema)filtro+=`&temas=cs.{${encodeURIComponent(tema)}}`;
   const primera=(pagina-1)*POR_PAGINA;
   try{
-    const rDocs=await fetch(`${SUPABASE_URL}/rest/v1/v_bandeja?select=${CAMPOS}&${filtro}&order=${orden}`,{headers:{...cabeceras,Prefer:'count=exact',Range:`${primera}-${primera+POR_PAGINA-1}`}});
+    const rDocs=await fetch(`${SUPABASE_URL}/rest/v1/v_bandeja?select=${CAMPOS}&${filtro}&order=${orden}`,{headers:{...cabeceras,Prefer:'count=exact',Range:`${primera}-${primera+POR_PAGINA-1}`});
     if(!rDocs.ok){const detalle=await rDocs.text();return res.status(502).json({error:'supabase',detalle:detalle.slice(0,300)});}
     const documentos=await rDocs.json(); const rango=rDocs.headers.get('content-range')||'*/0'; const total=parseInt(rango.split('/')[1],10)||0;
     if(documentos.length){
