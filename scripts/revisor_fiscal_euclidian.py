@@ -27,7 +27,7 @@ for _p in (str(ROOT), str(SCRIPTS)):
 from scripts.composicion import Composicion
 from scripts.verificador_aprobacion import verify
 
-RULES_VERSION = "3.8"
+RULES_VERSION = "3.9"
 DEFAULT_LIMIT = 20000
 MAX_LIMIT = 20000
 WORKERS = 16
@@ -43,7 +43,7 @@ def _session():
     if s is None:
         s = requests.Session()
         s.headers.update({
-            "User-Agent": "EUCLIDIAN-Fiscal-Reviewer/3.8",
+            "User-Agent": "EUCLIDIAN-Fiscal-Reviewer/3.9",
             "Accept-Language": "es-CO,es;q=0.9",
             "Connection": "keep-alive",
         })
@@ -76,9 +76,6 @@ def evaluate(d: dict, source_verified: bool = False):
             reasons.append(("CRITICAL: " if critical else "") + reason)
 
     official = bool(_texto(d.get("enlace_oficial")))
-    # Una ficha puede tener el texto completo, un extracto oficial o una
-    # descripción documental suficientemente sustantiva. No se penaliza como
-    # "contenido insuficiente" cuando ya existe una ficha usable para el lector.
     content = bool(_texto(d.get("contenido") or d.get("texto_completo") or d.get("descripcion_limpia") or d.get("resumen_humano")))
     web_date = _texto(d.get("fecha_publicacion_web"))
     doc_date = _texto(d.get("fecha_publicacion"))
@@ -113,6 +110,10 @@ def _verify_one(row):
         source_ok, source_errors = verify(_session(), d)
     except Exception as exc:
         source_ok, source_errors = False, [f"Error verificando fuente oficial: {str(exc)[:180]}"]
+    discovered = d.pop("_fuente_oficial_descubierta", None)
+    if discovered and discovered != _texto(row.get("enlace_oficial")):
+        cambios["enlace_oficial"] = discovered
+        d["enlace_oficial"] = discovered
     return d, cambios, source_ok, source_errors
 
 
