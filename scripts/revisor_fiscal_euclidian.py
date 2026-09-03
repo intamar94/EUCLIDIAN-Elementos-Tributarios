@@ -27,7 +27,7 @@ for _p in (str(ROOT), str(SCRIPTS)):
 from scripts.composicion import Composicion
 from scripts.verificador_aprobacion import verify
 
-RULES_VERSION = "3.6"
+RULES_VERSION = "3.7"
 DEFAULT_LIMIT = 20000
 MAX_LIMIT = 20000
 WORKERS = 16
@@ -43,7 +43,7 @@ def _session():
     if s is None:
         s = requests.Session()
         s.headers.update({
-            "User-Agent": "EUCLIDIAN-Fiscal-Reviewer/3.6",
+            "User-Agent": "EUCLIDIAN-Fiscal-Reviewer/3.7",
             "Accept-Language": "es-CO,es;q=0.9",
             "Connection": "keep-alive",
         })
@@ -225,10 +225,8 @@ def main():
                         "motivos": motivos,
                         "version_reglas": RULES_VERSION,
                     }, on_conflict="documento_id").execute()
-                    # REVIEW ya no bloquea la visibilidad. El documento queda
-                    # publicado en el catálogo, pero conserva su estado fiscal
-                    # y no queda aprobado para comunicaciones que requieran
-                    # alta confianza.
+                    # REVIEW no bloquea la visibilidad. El documento permanece
+                    # publicado en el catálogo y conserva su estado fiscal.
                     sb.table("documentos_tributarios").update({
                         "revisado_por_humano": False,
                         "publicado_cliente": True,
