@@ -21,10 +21,18 @@
 .fuentes .fuente-item{background:transparent}
 .oficial{margin-top:11px}
 .oficial p{max-height:420px;overflow:auto;padding-right:4px}
+.cobertura{margin-top:12px}
+.cobertura-lista{list-style:none;margin:7px 2px 3px;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px 8px}
+.cobertura-lista li{display:flex;align-items:center;gap:7px;padding:7px 8px;border:1px solid var(--linea);background:#FBFAF6;font:10.5px 'IBM Plex Sans',sans-serif;color:var(--tinta)}
+.cobertura-lista li span{font-family:'IBM Plex Mono',monospace;font-weight:600}
+.cobertura-ok span{color:var(--humano)}
+.cobertura-faltante{opacity:.65}
+.cobertura-nota{margin:7px 4px 3px;font-size:10.5px;line-height:1.45;color:var(--tenue)}
 
 @media(max-width:620px){
   .detalle-seccion>summary{padding:10px 11px;font-size:12.5px}
   .ficha-dato{grid-template-columns:1fr;gap:3px;padding:8px 4px}
   .ficha-dato>span{font-size:9px}
   .fecha-principal{display:block;margin:4px 0 0;font-size:9px;white-space:normal}
+  .cobertura-lista{grid-template-columns:1fr}
 }
