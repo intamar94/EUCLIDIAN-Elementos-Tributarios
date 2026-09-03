@@ -14,9 +14,9 @@ const PRIORIDADES = { accion:'prioridad=eq.accion', importante:'prioridad=eq.imp
 const NATURALEZAS = { obligatorias:'clasificacion_obligatoriedad=eq.obligatorio_dian_y_contribuyentes', conceptos:'clasificacion_obligatoriedad=eq.obligatorio_dian_solo' };
 const PERIODOS = { '2026':'anio_publicacion=eq.2026', recientes:'anio_publicacion=gte.2024', decada:'anio_publicacion=gte.2016', todo:'' };
 const ORDENES = {
-  recientes: 'fecha_publicacion_web.desc,fecha_publicacion.desc,numero_resolucion.desc',
-  prioridad: 'orden_prioridad.asc,fecha_publicacion_web.desc,fecha_publicacion.desc',
-  antiguos: 'fecha_publicacion_web.asc,fecha_publicacion.asc,numero_resolucion.asc',
+  recientes: 'fecha_publicacion.desc,fecha_publicacion_web.desc,numero_resolucion.desc',
+  prioridad: 'orden_prioridad.asc,fecha_publicacion.desc,fecha_publicacion_web.desc',
+  antiguos: 'fecha_publicacion.asc,fecha_publicacion_web.asc,numero_resolucion.asc',
 };
 const CAMPOS = [
   'id','numero_resolucion','numero_interno','tipo_documento','titulo','contenido','descripcion_limpia',
@@ -31,8 +31,8 @@ const CAMPOS = [
 export default async function handler(req,res){
   if(CLAVE&&req.headers['x-clave']!==CLAVE)return res.status(401).json({error:'clave_incorrecta'});
   if(!SUPABASE_URL||!SUPABASE_KEY)return res.status(500).json({error:'falta_configuracion'});
-  const periodoSolicitado=String(req.query.periodo||'todo');
-  const periodo=/^\d{4}$/.test(periodoSolicitado)?periodoSolicitado:(PERIODOS[periodoSolicitado]!==undefined?periodoSolicitado:'todo');
+  const periodoSolicitado=String(req.query.periodo||'2026');
+  const periodo=/^\d{4}$/.test(periodoSolicitado)?periodoSolicitado:(PERIODOS[periodoSolicitado]!==undefined?periodoSolicitado:'2026');
   const estadoSolicitado=req.query.estado;
   const estado=ESTADOS[estadoSolicitado]!==undefined?estadoSolicitado:'todos';
   const tema=req.query.tema||'';
@@ -59,6 +59,6 @@ export default async function handler(req,res){
     const total=parseInt(rango.split('/')[1],10)||0;
     let resumen={};try{resumen=(await rResumen.json())||{};}catch(e){}
     res.setHeader('Cache-Control','no-store');
-    return res.status(200).json({documentos,total,pagina,porPagina:POR_PAGINA,paginas:Math.max(1,Math.ceil(total/POR_PAGINA)),estado:resumen.estado||{},prioridad:resumen.prioridad||{},naturaleza:resumen.naturaleza||{},temas:resumen.temas||[],periodo,periodos:resumen.periodos||{},actualizado:resumen.actualizado||null,pendientes:(resumen.estado||{}).pendientes??0,aprobados:(resumen.estado||{}).aprobados??0});
+    return res.status(200).json({documentos,total,pagina,porPagina:POR_PAGINA,paginas:Math.max(1,Math.ceil(total/25)),estado:resumen.estado||{},prioridad:resumen.prioridad||{},naturaleza:resumen.naturaleza||{},temas:resumen.temas||[],periodo,periodos:resumen.periodos||{},actualizado:resumen.actualizado||null,pendientes:(resumen.estado||{}).pendientes??0,aprobados:(resumen.estado||{}).aprobados??0});
   }catch(e){return res.status(500).json({error:'fallo_lectura',detalle:String(e).slice(0,200)});}
 }
