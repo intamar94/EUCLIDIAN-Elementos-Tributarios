@@ -70,8 +70,9 @@ SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_KEY")
 
 
 class ExtractorEstructura(Lectores):
-    def __init__(self, limite=500, anio=None, dry_run=False):
+    def __init__(self, limite=500, anio=None, dry_run=False, rehacer=False):
         self.limite = limite
+        self.rehacer = rehacer
         self.anio = anio
         self.dry_run = dry_run
         self.stats = Counter()
@@ -136,11 +137,28 @@ class ExtractorEstructura(Lectores):
             q = self.db.table("documentos_tributarios").select(
                 "id,numero_resolucion,texto_completo"
             ).not_.is_("texto_completo", "null")
+            # Sin esto cada corrida volvia sobre los mismos documentos y
+            # el archivo no avanzaba nunca.
+            if not self.rehacer:
+                q = q.is_("estructura_extraida_en", "null")
             if self.anio:
                 q = q.gte("fecha_publicacion", f"{self.anio}-01-01") \
                      .lte("fecha_publicacion", f"{self.anio}-12-31")
-            r = q.order("fecha_publicacion", desc=True).limit(self.limite).execute()
-            return r.data or []
+            # Supabase corta las consultas en 1.000 filas y no avisa: se
+            # pedian 5.000 y devolvia 1.000, asi que cada corrida
+            # avanzaba lo mismo y el archivo no terminaba nunca. Se pide
+            # por tandas hasta juntar el limite.
+            filas, desde, TANDA = [], 0, 1000
+            while len(filas) < self.limite:
+                falta = min(TANDA, self.limite - len(filas))
+                r = q.order("fecha_publicacion", desc=True) \
+                      .range(desde, desde + falta - 1).execute()
+                lote = r.data or []
+                filas.extend(lote)
+                if len(lote) < falta:
+                    break
+                desde += falta
+            return filas[:self.limite]
         except Exception as e:
             log.error("No se pudo leer: %s", str(e)[:200])
             sys.exit(1)
@@ -231,9 +249,11 @@ class ExtractorEstructura(Lectores):
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--limite", type=int, default=500)
+    ap.add_argument("--rehacer", action="store_true",
+                    help="Volver sobre los ya procesados")
     ap.add_argument("--anio", type=int, default=None)
     ap.add_argument("--dry-run", action="store_true")
     args = ap.parse_args()
 
-    ExtractorEstructura(limite=args.limite, anio=args.anio,
+    ExtractorEstructura(limite=args.limite, anio=args.anio, rehacer=args.rehacer,
                         dry_run=args.dry_run).correr()
