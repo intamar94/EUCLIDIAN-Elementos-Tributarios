@@ -17,9 +17,15 @@ on:
         required: false
         default: ''
       limite:
-        description: 'Cuantos documentos'
+        description: 'Cuantos documentos (5000 procesa un buen tramo)'
         required: false
-        default: '500'
+        default: '5000'
+      rehacer:
+        description: 'Volver sobre los ya procesados'
+        required: false
+        default: 'no'
+        type: choice
+        options: ['no', 'si']
 
 jobs:
   extraer:
@@ -37,7 +43,8 @@ jobs:
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
         run: |
           cd scripts
-          ARGS="--limite ${{ inputs.limite || '500' }}"
+          ARGS="--limite ${{ inputs.limite || '5000' }}"
           if [ "${{ inputs.modo }}" = "dry-run" ]; then ARGS="$ARGS --dry-run"; fi
           if [ -n "${{ inputs.anio }}" ]; then ARGS="$ARGS --anio ${{ inputs.anio }}"; fi
+          if [ "${{ inputs.rehacer }}" = "si" ]; then ARGS="$ARGS --rehacer"; fi
           python extractor_estructura.py $ARGS
