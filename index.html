@@ -50,17 +50,15 @@
     <button type="button" class="limpiar" id="btnLimpiar" hidden onclick="limpiar()">Quitar filtros</button>
   </div>
   <p class="estado-consulta" id="estadoConsulta" role="status" aria-live="polite"></p>
-  <div hidden><span id="nPend"></span><span id="nApr"></span><div id="gPrioridad"></div><div id="gNaturaleza"></div><div id="gEstado"></div><div id="gPeriodo"></div><i id="activos"></i></div>
 </section>
 
 <div class="barra marco" hidden id="barra">
   <span id="rango" aria-live="polite"></span>
-  <label>Ordenar <select id="selOrden"><option value="recientes">Lo más reciente</option><option value="prioridad">Prioridad registrada</option><option value="antiguos">Lo más antiguo</option></select></label>
-  <button type="button" class="acceso-editorial" id="btnRevision" onclick="alternarRevision()">Revisión editorial</button>
+  <label>Ordenar <select id="selOrden"><option value="recientes">Lo más reciente</option><option value="prioridad">Relevancia práctica</option><option value="antiguos">Lo más antiguo</option></select></label>
 </div>
 <main class="marco" id="lista" tabindex="-1" aria-label="Resultados de la consulta" aria-busy="false"></main>
 <nav class="paginas marco" id="paginas" aria-label="Páginas de resultados"></nav>
-<footer class="marco pie-consulta" hidden id="pieConsulta"><p>EUCLIDIAN organiza información pública de la DIAN. Cada ficha distingue la fuente capturada, la síntesis y su revisión.</p><a href="https://normograma.dian.gov.co/dian/compilacion/tributario.html" target="_blank" rel="noopener noreferrer">Normograma tributario</a><a href="https://normograma.dian.gov.co/dian/compilacion/novedades_boletines.html" target="_blank" rel="noopener noreferrer">Novedades y boletines DIAN</a></footer>
+<footer class="marco pie-consulta" hidden id="pieConsulta"><p>EUCLIDIAN organiza normas, doctrina y boletines oficiales de la DIAN para facilitar su consulta profesional.</p><a href="https://normograma.dian.gov.co/dian/compilacion/tributario.html" target="_blank" rel="noopener noreferrer">Normograma tributario</a><a href="https://normograma.dian.gov.co/dian/compilacion/novedades_boletines.html" target="_blank" rel="noopener noreferrer">Novedades y boletines DIAN</a></footer>
 
 <script src="/temas.js" defer></script>
 <script src="/fichas.js" defer></script>
