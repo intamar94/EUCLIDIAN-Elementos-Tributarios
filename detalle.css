@@ -36,3 +36,13 @@
   .fecha-principal{display:block;margin:4px 0 0;font-size:9px;white-space:normal}
   .cobertura-lista{grid-template-columns:1fr}
 }
+
+/* Human review controls and captured official source text. */
+.texto-fuente pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:70vh;overflow:auto;padding:16px;background:#f8f7f1;border:1px solid #d2dacb;border-radius:8px;font:13px/1.6 'IBM Plex Mono',monospace;color:#17211c}
+.revision-editor{margin:16px 0;padding:16px;background:#fffdf8;border:1px solid #d2dacb;border-left:3px solid #2c4c8f;border-radius:8px;display:grid;gap:10px}
+.revision-editor label{font-weight:600;color:#17211c}
+.revision-editor textarea{width:100%;box-sizing:border-box;resize:vertical;min-height:110px;padding:12px;border:1px solid #b8c0b4;border-radius:6px;font:15px/1.55 'IBM Plex Sans',sans-serif;color:#17211c;background:white}
+.revision-ayuda{font-size:13px;line-height:1.5;color:#5e6b62}
+.revision-editor button{border:0;border-radius:6px;padding:10px 14px;background:#2c4c8f;color:white;font-weight:600;cursor:pointer}
+.revision-acciones{display:flex;flex-wrap:wrap;gap:8px;padding-top:8px;border-top:1px solid #d2dacb}
+.revision-editor .revision-acciones .secundario{background:#5e6b62}

@@ -37,7 +37,7 @@ jobs:
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
         run: |
           cd scripts
-          python verificador_aprobacion.py --auto-aprobar --limite 300
+          python verificador_aprobacion.py
       - name: Control de calidad estricto
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
@@ -49,11 +49,12 @@ jobs:
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          INPUT_DESDE: ${{ inputs.desde }}
         run: |
           cd scripts
-          ARGS="--guardar"
-          if [ -n "${{ inputs.desde }}" ]; then ARGS="$ARGS --desde ${{ inputs.desde }}"; fi
-          python generador.py $ARGS
+          ARGS=(--guardar)
+          if [ -n "$INPUT_DESDE" ]; then ARGS+=(--desde "$INPUT_DESDE"); fi
+          python generador.py "${ARGS[@]}"
       - name: Enviar
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
@@ -61,12 +62,14 @@ jobs:
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           EUCLIDIAN_REMITENTE: ${{ secrets.EUCLIDIAN_REMITENTE }}
           EUCLIDIAN_BASE_URL: ${{ secrets.EUCLIDIAN_BASE_URL }}
+          INPUT_ACCION: ${{ inputs.accion }}
+          INPUT_CORREO_PRUEBA: ${{ inputs.correo_prueba }}
         run: |
           cd scripts
-          case "${{ inputs.accion }}" in
+          case "$INPUT_ACCION" in
             prueba)
-              if [ -z "${{ inputs.correo_prueba }}" ]; then echo "Falta el correo de prueba."; exit 1; fi
-              python enviador.py --prueba "${{ inputs.correo_prueba }}" ;;
+              if [ -z "$INPUT_CORREO_PRUEBA" ]; then echo "Falta el correo de prueba."; exit 1; fi
+              python enviador.py --prueba "$INPUT_CORREO_PRUEBA" ;;
             enviar) python enviador.py --confirmar ;;
             *) python enviador.py ;;
           esac

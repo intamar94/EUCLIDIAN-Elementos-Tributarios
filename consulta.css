@@ -1,0 +1,42 @@
+/* La consulta ocupa la pantalla; la ilustración se reserva al acceso. */
+[hidden]{display:none!important}
+body{background:#f3f0e8;background-image:none}
+#cab{position:static;background:#fbfaf5;border-bottom:1px solid #d8d3c7;padding:0}
+#cab .cab{min-height:76px;padding-top:12px;padding-bottom:12px;align-items:center;gap:16px}
+.identidad{flex:none}.identidad .marca{text-decoration:none;font-size:27px;line-height:1.1}
+.identidad .sub{display:block;font-size:9px;letter-spacing:.12em}
+.cab-descripcion{color:var(--tenue);font-size:13px;max-width:310px;margin-right:auto}
+#btnRecargar{min-height:40px;border-radius:5px}
+.titulo-consulta{padding-top:19px}.titulo-consulta h1{font:600 26px/1.25 'Spectral',Georgia,serif;letter-spacing:-.02em}
+.titulo-consulta p{font-size:14px;color:var(--tenue);margin-top:5px}
+.buscador{padding:14px 0 10px}.buscador input,.buscador button{border-radius:5px;min-height:44px}
+.buscador input::placeholder{color:#69746c}
+.filtros-directos{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:end}
+.filtro{display:grid;gap:4px;min-width:125px;flex:1}.filtro>span{font-size:12px;color:var(--tenue)}
+select{font:14px 'IBM Plex Sans',sans-serif;border:1px solid #c6cdbf;background:#fffefa;color:var(--tinta);border-radius:5px;min-height:40px;padding:7px 26px 7px 10px;max-width:100%}
+.filtro select{width:100%}.limpiar{min-height:40px;border:1px solid var(--linea);border-radius:5px;padding:7px 12px;background:transparent;cursor:pointer;color:var(--tinta);font:13px 'IBM Plex Sans',sans-serif}
+.estado-consulta{font-size:12px;color:var(--tenue);min-height:19px;margin:9px 0 0}
+#barra{display:flex;align-items:center;gap:14px;padding-top:12px;padding-bottom:12px;margin:0 auto;border:0;position:static;flex-wrap:wrap}
+#rango{margin-right:auto;font-size:14px;font-weight:500}#barra label{font-size:12px;color:var(--tenue);display:flex;gap:8px;align-items:center}
+.acceso-editorial{border:0;border-bottom:1px solid #9ca699;background:transparent;color:var(--tenue);font-size:12px;cursor:pointer;padding:6px 0}
+#lista{padding-top:0;scroll-margin-top:12px}#lista:focus{outline:none}
+article{border-radius:7px}article .principal{min-width:0}.cuerpo.sin-lateral{grid-template-columns:minmax(0,1fr)}
+.acciones-fuente{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin:11px 0 14px}
+.abrir-fuente{display:inline-block;border:1px solid #b8c5b6;background:#fffefa;border-radius:5px;padding:7px 11px;text-decoration:none;font-size:13px;font-weight:500}
+.estado-fuente{font-size:12px;color:var(--tenue)}.revision-breve{display:flex;flex-wrap:wrap;gap:7px;font-size:12px;color:var(--tenue);margin-bottom:10px}
+.revision-breve .aprobada{color:var(--humano)}.revision-breve .sin-revisar{color:#825628}
+.documento-detalle>summary{font-size:14px;font-weight:500;padding:10px 0;cursor:pointer}.documento-detalle{margin-top:8px}
+.estado-editor{font-size:13px;min-height:20px}.estado-editor.error-editor{color:var(--alerta)}
+.pie-consulta{font-size:12px;color:var(--tenue);padding-top:18px;padding-bottom:30px;border-top:1px solid #ded8cb}.pie-consulta a{display:inline-block;margin:8px 16px 0 0}
+.saltar-contenido{position:fixed;left:12px;top:-70px;z-index:90;background:#fff;padding:10px 16px}.saltar-contenido:focus{top:12px}
+.solo-lectores{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+#puerta{overflow-y:auto;padding:24px 16px;background:#f3f0e8}
+#puerta form{width:100%;max-width:410px;background:#fbfaf5;border:1px solid #ded8cb;border-radius:16px;overflow:hidden;padding:0 28px 24px;box-shadow:0 12px 32px #3d362a14}
+#puerta .ilustracion{display:block;width:calc(100% + 56px);height:150px;object-fit:cover;object-position:center 40%;margin:0 -28px 22px;border-bottom:1px solid #ded8cb}
+#puerta .marca{font-size:36px;text-align:center}#puerta .sub{display:block;text-align:center}#puerta p{margin-top:22px}
+#puerta input,#puerta button{min-height:46px;border-radius:5px}#puerta button{background:#b83b2f;color:#fff}
+button:focus-visible,a:focus-visible,summary:focus-visible,select:focus-visible{outline:2px solid var(--obliga);outline-offset:3px}
+button:disabled{opacity:.55;cursor:wait}.error button,.aviso button{margin-top:12px;padding:8px 13px;background:#fff;border:1px solid var(--linea);border-radius:5px;cursor:pointer}
+@media(max-width:620px){#cab .cab{min-height:65px;gap:10px}.identidad .marca{font-size:23px}.cab-descripcion{display:none}#btnRecargar{margin-left:auto;font-size:12px;padding:6px 9px}.titulo-consulta{padding-top:15px}.titulo-consulta h1{font-size:23px}.titulo-consulta p{font-size:13px}.buscador{flex-wrap:nowrap}.buscador input{flex:1;min-width:0;font-size:14px;padding:10px}.buscador button{padding:10px 13px}.filtros-directos{gap:8px}.filtro{min-width:110px}.filtro:last-of-type{flex:1 1 100%}#barra{gap:8px}#rango{flex:1 1 100%}#barra select{min-height:36px}.acceso-editorial{margin-left:auto}.fecha-principal{white-space:normal}.cobertura-nota{font-size:12px}.diagnostico-cab span{text-align:left}.revision-acciones button{width:100%}}
+@media(max-height:550px){#puerta{align-items:flex-start}#puerta .ilustracion{height:90px;margin-bottom:12px}}
+@media print{#cab,#controles,#barra,#paginas,.pie-consulta,.revision-editor,.saltar-contenido{display:none!important}body{background:white}article{break-inside:avoid;box-shadow:none;animation:none}.marco{max-width:none}.documento-detalle{display:block}a{color:inherit}}

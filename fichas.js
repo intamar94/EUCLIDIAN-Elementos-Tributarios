@@ -73,8 +73,10 @@ function esc(s){
    El orden de las reglas es el desempate: lo que exige accion se
    evalua primero, porque la accion manda sobre la clasificacion. */
 function señal(d){
-  if (d.estado_vigencia !== 'vigente')
+  if (d.estado_vigencia && d.estado_vigencia !== 'vigente' && d.estado_vigencia !== 'desconocido')
     return {rotulo:'No la apliques', tono:'alerta'};
+  if (!d.estado_vigencia || d.estado_vigencia === 'desconocido')
+    return {rotulo:'Vigencia por confirmar', tono:'orienta'};
   if (d.nivel_alerta === 'critica')
     return {rotulo:'Acción requerida', tono:'alerta'};
 
@@ -90,19 +92,19 @@ function señal(d){
   if (dias !== null && dias >= 0)
     return {rotulo:'Tiene plazo', tono:'obliga'};
   if (d.clasificacion_obligatoriedad === 'obligatorio_dian_y_contribuyentes')
-    return {rotulo:'Obligatoria', tono:'obliga'};
+    return {rotulo:'Norma general · confirmar ámbito', tono:'orienta'};
 
   return {rotulo:'Informativa', tono:'neutro'};
 }
 
 /* Los glifos van al modo de Byrne: la figura dice lo que diria una etiqueta. */
 function glifo(d){
-  // Los dos azules son el mismo color a distinta intensidad: obligar y
-  // orientar son grados de lo mismo, y la figura lo refuerza.
-  const c = d.estado_vigencia !== 'vigente' ? '#B23A32'
+  // El color clasifica la naturaleza del documento; no determina por sí solo
+  // su aplicación al contribuyente concreto.
+  const c = d.estado_vigencia && d.estado_vigencia !== 'vigente' && d.estado_vigencia !== 'desconocido' ? '#B23A32'
           : d.clasificacion_obligatoriedad === 'obligatorio_dian_y_contribuyentes' ? '#2C4C8F'
           : '#3D82B8';
-  if (d.estado_vigencia !== 'vigente')
+  if (d.estado_vigencia && d.estado_vigencia !== 'vigente' && d.estado_vigencia !== 'desconocido')
     return `<svg width="15" height="15" viewBox="0 0 15 15" aria-hidden="true">
       <rect x="2" y="2" width="11" height="11" fill="none" stroke="${c}" stroke-width="1.5"/>
       <line x1="2" y1="13" x2="13" y2="2" stroke="${c}" stroke-width="1.5"/></svg>`;
@@ -114,9 +116,10 @@ function glifo(d){
 }
 
 function leyenda(d){
-  if (d.estado_vigencia !== 'vigente') return d.estado_vigencia;
+  if (d.estado_vigencia && d.estado_vigencia !== 'vigente' && d.estado_vigencia !== 'desconocido') return d.estado_vigencia;
+  if (!d.estado_vigencia || d.estado_vigencia === 'desconocido') return 'vigencia por confirmar';
   const o = d.clasificacion_obligatoriedad;
-  if (o === 'obligatorio_dian_y_contribuyentes') return 'obliga al contribuyente';
-  if (o === 'obligatorio_dian_solo') return 'criterio de la DIAN';
+  if (o === 'obligatorio_dian_y_contribuyentes') return 'norma general · confirmar ámbito y vigencia';
+  if (o === 'obligatorio_dian_solo') return 'criterio DIAN · revisar alcance';
   return 'informativo';
 }

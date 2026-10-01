@@ -167,11 +167,13 @@ def main(apply=False,limit=None):
                 db.table("documentos_tributarios").update({"enlace_oficial":discovered}).eq("id",doc["id"]).execute()
         if ok:
             good+=1
-            if apply:db.table("documentos_tributarios").update({"aprobado_para_email":True,"borrador_confianza":"alta","borrador_advertencias":[]}).eq("id",doc["id"]).execute()
+            # La similitud de palabras no prueba preservación de negaciones,
+            # excepciones o alcance. Nunca conceder aprobación humana/email.
+            if apply:db.table("documentos_tributarios").update({"borrador_confianza":"pendiente","borrador_advertencias":["Controles técnicos superados; falta revisión humana del contenido y su aplicación."]}).eq("id",doc["id"]).execute()
         else:
             bad+=1
             for e in errors[:5]:reasons[e]=reasons.get(e,0)+1
-            if apply:db.table("documentos_tributarios").update({"aprobado_para_email":False,"borrador_confianza":"no_aprobado","borrador_advertencias":errors[:12]}).eq("id",doc["id"]).execute()
+            if apply:db.table("documentos_tributarios").update({"borrador_confianza":"no_aprobado","borrador_advertencias":errors[:12]}).eq("id",doc["id"]).execute()
         if total%100==0:log.info("PROGRESO revisados=%d aptos=%d bloqueados=%d",total,good,bad)
     log.info("RESULTADO %s: universo_revisado=%d aptos=%d bloqueados=%d","APLICADO" if apply else "AUDITORIA",total,good,bad)
     if reasons:log.info("PRINCIPALES_MOTIVOS: %s",sorted(reasons.items(),key=lambda x:-x[1])[:10])

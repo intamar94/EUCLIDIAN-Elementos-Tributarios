@@ -19,11 +19,6 @@ jobs:
           python-version: '3.11'
       - name: Instalar dependencias
         run: pip install -r scripts/requirements.txt
-      - name: Sincronizar publicaciones actuales DIAN
-        env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
-        run: python scripts/sincronizador_dian.py
       - name: Descubrir fuentes históricas oficiales
         run: python scripts/descubrimiento_fuentes.py --limite 1000
       - name: Actualizar catálogo histórico local

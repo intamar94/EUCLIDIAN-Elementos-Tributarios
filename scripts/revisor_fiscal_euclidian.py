@@ -27,7 +27,7 @@ for _p in (str(ROOT), str(SCRIPTS)):
 from scripts.composicion import Composicion
 from scripts.verificador_aprobacion import verify
 
-RULES_VERSION = "3.9"
+RULES_VERSION = "4.0"
 DEFAULT_LIMIT = 20000
 MAX_LIMIT = 20000
 WORKERS = 16
@@ -58,7 +58,6 @@ def preparar_ficha(d: dict) -> dict:
         ficha = Composicion().componer(d)
         resumen = _texto(ficha.get("resumen"))
         if resumen:
-            cambios["resumen_humano"] = resumen[:4000]
             cambios["resumen_borrador"] = resumen[:4000]
             cambios["borrador_confianza"] = "pendiente"
             cambios["borrador_advertencias"] = list(ficha.get("advertencias") or [])
@@ -80,7 +79,7 @@ def evaluate(d: dict, source_verified: bool = False):
     web_date = _texto(d.get("fecha_publicacion_web"))
     doc_date = _texto(d.get("fecha_publicacion"))
     date_ok = bool(web_date) or bool(doc_date)
-    validity = bool(_texto(d.get("estado_vigencia")))
+    validity = _texto(d.get("estado_vigencia")) not in ("", "desconocido")
     classification = bool(_texto(d.get("clasificacion_obligatoriedad")))
     matter = bool(_texto(d.get("materia") or d.get("area_derecho") or d.get("banco_datos")))
     summary = bool(_texto(d.get("resumen_humano")))
@@ -210,8 +209,8 @@ def main():
                     score = min(score, 90)
                     failed.append("FUENTE_OFICIAL")
 
-            now = datetime.now(timezone.utc).isoformat()
             try:
+                now = datetime.now(timezone.utc).isoformat()
                 if result == "APPROVE":
                     sb.table("revisor_fiscal_euclidian_evaluaciones").upsert({
                         "documento_id": d["id"],
@@ -223,12 +222,12 @@ def main():
                         "version_reglas": RULES_VERSION,
                     }, on_conflict="documento_id").execute()
                     sb.table("documentos_tributarios").update({
-                        "revisado_por_humano": True,
-                        "publicado_cliente": True,
+                        # Fecha del control automático. La bandera
+                        # revisado_por_humano permanece separada.
                         "revisado_fiscal_en": now,
                         "observaciones_revisor": None,
-                        "borrador_confianza": "alta",
-                        "borrador_advertencias": [],
+                        "borrador_confianza": "pendiente",
+                        "borrador_advertencias": ["Controles técnicos superados; falta revisión humana del contenido y su aplicación."],
                     }).eq("id", d["id"]).execute()
                 else:
                     motivos = _limpiar_motivos(reasons)
@@ -242,8 +241,6 @@ def main():
                         "version_reglas": RULES_VERSION,
                     }, on_conflict="documento_id").execute()
                     sb.table("documentos_tributarios").update({
-                        "revisado_por_humano": False,
-                        "publicado_cliente": True,
                         "revisado_fiscal_en": now,
                         "aprobado_para_email": False,
                         "observaciones_revisor": " | ".join(motivos)[:4000],
@@ -260,6 +257,8 @@ def main():
                 print(f"TURBO_PROGRESO {n}/{len(rows)} aprobados={counts['APPROVE']} revisiones={counts['REVIEW']} errores={counts['ERROR']}", flush=True)
 
     print({"evaluated": len(rows), "counts": counts, "rules_version": RULES_VERSION, "workers": args.workers}, flush=True)
+    if counts["ERROR"]:
+        raise SystemExit(1)
 
 
 if __name__ == "__main__":

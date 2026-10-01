@@ -48,3 +48,17 @@ jobs:
             dry-run)    python scraper_fuentes_dian.py --dry-run ;;
             *)          python scraper_fuentes_dian.py ;;
           esac
+
+      - name: Capturar boletines y DoctriFlash enlazados por DIAN
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: |
+          cd scripts
+          if [ "${{ inputs.modo || 'incremental' }}" = "historico" ]; then
+            python boletines_dian.py --historico
+          elif [ "${{ inputs.modo || 'incremental' }}" = "dry-run" ]; then
+            python boletines_dian.py --dry-run
+          else
+            python boletines_dian.py --anio-corte $(( $(date +%Y) - 2 ))
+          fi

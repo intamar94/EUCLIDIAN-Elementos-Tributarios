@@ -77,7 +77,8 @@ class Enriquecedor(LectorDocumento,Alertas):
         if estado:campos["estado_vigencia"]=estado;campos["motivo_cambio_estado"]=motivo[:500];self.stats[f"estado_{estado}"]+=1
         if self.dry_run:return
         try:
-            campos["revisado_fiscal_en"]=None;campos["revisado_por_humano"]=False;campos["publicado_cliente"]=False
+            # El enriquecimiento añade metadatos; no debe reiniciar estados
+            # de revisión humana ni retirar fichas ya publicadas.
             self.db.table("documentos_tributarios").update(campos).eq("id",doc["id"]).execute();self.stats["actualizados"]+=1
         except Exception as e:self.stats["error_guardado"]+=1;log.error("No se pudo guardar %s: %s",doc["numero_resolucion"],str(e)[:160]);return
         self._alertas(doc,campos,anotaciones,retro,zonas)

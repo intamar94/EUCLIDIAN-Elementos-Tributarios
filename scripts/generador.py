@@ -273,9 +273,9 @@ class Generador:
             return d["estado_vigencia"].upper()
         oblig = d.get("clasificacion_obligatoriedad")
         if oblig == "obligatorio_dian_y_contribuyentes":
-            return "Obliga al contribuyente"
+            return "Norma general: confirmar ámbito de aplicación y vigencia"
         if oblig == "obligatorio_dian_solo":
-            return "Criterio de la DIAN, no obliga al contribuyente"
+            return "Criterio DIAN: revisar alcance y efecto jurídico"
         if oblig == "vinculante_jurisprudencia":
             return "Jurisprudencia vinculante"
         # Documentos internos y circulares: no obligan a nadie de afuera.
@@ -333,7 +333,7 @@ class Generador:
   <div style="font-family:Georgia,serif;font-size:13px;color:{TENUE};
     line-height:1.6;">
     <strong style="color:{TINTA};">Cómo leer este boletín</strong><br>
-    <span style="color:{AZUL};">{GLIFOS['obliga']}</span> obliga al contribuyente &nbsp;
+    <span style="color:{AZUL};">{GLIFOS['obliga']}</span> norma general; confirma ámbito y vigencia &nbsp;
     <span style="color:{OCRE};">{GLIFOS['criterio']}</span> criterio de la DIAN &nbsp;
     <span style="color:{REGLA};">{GLIFOS['caido']}</span> norma caída
   </div>
@@ -465,7 +465,7 @@ class Generador:
             L.append(f"   {d['enlace_oficial']}")
             L.append("")
 
-        L.append("▲ obliga al contribuyente")
+        L.append("▲ norma general; confirma ámbito y vigencia")
         L.append("● criterio de la DIAN")
         L.append("■ norma caída")
         L.append("")

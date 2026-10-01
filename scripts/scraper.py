@@ -262,6 +262,10 @@ class Scraper:
                 log.error("")
                 log.error("%d lotes fallaron al guardar.", fallidos)
                 sys.exit(1)
+            if self.stats["indices_fallidos"] or self.stats["partes_error"] or self.stats["partes_404"]:
+                log.error("Cobertura DIAN incompleta: indices_fallidos=%d partes_error=%d partes_404=%d",
+                          self.stats["indices_fallidos"], self.stats["partes_error"], self.stats["partes_404"])
+                sys.exit(1)
 
     # ==================================================================
 
@@ -291,6 +295,10 @@ class Scraper:
             titulos.append(t.get_text(" ", strip=True) if t else f"opcion_{i+1}")
 
         log.info("  %d acordeones", len(opciones))
+        if not opciones:
+            log.error("  El índice no contiene acordeones; posible cambio del HTML DIAN o mapeo incorrecto")
+            self.stats["indices_fallidos"] += 1
+            return
 
         for n, titulo in enumerate(titulos, 1):
             # En modo incremental, saltar acordeones de anios viejos
@@ -412,7 +420,9 @@ class Scraper:
             "titulo": titulo[:500],
             "contenido": descripcion[:10000],
             "enlace_oficial": url_doc[:1000],
-            "fecha_publicacion": f"{anio}-01-01",
+            # El índice informa el año pero no necesariamente el día de
+            # expedición. No inventar 1 de enero como fecha del documento.
+            "anio_publicacion": int(anio),
             "estado_vigencia": estado,
             "motivo_cambio_estado": motivo,
             "clasificacion_obligatoriedad": self._obligatoriedad(tipo_url),
@@ -420,8 +430,8 @@ class Scraper:
             "hash_contenido": hashlib.sha256(
                 (identificador + descripcion).encode("utf-8", "ignore")
             ).hexdigest(),
-            "revisado_por_humano": False,
-            "aprobado_para_email": False,
+            # Omitimos banderas de flujo humano en upsert: un refresco del
+            # mismo documento no debe borrar una revisión previamente hecha.
             "notas_verificacion": f"Extraido de {titulo_acordeon[:120]}",
             "fecha_scraped": datetime.now(timezone.utc).isoformat(),
         }
@@ -563,19 +573,20 @@ class Scraper:
     def _registrar_corrida(self, inicio):
         if self.dry_run:
             return
+        fallas_fuente = sum(self.stats[k] for k in ("indices_fallidos", "partes_error", "partes_404"))
         try:
             self.db.table("logs_scraping").insert({
                 "fuente": "normograma_dian:corrida_completa",
                 "url_objetivo": BASE,
                 "documentos_encontrados": self.stats["documentos_vistos"],
                 "documentos_nuevos": len(self.documentos),
-                "documentos_errores": self.stats["partes_error"],
+                "documentos_errores": fallas_fuente,
                 "timestamp_inicio": inicio.isoformat(),
                 "timestamp_fin": datetime.now(timezone.utc).isoformat(),
                 "tiempo_total_segundos": int(
                     (datetime.now(timezone.utc) - inicio).total_seconds()
                 ),
-                "estado": "exitoso" if not self.stats["partes_error"] else "parcial",
+                "estado": "exitoso" if not fallas_fuente else "parcial",
             }).execute()
         except Exception as e:
             log.debug("no se pudo registrar la corrida: %s", str(e)[:120])

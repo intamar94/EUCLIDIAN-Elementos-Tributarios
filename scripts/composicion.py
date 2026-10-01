@@ -189,7 +189,7 @@ class Composicion(Asunto):
         # Frases cortas a proposito: estas lineas se repiten en cientos de
         # fichas. Si son largas, el ojo las salta y deja de leerlas.
         if oblig == "obligatorio_dian_y_contribuyentes":
-            partes.append("Obligatorio")
+            partes.append("Norma general: confirmar ámbito y vigencia")
         elif oblig == "obligatorio_dian_solo":
             partes.append("Doctrina DIAN: orienta, no obliga")
         elif oblig == "vinculante_jurisprudencia":

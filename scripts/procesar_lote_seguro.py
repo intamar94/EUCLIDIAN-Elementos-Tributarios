@@ -49,10 +49,11 @@ def main(apply=False, limit=1000):
         if ok:
             good += 1
             if apply:
+                # Verificar URL, fecha y coincidencias no equivale a validar
+                # jurídicamente el borrador ni aprobar su envío a clientes.
                 db.table("documentos_tributarios").update({
-                    "aprobado_para_email": True,
-                    "borrador_confianza": "alta",
-                    "borrador_advertencias": [],
+                    "borrador_confianza": "pendiente",
+                    "borrador_advertencias": ["Controles técnicos superados; falta revisión humana del contenido y su aplicación."],
                 }).eq("id", doc["id"]).execute()
         else:
             bad += 1

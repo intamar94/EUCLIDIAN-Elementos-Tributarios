@@ -154,10 +154,8 @@ class RedactorReglas(Composicion):
                 "borrador_generado_en": datetime.now(timezone.utc).isoformat(),
             }
             if ficha["interno"]:
-                # Se marca revisado para que no estorbe en la bandeja, y
-                # se corrige la obligatoriedad para que ni la bandeja ni
-                # el correo digan que obliga a alguien.
-                campos["revisado_por_humano"] = True
+                # No marcar como revisado por una persona: esto solo etiqueta
+                # un caso interno y genera un borrador automático.
                 campos["clasificacion_obligatoriedad"] = "orientativo"
                 temas = [t for t in (d.get("temas") or []) if t != "interno_dian"]
                 campos["temas"] = temas + ["interno_dian"]
