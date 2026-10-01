@@ -37,7 +37,7 @@
 </header>
 
 <section class="controles marco" hidden id="controles" aria-label="Buscar documentos DIAN">
-  <div class="titulo-consulta"><h1>Normas, doctrina y boletines</h1><p>Consulta la fuente oficial, su contenido y el estado de revisión de cada ficha.</p></div>
+  <div class="titulo-consulta"><h1>Normas, doctrina y boletines</h1><p>Consulta la fuente oficial, el alcance práctico y los datos necesarios para documentar tu criterio profesional.</p></div>
   <form class="buscador" id="formBuscar" role="search">
     <label class="solo-lectores" for="consulta">Buscar por número, título o contenido</label>
     <input id="consulta" type="search" maxlength="160" placeholder="Busca por número, título o tema, p. ej. retención en la fuente" autocomplete="off">
@@ -46,7 +46,7 @@
   <div class="filtros-directos">
     <label class="filtro" for="selAnio"><span>Año</span><select id="selAnio"><option value="">Todos los años</option></select></label>
     <label class="filtro" for="selTema"><span>Tema</span><select id="selTema"><option value="">Todos los temas</option></select></label>
-    <label class="filtro" for="selEstado"><span>Revisión</span><select id="selEstado"><option value="todos">Todos los documentos</option><option value="aprobados">Con revisión humana y publicados</option><option value="pendientes">Pendientes de revisión humana</option><option value="nuevos">Nuevos en EUCLIDIAN</option></select></label>
+    <label class="filtro" for="selEstado"><span>Vista</span><select id="selEstado"><option value="todos">Todos los documentos</option><option value="nuevos">Novedades en EUCLIDIAN</option></select></label>
     <button type="button" class="limpiar" id="btnLimpiar" hidden onclick="limpiar()">Quitar filtros</button>
   </div>
   <p class="estado-consulta" id="estadoConsulta" role="status" aria-live="polite"></p>
