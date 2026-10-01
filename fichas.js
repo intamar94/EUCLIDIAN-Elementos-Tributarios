@@ -45,13 +45,40 @@ function diasHasta(f){
    publicación en su página web. fecha_publicacion conserva la fecha propia
    del acto/concepto y solo se usa como respaldo si la DIAN no informó fecha web. */
 function fechaFicha(d){
+  if ((d.precision_fecha === 'exacta' || d.fecha_es_real) && fechaDocumentoConfiable(d))
+    return `<span class="fecha">${fechaCorta(d.fecha_publicacion)}</span>`;
   if (d.fecha_publicacion_web)
     return `<span class="fecha">${fechaCorta(d.fecha_publicacion_web)}</span>`;
-  if (d.precision_fecha === 'exacta' || d.fecha_es_real)
-    return `<span class="fecha">${fechaCorta(d.fecha_publicacion)}</span>`;
   const anio = d.anio_publicacion || d.anio || String(d.fecha_publicacion || '').slice(0,4);
   if (!anio) return '';
   return `<span class="fecha aproximada" title="La DIAN no publicó el día exacto">${anio}</span>`;
+}
+
+function fechaDocumentoConfiable(d){
+  if (!d.fecha_es_real || !d.fecha_publicacion) return false;
+  const fecha=String(d.fecha_publicacion).slice(0,10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha)) return false;
+  const hoy=new Date().toISOString().slice(0,10);
+  if(fecha>hoy || fecha.endsWith('-01-01')) return false;
+  const anio=anioIdentificador(d);
+  return !anio || fecha.slice(0,4)===anio;
+}
+
+function anioIdentificador(d){
+  const coincidencia=String(d.numero_resolucion||'').match(/-(19|20)\d{2}$/);
+  return coincidencia?coincidencia[0].slice(1):'';
+}
+
+/* La ficha no presenta una fecha exacta si no está respaldada por el
+   documento. Distingue la fecha propia del acto de la fecha en que la DIAN
+   lo publicó en su web; ambas pueden ser relevantes y no son equivalentes. */
+function fechaPrincipal(d){
+  if (fechaDocumentoConfiable(d))
+    return `<span class="fecha-principal">Documento DIAN · ${fechaCorta(d.fecha_publicacion)}</span>`;
+  if (d.fecha_publicacion_web)
+    return `<span class="fecha-principal">Publicada por DIAN · ${fechaCorta(d.fecha_publicacion_web)}</span>`;
+  const anio=anioIdentificador(d)||d.anio_publicacion||d.anio||String(d.fecha_publicacion||'').slice(0,4);
+  return anio?`<span class="fecha-principal aproximada" title="El índice DIAN solo permite identificar el año">Índice DIAN · ${esc(anio)}</span>`:'';
 }
 
 function esc(s){

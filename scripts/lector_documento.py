@@ -80,8 +80,18 @@ class LectorDocumento:
         return []
 
     def _plazos(self,texto):
+        # Los considerandos suelen reproducir plazos de actos anteriores.
+        # Para orientar al contador interesan primero las órdenes vigentes del
+        # apartado resolutivo, no la cronología que explica el antecedente.
+        inicio=re.search(r"\bRESUELVE\b",texto,re.I)
+        fuente=texto[inicio.end():] if inicio else texto
         out=[]
-        for m in re.finditer(r"([^\.\n]{0,120}?(?:plazo|vencimiento|hasta el|a m[aá]s tardar|pagar[aá]n?|pago)[^\.\n]{0,140}?\d{1,2}\s+de\s+[a-zA-ZáéíóúÁÉÍÓÚ]+\s+de\s+(?:19|20)\d{2}[^\.\n]{0,40})",texto,re.I):
-            s=re.sub(r"\s+"," ",m.group(1)).strip()
-            if 25<len(s)<300 and s not in out:out.append(s)
+        patrones=[
+            r"([^\.\n]{0,120}?(?:plazo|vencimiento|hasta el|a m[aá]s tardar|pagar[aá]n?|pago)[^\.\n]{0,140}?\d{1,2}\s+de\s+[a-zA-ZáéíóúÁÉÍÓÚ]+\s+de\s+(?:19|20)\d{2}[^\.\n]{0,40})",
+            r"([^\.\n]{0,120}?suspensi[oó]n\s+de\s+(?:los\s+)?t[eé]rminos[^\.\n]{0,180}?desde\s+el?\s*\d{1,2}\s+de\s+[a-zA-ZáéíóúÁÉÍÓÚ]+[^\.\n]{0,100}?hasta\s+el?\s*\d{1,2}\s+de\s+[a-zA-ZáéíóúÁÉÍÓÚ]+\s+de\s+(?:19|20)\d{2}[^\.\n]{0,40})"
+        ]
+        for patron in patrones:
+            for m in re.finditer(patron,fuente,re.I):
+                s=re.sub(r"\s+"," ",m.group(1)).strip()
+                if 25<len(s)<300 and s not in out:out.append(s)
         return out
