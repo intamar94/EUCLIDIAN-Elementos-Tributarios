@@ -16,7 +16,7 @@ DOMINIO = "normograma.dian.gov.co"
 PREFIJO = "/dian/compilacion/"
 FUENTES_RAIZ = {
     "novedades_boletines": "https://normograma.dian.gov.co/dian/compilacion/novedades_boletines.html",
-    "tributario": "https://normograma.dian.gov.co/dian/compilacion/tributario.html?q=TRIBUTARIO",
+    "tributario": "https://normograma.dian.gov.co/dian/compilacion/tributario.html",
 }
 TIMEOUT = 30
 HEADERS = {

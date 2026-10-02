@@ -6,7 +6,7 @@ on:
       - 'scripts/**'
       - '.github/workflows/control_calidad.yml'
   schedule:
-    - cron: '0 14 * * 1-5'
+    - cron: '0 14 * * *'
   workflow_dispatch:
     inputs:
       limite:
@@ -91,4 +91,4 @@ jobs:
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
-        run: python scripts/control_calidad.py --enlaces 25 --estricto
+        run: python scripts/control_calidad.py --enlaces 100 --estricto

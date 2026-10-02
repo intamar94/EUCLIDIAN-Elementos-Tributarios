@@ -16,6 +16,10 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)-7s %(me
 log = logging.getLogger("euclidian")
 URL = os.getenv("SUPABASE_URL"); KEY = os.getenv("SUPABASE_SERVICE_KEY")
 DOMINIO = "normograma.dian.gov.co"; FUNDACION = date(1900, 1, 1)
+FUENTES_RAIZ = {
+    "https://normograma.dian.gov.co/dian/compilacion/tributario.html",
+    "https://normograma.dian.gov.co/dian/compilacion/novedades_boletines.html",
+}
 
 class Control:
     def __init__(self, enlaces=25, estricto=False):
@@ -24,32 +28,37 @@ class Control:
         self.db = create_client(URL, KEY); self.s = requests.Session(); self.s.headers.update({"User-Agent": "EUCLIDIAN/1.0"})
 
     def correr(self):
-        self._completitud(); self._aprobados(); self._fechas(); self._duplicados(); self._plazos(); self._scraper(); self._enlaces(); return self._veredicto()
+        self._completitud(); self._visibles(); self._fechas(); self._duplicados(); self._plazos(); self._scraper(); self._enlaces(); return self._veredicto()
 
     def _completitud(self):
         try:
             total = self.db.table("documentos_tributarios").select("id", count="exact").limit(1).execute().count or 0
-            aprobados = self.db.table("documentos_tributarios").select("id", count="exact").eq("aprobado_para_email", True).limit(1).execute().count or 0
+            visibles = self.db.table("documentos_tributarios").select("id", count="exact").eq("publicado_cliente", True).limit(1).execute().count or 0
             fechas_pendientes = (self.db.table("documentos_tributarios").select("id", count="exact")
-                                 .eq("aprobado_para_email", True).eq("fecha_es_real", False).limit(1).execute().count or 0)
-            self.stats.update(documentos_totales=total, aprobados=aprobados, documentos_fecha_pendiente=fechas_pendientes)
+                                 .eq("publicado_cliente", True).eq("fecha_es_real", False).limit(1).execute().count or 0)
+            self.stats.update(documentos_totales=total, visibles=visibles, documentos_fecha_pendiente=fechas_pendientes)
             if not total: self.graves.append("No hay documentos tributarios")
+            if not visibles: self.graves.append("No hay documentos visibles para el suscriptor")
             if fechas_pendientes: log.info("Campos fecha pendientes: %d (no bloquean el documento)", fechas_pendientes)
         except Exception as e: self.graves.append(f"No se pudo comprobar completitud: {str(e)[:150]}")
 
-    def _aprobados(self):
+    def _visibles(self):
         try:
             r = (self.db.table("documentos_tributarios")
-                 .select("numero_resolucion,resumen_humano,resumen_borrador,contenido,enlace_oficial,borrador_confianza")
-                 .eq("aprobado_para_email", True).execute().data or [])
+                 .select("numero_resolucion,resumen_humano,resumen_borrador,contenido,enlace_oficial,fuente_raiz,fuente_indice")
+                 .eq("publicado_cliente", True).execute().data or [])
         except Exception as e:
-            self.graves.append(f"No se pudo revisar aprobados: {str(e)[:150]}"); return
-        self.stats["aprobados_revisados"] = len(r)
+            self.graves.append(f"No se pudo revisar fichas visibles: {str(e)[:150]}"); return
+        self.stats["visibles_revisados"] = len(r)
         for d in r:
-            if d.get("borrador_confianza") != "alta": self.graves.append(f"{d['numero_resolucion']} está aprobado sin confianza alta")
-            if len((d.get("resumen_humano") or d.get("resumen_borrador") or d.get("contenido") or "").strip()) < 30: self.graves.append(f"{d['numero_resolucion']} está aprobado sin resumen suficiente")
+            if len((d.get("resumen_humano") or d.get("resumen_borrador") or d.get("contenido") or "").strip()) < 30: self.graves.append(f"{d['numero_resolucion']} está visible sin información suficiente")
             u = d.get("enlace_oficial") or ""
             if not u.startswith("https://" + DOMINIO + "/"): self.graves.append(f"{d['numero_resolucion']} no tiene fuente DIAN permitida")
+            raiz = d.get("fuente_raiz") or ""
+            if raiz and raiz not in FUENTES_RAIZ: self.graves.append(f"{d['numero_resolucion']} tiene una raíz de procedencia no autorizada")
+            indice = d.get("fuente_indice") or ""
+            if indice and not indice.startswith("https://" + DOMINIO + "/dian/compilacion/"):
+                self.graves.append(f"{d['numero_resolucion']} tiene un índice de procedencia fuera del Normograma DIAN")
 
     def _fechas(self):
         try:
@@ -72,7 +81,7 @@ class Control:
         except Exception as e: self.avisos.append(f"No se pudieron revisar duplicados: {str(e)[:100]}")
 
     def _plazos(self):
-        try: r = self.db.table("documentos_tributarios").select("numero_resolucion,plazos_mencionados").eq("aprobado_para_email", True).execute().data or []
+        try: r = self.db.table("documentos_tributarios").select("numero_resolucion,plazos_mencionados").eq("publicado_cliente", True).execute().data or []
         except Exception: return
         import re
         for d in r:
@@ -90,7 +99,10 @@ class Control:
         except Exception: self.avisos.append("No se pudo determinar antigüedad del scraper")
 
     def _enlaces(self):
-        try: r = self.db.table("documentos_tributarios").select("numero_resolucion,enlace_oficial").eq("aprobado_para_email", True).limit(self.enlaces).execute().data or []
+        try: r = (self.db.table("documentos_tributarios")
+                  .select("numero_resolucion,enlace_oficial")
+                  .eq("publicado_cliente", True)
+                  .order("fecha_scraped", desc=True).limit(self.enlaces).execute().data or [])
         except Exception: return
         for d in r:
             try:
@@ -99,7 +111,7 @@ class Control:
             except requests.RequestException: self.graves.append(f"{d['numero_resolucion']} no responde")
 
     def _veredicto(self):
-        log.info("RESULTADO: graves=%d avisos=%d aprobados=%d fechas_pendientes=%d", len(self.graves), len(self.avisos), self.stats.get('aprobados_revisados', 0), self.stats.get('documentos_fecha_pendiente', 0))
+        log.info("RESULTADO: graves=%d avisos=%d visibles=%d fechas_pendientes=%d", len(self.graves), len(self.avisos), self.stats.get('visibles_revisados', 0), self.stats.get('documentos_fecha_pendiente', 0))
         for x in self.graves[:25]: log.error(x)
         for x in self.avisos[:15]: log.warning(x)
         if self.graves or (self.estricto and self.avisos): log.error("NO APTO PARA ENVÍO"); return 1
