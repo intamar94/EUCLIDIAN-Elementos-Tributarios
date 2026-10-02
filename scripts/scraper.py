@@ -74,6 +74,12 @@ INDICES = [
     ("t_3_jurisprudencia_tributaria", "jurisprudencia"),
 ]
 
+# Raíces que el suscriptor puede abrir para comprobar de dónde salió cada
+# ficha. La página de una parte del índice es evidencia de procedencia; la
+# ficha individual sigue siendo el enlace oficial del documento.
+FUENTE_RAIZ_TRIBUTARIA = f"{BASE}tributario.html"
+FUENTE_RAIZ_NOVEDADES = f"{BASE}novedades_boletines.html"
+
 PATRON_DOC = re.compile(
     r"docs/(?P<tipo>[a-z_]+?)_(?:dian_)?(?P<numero>\d+)_(?P<anio>\d{4})\.html?",
     re.IGNORECASE,
@@ -338,7 +344,9 @@ class Scraper:
 
         nuevos = 0
         for li in items:
-            reg = self._extraer_documento(li, categoria, titulo_acordeon)
+            reg = self._extraer_documento(
+                li, categoria, titulo_acordeon, indice, url
+            )
             if reg:
                 clave = reg["numero_resolucion"]
                 if clave not in self.documentos:
@@ -360,7 +368,8 @@ class Scraper:
 
     # ------------------------------------------------------------------
 
-    def _extraer_documento(self, li, categoria, titulo_acordeon):
+    def _extraer_documento(self, li, categoria, titulo_acordeon,
+                            indice, fuente_indice):
         a = li.find("a", href=True)
         if not a:
             return None
@@ -420,6 +429,11 @@ class Scraper:
             "titulo": titulo[:500],
             "contenido": descripcion[:10000],
             "enlace_oficial": url_doc[:1000],
+            "fuente_raiz": (
+                FUENTE_RAIZ_NOVEDADES if categoria == "boletin"
+                else FUENTE_RAIZ_TRIBUTARIA
+            ),
+            "fuente_indice": fuente_indice[:1000],
             # El índice informa el año pero no necesariamente el día de
             # expedición. No inventar 1 de enero como fecha del documento.
             "anio_publicacion": int(anio),
@@ -486,6 +500,26 @@ class Scraper:
         for i in range(0, len(registros), lote):
             trozo = registros[i:i + lote]
             try:
+                # Un cambio en el texto o en la identificación publicada por
+                # DIAN exige contrastar de nuevo la ficha. Conservamos su
+                # presencia en el catálogo, pero invalidamos el control
+                # anterior para que el revisor automático recorra la fuente
+                # actual, en lugar de asumir que una revisión vieja basta.
+                numeros = [r["numero_resolucion"] for r in trozo]
+                existentes = self.db.table("documentos_tributarios").select(
+                    "numero_resolucion,hash_contenido"
+                ).in_("numero_resolucion", numeros).execute().data or []
+                hashes_previos = {
+                    e["numero_resolucion"]: e.get("hash_contenido")
+                    for e in existentes
+                }
+                for registro in trozo:
+                    previo = hashes_previos.get(registro["numero_resolucion"])
+                    if previo and previo != registro["hash_contenido"]:
+                        registro["revisado_fiscal_en"] = None
+                        registro["aprobado_para_email"] = False
+                        self.stats["documentos_cambiados_dian"] += 1
+
                 self.db.table("documentos_tributarios").upsert(
                     trozo, on_conflict="numero_resolucion"
                 ).execute()
