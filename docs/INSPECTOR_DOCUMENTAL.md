@@ -15,8 +15,8 @@ manualmente. El panel privado está en `/inspector.html` y requiere
 - Compara cinco casos centinela con la página oficial DIAN en cada ejecución.
   Incluyen IVA, SIMPLE, firma del revisor fiscal, emergencia y MAP. Comprueba
   las dos fechas de los conceptos cuando la fuente las indica.
-- Consulta 500 enlaces visibles por día en rotación, más todas las publicaciones
-  visibles de los últimos 14 días, con cuatro conexiones simultáneas. La cifra
+- Consulta 500 enlaces del archivo por día en rotación, más todos los registros
+  creados o fechados en los últimos 14 días, con cuatro conexiones simultáneas. La cifra
   de enlaces comprobados se muestra separada de la
   cobertura estructural. No se afirma que los 17.750 enlaces fueron abiertos
   diariamente.

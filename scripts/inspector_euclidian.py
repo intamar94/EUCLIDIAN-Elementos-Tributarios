@@ -24,7 +24,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(mess
 PAGE = 400
 OFFICIAL_HOST = "normograma.dian.gov.co"
 OFFICIAL_PATH = "/dian/compilacion/"
-FIELDS = "id,numero_resolucion,tipo_documento,titulo,descripcion_limpia,resumen_humano,resumen_borrador,enlace_oficial,fecha_publicacion,fecha_publicacion_web,fecha_es_real,anio_publicacion,publicado_cliente,problema_juridico,tesis_juridica,fuentes_formales,plazos_mencionados,tiene_efectos_retroactivos,anos_afectados,zonas_afectadas,estado_vigencia"
+FIELDS = "id,numero_resolucion,tipo_documento,titulo,descripcion_limpia,resumen_humano,resumen_borrador,enlace_oficial,fecha_publicacion,fecha_publicacion_web,fecha_es_real,anio_publicacion,publicado_cliente,problema_juridico,tesis_juridica,fuentes_formales,plazos_mencionados,tiene_efectos_retroactivos,anos_afectados,zonas_afectadas,estado_vigencia,created_at"
 CASES = (
     ("IVA: cambio de responsable", "oficio_dian_15660_2026.htm", True),
     ("SIMPLE: varias actividades", "oficio_dian_15659_2026.htm", True),
@@ -225,7 +225,7 @@ def run(link_sample=500, persist=True):
                 db.table("inspector_resultados").upsert(results[start:start + PAGE], on_conflict="documento_id").execute()
         cases = [inspect_case(session, *definition, all_rows) for definition in CASES]
         # La red se muestrea por rotación; nunca se presenta como validación HTTP total.
-        candidates = [d for d in all_rows if d.get("publicado_cliente") and official_url(d.get("enlace_oficial"))]
+        candidates = [d for d in all_rows if official_url(d.get("enlace_oficial"))]
         candidates.sort(key=lambda d: d["id"])
         sample_size = min(max(0, link_sample), len(candidates))
         start = (today.toordinal() * max(sample_size, 1)) % max(len(candidates), 1)
@@ -233,7 +233,8 @@ def run(link_sample=500, persist=True):
         selected = [candidates[(start + index) % len(candidates)] for index in range(sample_size)]
         recent_cutoff = (today - timedelta(days=14)).isoformat()
         recent = [d for d in candidates if max(str(d.get("fecha_publicacion_web") or ""),
-                                                  str(d.get("fecha_publicacion") or "")) >= recent_cutoff]
+                                                  str(d.get("fecha_publicacion") or ""),
+                                                  str(d.get("created_at") or "")[:10]) >= recent_cutoff]
         # Novedades: prioridad diaria. Históricos: rotación de todo el archivo.
         by_id = {d["id"]: d for d in selected}
         by_id.update({d["id"]: d for d in recent})
