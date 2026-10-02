@@ -152,6 +152,7 @@ def inspect_case(session, label, suffix, expects_thesis, rows):
         case["hallazgos"].append("El documento aparece duplicado.")
     canonical = next((d for d in matches if (d.get("enlace_oficial") or "").endswith(suffix)), matches[0])
     case["documento_id"] = canonical["id"]
+    case["fuente"] = canonical.get("enlace_oficial")
     try:
         text = source_text(session, canonical["enlace_oficial"])
     except Exception as exc:
