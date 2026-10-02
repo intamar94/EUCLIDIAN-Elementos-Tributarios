@@ -21,3 +21,11 @@ class FechasDocumentoTests(unittest.TestCase):
         self.assertEqual(str(fecha_documento), "2024-04-05")
         self.assertEqual(str(fecha_web), "2024-04-17")
 
+    def test_preserves_the_century_of_historical_documents(self):
+        fecha = self.lector._fecha_documento(
+            "CONCEPTO 45224 DE 1995\n(julio 4)",
+            "DIAN-CONCEPTO_TRIBUTARIO-45224-1995",
+        )
+
+        self.assertEqual(str(fecha), "1995-07-04")
+

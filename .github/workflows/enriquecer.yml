@@ -78,7 +78,8 @@ jobs:
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
         run: |
           set -o pipefail
-          python scripts/control_calidad.py --enlaces 25 --estricto 2>&1 | tee calidad.log
+          python scripts/quarantine_future_dates.py 2>&1 | tee cuarentena_fechas.log
+          python scripts/control_calidad.py --enlaces 100 --estricto 2>&1 | tee calidad.log
 
       - name: Generar informe de progreso
         if: always()
@@ -98,6 +99,9 @@ jobs:
             echo "### Lote seguro"
             cat lote_seguro.log || true
             echo
+            echo "### Fechas imposibles"
+            cat cuarentena_fechas.log || true
+            echo
             echo "### Control de calidad"
             cat calidad.log || true
           } >> "$GITHUB_STEP_SUMMARY"
@@ -110,6 +114,7 @@ jobs:
           path: |
             enriquecimiento.log
             lote_seguro.log
+            cuarentena_fechas.log
             calidad.log
           if-no-files-found: warn
           retention-days: 30

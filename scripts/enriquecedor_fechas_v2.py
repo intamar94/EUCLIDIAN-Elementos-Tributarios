@@ -128,8 +128,11 @@ class EnriquecedorFechasV2:
 
     def _fecha_documento(self,texto,numero):
         """Lee la fecha propia del acto del encabezado, separada de su publicación web."""
-        anio=re.search(r"-(?:19|20)(\d{2})$",str(numero or ""))
-        year=("20"+anio.group(1)) if anio else None
+        # Conservar el siglo del identificador. Extraer solo sus dos últimos
+        # dígitos convierte, por ejemplo, 1995 en 2095 y crea una fecha
+        # imposible que puede terminar expuesta como metadato documental.
+        anio=re.search(r"-((?:19|20)\d{2})$",str(numero or ""))
+        year=anio.group(1) if anio else None
         if not year:
             m=re.search(r"\b(?:19|20)\d{2}\b",texto[:1200])
             year=m.group(0) if m else None
