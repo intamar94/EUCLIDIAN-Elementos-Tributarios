@@ -231,6 +231,13 @@ def run(link_sample=500, persist=True):
         start = (today.toordinal() * max(sample_size, 1)) % max(len(candidates), 1)
         network = {"revisados": 0, "rotos": 0, "muestra": []}
         selected = [candidates[(start + index) % len(candidates)] for index in range(sample_size)]
+        recent_cutoff = (today - timedelta(days=14)).isoformat()
+        recent = [d for d in candidates if max(str(d.get("fecha_publicacion_web") or ""),
+                                                  str(d.get("fecha_publicacion") or "")) >= recent_cutoff]
+        # Novedades: prioridad diaria. Históricos: rotación de todo el archivo.
+        by_id = {d["id"]: d for d in selected}
+        by_id.update({d["id"]: d for d in recent})
+        selected = list(by_id.values())
         with ThreadPoolExecutor(max_workers=4) as pool:
           for doc, error in pool.map(check_link, selected):
             if error:
