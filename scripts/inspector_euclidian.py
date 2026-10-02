@@ -165,7 +165,16 @@ def inspect_case(session, label, suffix, expects_thesis, rows):
         case["hallazgos"].append(f"Fecha web: ficha {canonical.get('fecha_publicacion_web')}; DIAN {dates['web']}.")
     if expects_thesis and (not canonical.get("tesis_juridica") or not canonical.get("problema_juridico")):
         case["hallazgos"].append("La pregunta o la respuesta central no están estructuradas en la ficha.")
+    if suffix.startswith("oficio_dian_15659"):
+        formal = " ".join(canonical.get("fuentes_formales") or [])
+        source_section = norm(text.split("Fuentes Formales", 1)[-1].split("Extracto", 1)[0])
+        missing = [n for n in ("903", "904", "907", "908", "910")
+                   if re.search(rf"\b{n}\b", source_section) and not re.search(rf"\b{n}\b", norm(formal))]
+        if missing:
+            case["hallazgos"].append("Faltan artículos de las fuentes formales DIAN: " + ", ".join(missing) + ".")
     if suffix.startswith("decreto_1419"):
+        if "valle del cauca" in norm(text) and "valle del cauca" not in norm(" ".join(canonical.get("zonas_afectadas") or [])):
+            case["hallazgos"].append("Falta Valle del Cauca en las zonas mencionadas por la fuente DIAN.")
         if len(canonical.get("zonas_afectadas") or []) < 10:
             case["hallazgos"].append("El ámbito territorial necesita revisión por artículo y municipio.")
         if any(len(str(p)) >= 95 for p in canonical.get("plazos_mencionados") or []):
