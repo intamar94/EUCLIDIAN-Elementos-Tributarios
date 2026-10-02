@@ -2,7 +2,9 @@
 let CLAVE = sessionStorage.getItem('euclidian_clave') || '';
 let REVISOR = sessionStorage.getItem('euclidian_revisor_clave') || '';
 window.euclidianPuedeRevisar=!!REVISOR;
-const F = { estado:'todos', periodo:'todo', tema:'', q:'', orden:'recientes', pagina:1 };
+const consultaInicial=new URLSearchParams(window.location.search);
+const F = { estado:'todos', periodo:'todo', tema:'', q:(consultaInicial.get('q')||'').trim().slice(0,160), orden:'recientes', pagina:1 };
+const cajaConsulta=document.getElementById('consulta'); if(cajaConsulta)cajaConsulta.value=F.q;
 
 async function entrar(e){
   e.preventDefault();

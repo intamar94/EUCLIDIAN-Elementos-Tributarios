@@ -67,3 +67,17 @@ correctos, no con conjeturas.
 El script espera 1,5 segundos entre pedidos y se identifica con un
 User-Agent normal. Son 7 páginas en total, o sea nada de carga para el
 servidor de la DIAN. No lo bajes de ese valor.
+# Boletín para suscriptores
+
+El boletín semanal usa el resumen de cada documento, muestra su fecha, efecto práctico y dos enlaces: uno abre la ficha filtrada dentro de EUCLIDIAN y el otro abre la fuente primaria DIAN.
+
+Para enviar desde un dominio propio, configura estos secretos donde se ejecuta el envío:
+
+```
+RESEND_API_KEY=re_...
+EUCLIDIAN_REMITENTE=EUCLIDIAN <boletin@tudominio.co>
+EUCLIDIAN_BASE_URL=https://euclidian-elementos-tributarios.vercel.app
+```
+
+Primero genera el borrador y prueba el correo con una dirección propia. El envío real queda disponible solamente después de esa revisión.
+

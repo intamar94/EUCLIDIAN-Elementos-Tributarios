@@ -43,6 +43,7 @@ import re
 import sys
 from collections import Counter
 from datetime import date, datetime, timedelta, timezone
+from urllib.parse import quote
 
 try:
     from supabase import create_client
@@ -57,6 +58,7 @@ log = logging.getLogger("euclidian")
 
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_KEY")
+BASE_URL = os.getenv("EUCLIDIAN_BASE_URL", "https://euclidian-elementos-tributarios.vercel.app").rstrip("/")
 
 MESES = ["", "enero", "febrero", "marzo", "abril", "mayo", "junio", "julio",
          "agosto", "septiembre", "octubre", "noviembre", "diciembre"]
@@ -300,6 +302,10 @@ class Generador:
             partes.append(f"Diario Oficial {d['diario_oficial']}")
         return " · ".join(partes)
 
+    def _enlace_ficha(self, d):
+        """Abre la ficha del documento en EUCLIDIAN, ya filtrada por número."""
+        return f"{BASE_URL}/?q={quote(str(d['numero_resolucion']))}"
+
     # ==================================================================
 
     def _html(self, docs, alertas, asunto):
@@ -417,10 +423,13 @@ class Generador:
       <div style="font-family:'Courier New',monospace;font-size:10px;
         color:{color};padding-top:12px;">{esc(self._leyenda(d))}</div>
       <div style="padding-top:14px;">
-        <a href="{esc(d['enlace_oficial'])}"
+        <a href="{esc(self._enlace_ficha(d))}"
            style="display:inline-block;background:{TINTA};color:{PAPEL};
            font-family:Georgia,serif;font-size:13px;padding:9px 16px;
-           text-decoration:none;">Leer el documento oficial</a>
+           text-decoration:none;">Ver la ficha en EUCLIDIAN</a>
+        <a href="{esc(d['enlace_oficial'])}"
+           style="display:inline-block;color:{TINTA};font-family:Georgia,serif;
+           font-size:13px;padding:9px 12px;text-decoration:underline;">Fuente DIAN</a>
       </div>
   </td></tr></table>
 </td></tr>"""
@@ -462,7 +471,8 @@ class Generador:
                 L.append(f"   Una norma posterior la tocó: {nums}")
 
             L.append(f"   {self._leyenda(d)}")
-            L.append(f"   {d['enlace_oficial']}")
+            L.append(f"   Ficha EUCLIDIAN: {self._enlace_ficha(d)}")
+            L.append(f"   Fuente DIAN: {d['enlace_oficial']}")
             L.append("")
 
         L.append("▲ norma general; confirma ámbito y vigencia")
