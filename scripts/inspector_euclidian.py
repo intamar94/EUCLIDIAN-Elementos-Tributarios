@@ -24,7 +24,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(mess
 PAGE = 400
 OFFICIAL_HOST = "normograma.dian.gov.co"
 OFFICIAL_PATH = "/dian/compilacion/"
-FIELDS = "id,numero_resolucion,tipo_documento,titulo,descripcion_limpia,resumen_humano,resumen_borrador,enlace_oficial,fecha_publicacion,fecha_publicacion_web,fecha_es_real,anio_publicacion,publicado_cliente,problema_juridico,tesis_juridica,fuentes_formales,plazos_mencionados,tiene_efectos_retroactivos,anos_afectados,zonas_afectadas,estado_vigencia,created_at"
+FIELDS = "id,numero_resolucion,tipo_documento,titulo,descripcion_limpia,resumen_humano,resumen_borrador,enlace_oficial,fecha_publicacion,fecha_publicacion_web,fecha_es_real,anio_publicacion,publicado_cliente,problema_juridico,tesis_juridica,fuentes_formales,plazos_mencionados,tiene_efectos_retroactivos,anos_afectados,zonas_afectadas,estado_vigencia,created_at,notas_verificacion"
 CASES = (
     ("IVA: cambio de responsable", "oficio_dian_15660_2026.htm", True),
     ("SIMPLE: varias actividades", "oficio_dian_15659_2026.htm", True),
@@ -44,6 +44,22 @@ def norm(value):
 def official_url(value):
     p = urlparse(str(value or ""))
     return p.scheme == "https" and p.netloc == OFFICIAL_HOST and p.path.startswith(OFFICIAL_PATH)
+
+
+def trusted_bulletin(row):
+    url = str(row.get("enlace_oficial") or "")
+    p = urlparse(url)
+    notes = str(row.get("notas_verificacion") or "")
+    return (row.get("tipo_documento") == "boletin" and p.scheme == "https"
+            and p.netloc == "www.dian.gov.co"
+            and p.path.startswith("/normatividad/Publicaciones-Juridicas/")
+            and p.path.lower().endswith(".pdf")
+            and "raiz: https://normograma.dian.gov.co/dian/compilacion/novedades_boletines.html" in notes
+            and f"URL verificada: {url}" in notes)
+
+
+def trusted_source(row):
+    return official_url(row.get("enlace_oficial")) or trusted_bulletin(row)
 
 
 def issue(code, severity, detail):
@@ -70,8 +86,8 @@ def inspect_row(row, today):
     if not number or not row.get("titulo"):
         found.append(issue("identificacion", "critico", "Falta número o título."))
     url = row.get("enlace_oficial") or ""
-    if not official_url(url):
-        found.append(issue("fuente", "critico", "El enlace no pertenece al Normograma DIAN permitido."))
+    if not trusted_source(row):
+        found.append(issue("fuente", "critico", "Falta una fuente DIAN permitida o su trazabilidad desde novedades."))
     doc_date = row.get("fecha_publicacion")
     web_date = row.get("fecha_publicacion_web")
     if row.get("fecha_es_real") and not doc_date:
@@ -117,9 +133,17 @@ def source_text(session, url):
 
 def check_link(doc):
     try:
-        text = source_text(requests, doc["enlace_oficial"])
-        if "compilacion juridica" not in norm(text[:500]):
-            raise ValueError("La página no se identifica como Compilación Jurídica DIAN")
+        if trusted_bulletin(doc):
+            with requests.get(doc["enlace_oficial"], timeout=20, allow_redirects=True, stream=True) as response:
+                response.raise_for_status()
+                p = urlparse(response.url)
+                response.raw.decode_content = True
+                if p.scheme != "https" or p.netloc != "www.dian.gov.co" or response.raw.read(4) != b"%PDF":
+                    raise ValueError("El boletín no devuelve un PDF del dominio DIAN")
+        else:
+            text = source_text(requests, doc["enlace_oficial"])
+            if "compilacion juridica" not in norm(text[:500]):
+                raise ValueError("La página no se identifica como Compilación Jurídica DIAN")
         return doc, None
     except Exception as exc:
         return doc, str(exc)[:120]
@@ -235,7 +259,7 @@ def run(link_sample=500, persist=True):
                 db.table("inspector_resultados").upsert(results[start:start + PAGE], on_conflict="documento_id").execute()
         cases = [inspect_case(session, *definition, all_rows) for definition in CASES]
         # La red se muestrea por rotación; nunca se presenta como validación HTTP total.
-        candidates = [d for d in all_rows if official_url(d.get("enlace_oficial"))]
+        candidates = [d for d in all_rows if trusted_source(d)]
         candidates.sort(key=lambda d: d["id"])
         sample_size = min(max(0, link_sample), len(candidates))
         start = (today.toordinal() * max(sample_size, 1)) % max(len(candidates), 1)

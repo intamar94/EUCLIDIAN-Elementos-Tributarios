@@ -5,7 +5,7 @@ let currentTotal = 0;
 const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 const number = value => Number(value || 0).toLocaleString('es-CO');
 const when = value => value ? new Date(value).toLocaleString('es-CO', {dateStyle:'medium',timeStyle:'short'}) : 'Sin fecha';
-const safeOfficialUrl = value => { try { const u = new URL(value); return u.protocol === 'https:' && u.hostname === 'normograma.dian.gov.co' && u.pathname.startsWith('/dian/compilacion/') ? u.href : ''; } catch { return ''; } };
+const safeOfficialUrl = value => { try { const u = new URL(value); const normograma = u.hostname === 'normograma.dian.gov.co' && u.pathname.startsWith('/dian/compilacion/'); const boletin = u.hostname === 'www.dian.gov.co' && u.pathname.startsWith('/normatividad/Publicaciones-Juridicas/') && u.pathname.toLowerCase().endsWith('.pdf'); return u.protocol === 'https:' && (normograma || boletin) ? u.href : ''; } catch { return ''; } };
 
 async function load() {
   const params = new URLSearchParams({estado:$('filtro').value,pagina:String(currentPage)});

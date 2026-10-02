@@ -12,6 +12,9 @@ manualmente. El panel privado está en `/inspector.html` y requiere
 - Revisa identificación, URL oficial, fechas imposibles o invertidas,
   duplicados numéricos, fichas escasas, plazos aparentemente recortados y citas
   manifiestamente incompletas.
+- Los PDF alojados en `www.dian.gov.co` se aceptan solo si son boletines de la
+  carpeta jurídica oficial y el registro conserva la ruta de procedencia desde
+  Novedades del Normograma y la URL verificada.
 - Compara cinco casos centinela con la página oficial DIAN en cada ejecución.
   Incluyen IVA, SIMPLE, firma del revisor fiscal, emergencia y MAP. Comprueba
   las dos fechas de los conceptos cuando la fuente las indica.
