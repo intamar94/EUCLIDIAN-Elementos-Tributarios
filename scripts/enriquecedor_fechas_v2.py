@@ -54,10 +54,13 @@ class EnriquecedorFechasV2:
         if total: log.info("RESUMEN_EUCLIDIAN %s",dict(sorted(self.stats.items())))
 
     def _pendientes(self):
-        campos="id,numero_resolucion,enlace_oficial,tipo_documento,contenido,temas,fecha_publicacion"
+        campos="id,numero_resolucion,enlace_oficial,tipo_documento,contenido,temas,fecha_publicacion,fecha_es_real,texto_completo"
         encontrados={}
         try:
-            q=self.db.table("documentos_tributarios").select(campos).eq("fecha_es_real",False)
+            # Una fecha no basta para sustentar una ficha. También abrimos los
+            # documentos sin texto capturado, aunque el índice ya hubiera
+            # identificado una fecha válida.
+            q=self.db.table("documentos_tributarios").select(campos).or_("fecha_es_real.is.false,texto_completo.is.null")
             if self.anio:q=q.gte("fecha_publicacion",f"{self.anio}-01-01").lte("fecha_publicacion",f"{self.anio}-12-31")
             r=q.order("fecha_publicacion",desc=True).order("numero_resolucion",desc=True).limit(self.limite).execute()
             for d in r.data or []:encontrados[d["id"]]=d
@@ -88,14 +91,18 @@ class EnriquecedorFechasV2:
             return
         soup=BeautifulSoup(r.text,"html.parser")
         for x in soup(["script","style","nav","footer"]):x.decompose()
-        texto=re.sub(r"\n{3,}","\n\n",re.sub(r"[ \t]+"," ",soup.get_text("\n"))).strip(); fecha=self._fecha_publicacion(texto)
+        texto=re.sub(r"\n{3,}","\n\n",re.sub(r"[ \t]+"," ",soup.get_text("\n"))).strip()
+        fecha_documento=self._fecha_documento(texto,doc.get("numero_resolucion"))
+        fecha_web=self._fecha_publicacion(texto)
         campos={"texto_completo":texto[:60000],"enriquecido_en":datetime.now(timezone.utc).isoformat()}
-        if fecha:
-            campos.update(fecha_publicacion=fecha.isoformat(),fecha_es_real=True);self.stats["fecha_verificada"]+=1
+        if fecha_documento:
+            campos.update(fecha_publicacion=fecha_documento.isoformat(),fecha_es_real=True);self.stats["fecha_documento_verificada"]+=1
         else:
-            self.stats["fecha_no_verificada"]+=1
+            self.stats["fecha_documento_no_verificada"]+=1
             if re.search(r"Diario Oficial|publicad[ao]|publicaci[oó]n",texto[:25000],re.I): self.stats["fecha_patron_sin_fecha_valida"]+=1
             else: self.stats["fecha_sin_evidencia_en_pagina"]+=1
+        if fecha_web:
+            campos["fecha_publicacion_web"]=fecha_web.isoformat();self.stats["fecha_web_verificada"]+=1
         diario=self._diario(texto)
         if diario:campos["diario_oficial"]=diario[:120]
         entidad=self._entidad(texto)
@@ -113,11 +120,22 @@ class EnriquecedorFechasV2:
         estado,motivo=self._estado(anot)
         if estado:campos["estado_vigencia"]=estado;campos["motivo_cambio_estado"]=motivo[:500]
         if self.dry_run:
-            log.info("[%d/%d] %s fecha=%s DO=%s",i,total,numero,fecha or "NO VERIFICADA","si" if diario else "-");return
+            log.info("[%d/%d] %s fecha_documento=%s fecha_web=%s DO=%s",i,total,numero,fecha_documento or "NO VERIFICADA",fecha_web or "NO VERIFICADA","si" if diario else "-");return
         try:
             self.db.table("documentos_tributarios").update(campos).eq("id",doc["id"]).execute();self.stats["actualizados"]+=1;self._alertas(doc,campos,retro,zonas)
         except Exception as e:self.stats["error_guardado"]+=1;log.error("[%d/%d] %s ERROR_GUARDADO: %s",i,total,numero,str(e)[:180]);return
-        log.info("[%d/%d] %s fecha=%s",i,total,numero,fecha or "NO VERIFICADA")
+        log.info("[%d/%d] %s fecha_documento=%s fecha_web=%s",i,total,numero,fecha_documento or "NO VERIFICADA",fecha_web or "NO VERIFICADA")
+
+    def _fecha_documento(self,texto,numero):
+        """Lee la fecha propia del acto del encabezado, separada de su publicación web."""
+        anio=re.search(r"-(?:19|20)(\d{2})$",str(numero or ""))
+        year=("20"+anio.group(1)) if anio else None
+        if not year:
+            m=re.search(r"\b(?:19|20)\d{2}\b",texto[:1200])
+            year=m.group(0) if m else None
+        m=re.search(r"\(\s*([A-Za-záéíóúÁÉÍÓÚ]+)\s+(\d{1,2})\s*\)",texto[:2200])
+        if not (m and year): return None
+        return a_fecha(m.group(2),m.group(1),year)
 
     def _fecha_publicacion(self,texto):
         patrones=[r"Diario Oficial[^\n]{0,160}?de\s+(\d{1,2})\s+de\s+([A-Za-záéíóúÁÉÍÓÚ]+)\s+de\s+((?:19|20)\d{2})",r"Diario Oficial[^\n]{0,160}?del\s+(\d{1,2})\s+de\s+([A-Za-záéíóúÁÉÍÓÚ]+)\s+de\s+((?:19|20)\d{2})",r"publicad[ao][^\n]{0,180}?(\d{1,2})\s+de\s+([A-Za-záéíóúÁÉÍÓÚ]+)\s+de\s+((?:19|20)\d{2})",r"publicaci[oó]n[^\n]{0,180}?(\d{1,2})\s+de\s+([A-Za-záéíóúÁÉÍÓÚ]+)\s+de\s+((?:19|20)\d{2})"]
