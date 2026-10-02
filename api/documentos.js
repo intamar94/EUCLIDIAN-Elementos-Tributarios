@@ -41,8 +41,8 @@ export default async function handler(req,res){
       const ids=documentos.map(d=>d.id).filter(Boolean); const inFilter=`in.(${ids.join(',')})`;
       // texto_completo/enriquecido_en pertenecen a la tabla base y pueden no
       // estar expuestos por la vista de lectura; pedirlos aparte evita romperla.
-      const rTexto=await fetch(`${SUPABASE_URL}/rest/v1/documentos_tributarios?select=id,texto_completo,fuente_raiz,fuente_indice,fuente_verificada_en&id=${encodeURIComponent(inFilter)}`,{headers:cabeceras});
-      if(rTexto.ok){const textos=await rTexto.json();const porTexto=new Map(textos.map(x=>[x.id,x]));for(const d of documentos){const x=porTexto.get(d.id)||{};d.texto_completo=x.texto_completo||null;d.fuente_raiz=x.fuente_raiz||((d.temas||[]).includes('boletin_mensual')||d.tipo_documento==='boletin'?FUENTES.novedades:FUENTES.tributario);d.fuente_indice=x.fuente_indice||null;d.fuente_verificada_en=x.fuente_verificada_en||null;}}
+      const rTexto=await fetch(`${SUPABASE_URL}/rest/v1/documentos_tributarios?select=id,texto_completo,notas_verificacion&id=${encodeURIComponent(inFilter)}`,{headers:cabeceras});
+      if(rTexto.ok){const textos=await rTexto.json();const porTexto=new Map(textos.map(x=>[x.id,x]));for(const d of documentos){const x=porTexto.get(d.id)||{};const nota=String(x.notas_verificacion||'');const raiz=nota.match(/raiz:\s*(https:\/\/[^\s|]+)/i);const indice=nota.match(/indice:\s*(https:\/\/[^\s|]+)/i);d.texto_completo=x.texto_completo||null;d.fuente_raiz=(raiz&&raiz[1])||((d.temas||[]).includes('boletin_mensual')||d.tipo_documento==='boletin'?FUENTES.novedades:FUENTES.tributario);d.fuente_indice=(indice&&indice[1])||null;}}
       for(const d of documentos){d.es_nuevo=esNovedadOficial(d);if(!d.fuente_raiz)d.fuente_raiz=(d.temas||[]).includes('boletin_mensual')||d.tipo_documento==='boletin'?FUENTES.novedades:FUENTES.tributario;}
       // Una publicación reciente solo aparece como novedad cuando conserva
       // fecha exacta, texto fuente y enlace DIAN. Así la urgencia no rebaja

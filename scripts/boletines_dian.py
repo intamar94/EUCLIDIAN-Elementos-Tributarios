@@ -88,19 +88,22 @@ def registro_publicacion(item, capture=None):
         "numero_resolucion": "DIAN-BOLETIN-" + hashlib.sha256(url.encode()).hexdigest()[:24].upper(),
         "tipo_documento": "boletin", "subtipo": item["subtipo"],
         "titulo": title[:500], "contenido": title,
-        "enlace_oficial": url, "fuente_raiz": RAIZ, "fuente_indice": item["fuente_indice"],
+        "enlace_oficial": url,
         "anio_publicacion": int(year.group()) if year else None,
         "estado_vigencia": "desconocido", "clasificacion_obligatoriedad": "orientativo",
         "temas": ["boletin_mensual", item["subtipo"]],
         "hash_contenido": hashlib.sha256(title.encode()).hexdigest(),
         "fecha_scraped": now,
-        "notas_verificacion": "Publicación informativa DIAN; el período del título no es fecha de expedición ni acredita vigencia de las normas citadas.",
+        "notas_verificacion": (
+            "Publicación informativa DIAN; el período del título no es fecha de expedición ni acredita vigencia de las normas citadas. "
+            f"Procedencia DIAN | raiz: {RAIZ} | indice: {item['fuente_indice']}"
+        ),
     }
     if capture:
-        record.update({"texto_completo": capture.texto, "hash_texto_fuente": capture.huella,
-                       "texto_fuente_estado": capture.estado, "texto_fuente_paginas": capture.paginas,
-                       "enriquecido_en": now, "fuente_verificada_en": now,
-                       "fuente_verificacion_url": capture.url, "estado_fuente_verificacion": "accesible"})
+        record.update({"texto_completo": capture.texto, "hash_contenido": capture.huella,
+                       "enriquecido_en": now,
+                       "notas_verificacion": record["notas_verificacion"] +
+                       f" | captura: {capture.estado}; paginas: {capture.paginas or 0}; URL verificada: {capture.url}"})
     return record
 
 
@@ -120,7 +123,7 @@ def recolectar(session, historico=False, anio_corte=None):
             # Conservar registro y URL incluso si no hay texto; no borrar una
             # captura previa ni registrar una descarga fallida como verificada.
             errors.append({"url": item["url"], "error": str(exc)[:300]})
-            record["estado_fuente_verificacion"] = "error"
+            record["notas_verificacion"] += " | captura pendiente por error de acceso"
         records.append(record)
     return records, errors, uncovered
 

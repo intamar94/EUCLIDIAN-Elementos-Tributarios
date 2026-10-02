@@ -429,11 +429,6 @@ class Scraper:
             "titulo": titulo[:500],
             "contenido": descripcion[:10000],
             "enlace_oficial": url_doc[:1000],
-            "fuente_raiz": (
-                FUENTE_RAIZ_NOVEDADES if categoria == "boletin"
-                else FUENTE_RAIZ_TRIBUTARIA
-            ),
-            "fuente_indice": fuente_indice[:1000],
             # El índice informa el año pero no necesariamente el día de
             # expedición. No inventar 1 de enero como fecha del documento.
             "anio_publicacion": int(anio),
@@ -446,7 +441,14 @@ class Scraper:
             ).hexdigest(),
             # Omitimos banderas de flujo humano en upsert: un refresco del
             # mismo documento no debe borrar una revisión previamente hecha.
-            "notas_verificacion": f"Extraido de {titulo_acordeon[:120]}",
+            # La tabla histórica ya dispone de notas_verificacion, por lo
+            # que la procedencia se conserva allí sin depender de columnas
+            # de esquema que una instalación antigua pueda no tener.
+            "notas_verificacion": (
+                f"Procedencia DIAN | raiz: "
+                f"{FUENTE_RAIZ_NOVEDADES if categoria == 'boletin' else FUENTE_RAIZ_TRIBUTARIA} "
+                f"| indice: {fuente_indice[:700]} | seccion: {titulo_acordeon[:120]}"
+            ),
             "fecha_scraped": datetime.now(timezone.utc).isoformat(),
         }
         return registro

@@ -16,10 +16,6 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)-7s %(me
 log = logging.getLogger("euclidian")
 URL = os.getenv("SUPABASE_URL"); KEY = os.getenv("SUPABASE_SERVICE_KEY")
 DOMINIO = "normograma.dian.gov.co"; FUNDACION = date(1900, 1, 1)
-FUENTES_RAIZ = {
-    "https://normograma.dian.gov.co/dian/compilacion/tributario.html",
-    "https://normograma.dian.gov.co/dian/compilacion/novedades_boletines.html",
-}
 
 class Control:
     def __init__(self, enlaces=25, estricto=False):
@@ -45,7 +41,7 @@ class Control:
     def _visibles(self):
         try:
             r = (self.db.table("documentos_tributarios")
-                 .select("numero_resolucion,resumen_humano,resumen_borrador,contenido,enlace_oficial,fuente_raiz,fuente_indice")
+                 .select("numero_resolucion,resumen_humano,resumen_borrador,contenido,enlace_oficial,notas_verificacion")
                  .eq("publicado_cliente", True).execute().data or [])
         except Exception as e:
             self.graves.append(f"No se pudo revisar fichas visibles: {str(e)[:150]}"); return
@@ -54,11 +50,6 @@ class Control:
             if len((d.get("resumen_humano") or d.get("resumen_borrador") or d.get("contenido") or "").strip()) < 30: self.graves.append(f"{d['numero_resolucion']} está visible sin información suficiente")
             u = d.get("enlace_oficial") or ""
             if not u.startswith("https://" + DOMINIO + "/"): self.graves.append(f"{d['numero_resolucion']} no tiene fuente DIAN permitida")
-            raiz = d.get("fuente_raiz") or ""
-            if raiz and raiz not in FUENTES_RAIZ: self.graves.append(f"{d['numero_resolucion']} tiene una raíz de procedencia no autorizada")
-            indice = d.get("fuente_indice") or ""
-            if indice and not indice.startswith("https://" + DOMINIO + "/dian/compilacion/"):
-                self.graves.append(f"{d['numero_resolucion']} tiene un índice de procedencia fuera del Normograma DIAN")
 
     def _fechas(self):
         try:

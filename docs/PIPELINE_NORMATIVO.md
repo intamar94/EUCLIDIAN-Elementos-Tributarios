@@ -31,6 +31,7 @@ esas páginas y permanecen en los dominios DIAN permitidos.
 - Las novedades recientes exigen fecha exacta, texto capturado y enlace
   individual del Normograma.
 - Un cambio detectado en el contenido DIAN reinicia su contraste técnico.
-- La ficha conserva la fuente raíz, el índice y el documento individual.
+- La ficha conserva el documento individual y el registro de procedencia de
+  la fuente raíz e índice DIAN.
 - El correo se genera solo después de los controles de fuente, fecha, vigencia
   y enlace oficial.
