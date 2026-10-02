@@ -36,8 +36,22 @@
   </div>
 </header>
 
+<section class="hoy marco" hidden id="hoy" aria-label="Atención prioritaria">
+  <div class="hoy-cabecera">
+    <div><span class="hoy-sobrelinea">PARA TU JORNADA</span><h1>Atención prioritaria</h1></div>
+    <p id="estadoFuente" class="estado-fuente" aria-live="polite"></p>
+  </div>
+  <p class="hoy-intro" id="hoyIntro"></p>
+  <div class="hoy-resumen" id="hoyResumen"></div>
+  <div class="hoy-lista" id="hoyLista"></div>
+  <div class="seguimiento" aria-label="Temas que sigues">
+    <div><strong>Temas que sigues</strong><span>Priorizan esta vista en este dispositivo.</span></div>
+    <div class="temas-seguidos" id="temasSeguidos"></div>
+  </div>
+</section>
+
 <section class="controles marco" hidden id="controles" aria-label="Buscar documentos DIAN">
-  <div class="titulo-consulta"><h1>Normas, doctrina y boletines</h1><p>Consulta la fuente oficial, el alcance práctico y los datos necesarios para documentar tu criterio profesional.</p></div>
+  <div class="titulo-consulta"><h2>Normas, doctrina y boletines</h2><p>Encuentra la fuente DIAN, entiende el alcance y documenta tu criterio profesional.</p></div>
   <form class="buscador" id="formBuscar" role="search">
     <label class="solo-lectores" for="consulta">Buscar por número, título o contenido</label>
     <input id="consulta" type="search" maxlength="160" placeholder="Busca por número, título o tema, p. ej. retención en la fuente" autocomplete="off">
