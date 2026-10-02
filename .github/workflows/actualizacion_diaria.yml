@@ -19,6 +19,8 @@ jobs:
           python-version: '3.11'
       - name: Instalar dependencias
         run: pip install -r scripts/requirements.txt
+      - name: Validar las dos fuentes oficiales DIAN
+        run: python scripts/validar_fuentes_dian.py
       - name: Descubrir fuentes históricas oficiales
         run: python scripts/descubrimiento_fuentes.py --limite 1000
       - name: Actualizar catálogo histórico local
@@ -27,7 +29,12 @@ jobs:
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
-        run: python scripts/enriquecedor.py --limite 500 --minutos 20
+        run: python scripts/enriquecedor_fechas_v2.py --limite 500
+      - name: Retirar fechas imposibles del catálogo
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python scripts/quarantine_future_dates.py
       - name: Exportar índice consultable
         run: python scripts/catalogo_historico.py --entrada descubrimiento_fuentes.json --salida historico_index.json
       - name: Publicar artefactos del histórico

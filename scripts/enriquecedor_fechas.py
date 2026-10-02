@@ -22,7 +22,7 @@ from enriquecedor import Enriquecedor as EnriquecedorBase, a_fecha
 
 SOURCE_ROOTS = (
     "https://normograma.dian.gov.co/dian/compilacion/novedades_boletines.html",
-    "https://normograma.dian.gov.co/dian/compilacion/tributario.html?q=TRIBUTARIO",
+    "https://normograma.dian.gov.co/dian/compilacion/tributario.html",
 )
 OFFICIAL_HOST = "normograma.dian.gov.co"
 OFFICIAL_PREFIX = "/dian/compilacion/"
