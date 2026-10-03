@@ -1,9 +1,9 @@
 {
-  "generated_at": "2026-10-03T13:06:09.347875+00:00",
+  "generated_at": "2026-10-03T17:17:29.275479+00:00",
   "total_documentos": 17792,
-  "enriquecidos": 17666,
-  "pendientes_enriquecimiento": 126,
-  "porcentaje_enriquecimiento": 99.29,
+  "enriquecidos": 17732,
+  "pendientes_enriquecimiento": 60,
+  "porcentaje_enriquecimiento": 99.66,
   "fechas_verificadas": 16825,
   "fechas_no_verificadas": 967,
   "clasificados": 17594,
@@ -13,7 +13,7 @@
   "aprobados_para_email": 48,
   "con_diario_oficial": 3048,
   "con_estado_vigencia": 17792,
-  "retroactivos": 6149,
+  "retroactivos": 6156,
   "con_zonas": 676,
   "con_plazos": 1067
 }
