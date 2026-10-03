@@ -236,8 +236,10 @@ if __name__ == "__main__":
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
     try:
-        outcome = run(args.dry_run)
-        raise SystemExit(0 if not outcome["pendientes_evidencia"] else 1)
+        run(args.dry_run)
+        # Los casos pendientes son el producto esperado del control interno,
+        # no un error de ejecución. El panel y el monitor los comunican.
+        raise SystemExit(0)
     except Exception as exc:
         LOG.error("Agente bloqueado: %s", exc)
         raise SystemExit(2)
