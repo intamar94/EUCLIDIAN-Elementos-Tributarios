@@ -52,11 +52,16 @@ def date_correction(row, official_text):
     dates = source_dates(official_text)
     candidate = dates.get("documento")
     current = str(row.get("fecha_publicacion") or "")
-    if candidate and candidate != current:
-        return {"fecha_publicacion": candidate, "fecha_es_real": True}, {
+    if candidate:
+        evidence = {
             "campo": "fecha_publicacion", "antes": current or None, "despues": candidate,
             "fuente": row.get("enlace_oficial"),
         }
+        if candidate != current:
+            return {"fecha_publicacion": candidate, "fecha_es_real": True}, evidence
+        # La corrección de una ejecución anterior continúa siendo evidencia
+        # positiva: no se reescribe, pero se conserva como verificada.
+        return {}, evidence
     return None, None
 
 
@@ -128,6 +133,10 @@ def process_document(db, session, inspection_id, run_id, row, codes):
                 requeue_after_change(db, row, changes)
                 cases.append(build_case(inspection_id, run_id, row, "fecha_corregida", "corregido",
                     "Se actualizó la fecha del documento con la fecha expresada en la fuente DIAN.", evidence))
+                codes = codes - SAFE_DATE_CODES
+            elif evidence:
+                cases.append(build_case(inspection_id, run_id, row, "fecha_corregida", "corregido",
+                    "La fecha del documento ya coincide con la fecha expresada en la fuente DIAN.", evidence))
                 codes = codes - SAFE_DATE_CODES
             else:
                 cases.append(build_case(inspection_id, run_id, row, "fecha_pendiente_evidencia", "pendiente_evidencia",

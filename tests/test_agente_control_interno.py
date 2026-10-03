@@ -21,6 +21,13 @@ class AgenteControlInternoTests(unittest.TestCase):
         self.assertIsNone(changes)
         self.assertIsNone(evidence)
 
+    def test_preserves_a_previous_verified_correction(self):
+        row = {"fecha_publicacion": "2026-09-07", "enlace_oficial": "https://normograma.dian.gov.co/dian/compilacion/docs/x.htm"}
+        text = "2026 (septiembre 7) <Fuente: Archivo interno>"
+        changes, evidence = date_correction(row, text)
+        self.assertEqual(changes, {})
+        self.assertEqual(evidence["despues"], "2026-09-07")
+
     def test_keeps_codes_and_prioritizes_documental_risk(self):
         found = issue_codes([{"codigo": "plazo_cortado"}, {"codigo": "duplicado"}, {"detalle": "sin código"}])
         self.assertEqual(found, {"plazo_cortado", "duplicado"})
