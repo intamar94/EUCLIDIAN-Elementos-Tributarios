@@ -22,6 +22,12 @@ export default async function handler(req, res) {
     const latest = await read('inspector_ejecuciones?select=*&order=iniciado_en.desc&limit=1');
     const run = latest.data[0] || null;
     if (!run) return res.status(200).json({ ejecucion: null, resultados: [], total: 0 });
+    const latestManagement = await read('control_interno_ejecuciones?select=*&order=iniciado_en.desc&limit=1');
+    const management = latestManagement.data[0] || null;
+    let managementCases = [];
+    if (management) {
+      managementCases = (await read(`control_interno_casos?select=estado,prioridad,codigo,detalle,evidencia,documento_id,actualizado_en&ejecucion_id=eq.${management.id}&order=prioridad.asc,actualizado_en.desc&limit=25`)).data;
+    }
     const state = ['critico', 'aviso', 'correcto'].includes(req.query.estado) ? req.query.estado : 'critico';
     const page = Math.max(1, Math.min(1000, Number.parseInt(req.query.pagina, 10) || 1));
     const first = (page - 1) * PAGE;
@@ -32,7 +38,7 @@ export default async function handler(req, res) {
       documents = (await read(`documentos_tributarios?select=id,numero_resolucion,titulo,enlace_oficial&id=in.(${ids.join(',')})`)).data;
     }
     const byId = new Map(documents.map(x => [x.id, x]));
-    return res.status(200).json({ ejecucion: run, estado: state, pagina: page, porPagina: PAGE,
+    return res.status(200).json({ ejecucion: run, gestion: { ejecucion: management, casos: managementCases }, estado: state, pagina: page, porPagina: PAGE,
       total: results.total, resultados: results.data.map(x => ({ ...x, documento: byId.get(x.documento_id) || null })) });
   } catch (error) {
     return res.status(502).json({ error: 'inspector_no_disponible' });

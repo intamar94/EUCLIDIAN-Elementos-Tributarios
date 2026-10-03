@@ -31,6 +31,21 @@ async function load() {
     [number(run.avisos), 'Con avisos'],
     [number(run.enlaces?.revisados), `Enlaces DIAN comprobados en esta ejecución · ${number(run.enlaces?.rotos)} fallaron`]
   ].map(([value,label]) => `<div class="metrica"><strong>${escapeHtml(value)}</strong><span>${escapeHtml(label)}</span></div>`).join('');
+  const gestion = data.gestion || {};
+  const gestionRun = gestion.ejecucion;
+  if (!gestionRun) {
+    $('gestion').innerHTML = '<p>El agente de integridad aún no ha procesado esta inspección.</p>';
+  } else if (gestionRun.inspeccion_id !== run.id) {
+    $('gestion').innerHTML = '<p>La gestión disponible corresponde a una inspección anterior. El nuevo análisis se incorporará al terminar.</p>';
+  } else {
+    const values = [
+      [number(gestionRun.corregidos), 'Corregidos con evidencia DIAN'],
+      [number(gestionRun.pendientes_evidencia), 'Pendientes de evidencia'],
+      [number(gestionRun.requieren_analisis), 'Para análisis documental']
+    ];
+    const rows = (gestion.casos || []).map(item => `<div class="resultado"><strong class="${item.estado === 'corregido' ? 'bien-texto' : 'fallo-texto'}">${escapeHtml(item.codigo.replaceAll('_', ' '))} · ${escapeHtml(item.estado.replaceAll('_', ' '))}</strong><p>${escapeHtml(item.detalle)}</p></div>`).join('');
+    $('gestion').innerHTML = `<div class="metricas">${values.map(([value,label]) => `<div class="metrica"><strong>${escapeHtml(value)}</strong><span>${escapeHtml(label)}</span></div>`).join('')}</div>${rows || '<p>Sin casos abiertos.</p>'}`;
+  }
   $('casos').innerHTML = (run.casos || []).map(c => `<div class="caso"><strong class="${c.estado === 'fallo' ? 'fallo-texto' : 'bien-texto'}">${escapeHtml(c.nombre)} · ${c.estado === 'fallo' ? 'Revisar' : 'Sin hallazgos automáticos'}</strong><p>${escapeHtml((c.hallazgos || []).join(' · ') || 'Fuente y datos centinela cotejados.')}</p>${safeOfficialUrl(c.fuente) ? `<a href="${escapeHtml(safeOfficialUrl(c.fuente))}" target="_blank" rel="noopener noreferrer">Abrir fuente DIAN</a>` : ''}</div>`).join('') || '<p>Los casos centinela todavía no se han ejecutado.</p>';
   $('enlaces').innerHTML = (run.enlaces?.muestra || []).map(x => `<div class="resultado"><strong>${escapeHtml(x.numero || x.id)}</strong><p>${escapeHtml(x.motivo)}</p></div>`).join('') || '<p>No se encontraron enlaces fallidos en la muestra de esta ejecución.</p>';
   $('motivos').innerHTML = Object.entries(run.motivos || {}).sort((a,b) => b[1]-a[1]).map(([code,count]) => `<div class="motivo">${escapeHtml(code.replaceAll('_',' '))}: <strong>${number(count)}</strong></div>`).join('') || '<p>Sin motivos registrados.</p>';
