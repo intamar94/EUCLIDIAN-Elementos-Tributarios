@@ -220,9 +220,16 @@ def process_document(db, session, inspection_id, run_id, row, codes):
                 {"campo": "fuentes_formales", "antes": before, "despues": sources,
                  "fuente": row.get("enlace_oficial")}))
         else:
-            cases.append(build_case(inspection_id, run_id, row, "cita_pendiente_evidencia", "pendiente_evidencia",
-                "La fuente no permite reconstruir una cita jurídica completa con seguridad.",
-                {"fuente": row.get("enlace_oficial")}))
+            if before:
+                requeue_after_change(db, row, {"fuentes_formales": []})
+                cases.append(build_case(inspection_id, run_id, row, "cita_corregida", "corregido",
+                    "Se retiró la cita fragmentada: la fuente disponible no permite reconstruirla con seguridad.",
+                    {"campo": "fuentes_formales", "antes": before, "despues": [],
+                     "fuente": row.get("enlace_oficial")}))
+            else:
+                cases.append(build_case(inspection_id, run_id, row, "cita_pendiente_evidencia", "pendiente_evidencia",
+                    "La fuente no permite reconstruir una cita jurídica completa con seguridad.",
+                    {"fuente": row.get("enlace_oficial")}))
         codes = codes - {"cita_incompleta"}
     # Primero una fecha inequívoca. Si DIAN no permite determinarla, no se toca.
     if codes & SAFE_DATE_CODES and trusted_source(row):
