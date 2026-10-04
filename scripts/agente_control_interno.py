@@ -32,7 +32,7 @@ from patrones_dian import limpiar
 LOG = logging.getLogger("agente_control_interno")
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 PAGE = 300
-FIELDS = "id,numero_resolucion,titulo,enlace_oficial,fecha_publicacion,fecha_es_real,texto_completo,fuentes_formales,plazos_mencionados"
+FIELDS = "id,numero_resolucion,titulo,enlace_oficial,fecha_publicacion,fecha_es_real,texto_completo,fuentes_formales,plazos_mencionados,publicado_cliente"
 
 SAFE_DATE_CODES = {"fecha_imposible", "orden_fechas", "fecha_centinal"}
 ANALYSIS_CODES = {
@@ -164,6 +164,11 @@ def requeue_after_change(db, row, changes):
     payload = dict(changes)
     payload.update({"revisado_fiscal_en": None, "aprobado_para_email": False})
     db.table("documentos_tributarios").update(payload).eq("id", row["id"]).execute()
+
+
+def source_quarantine_changes():
+    """Un documento sin fuente DIAN accesible no puede seguir visible."""
+    return {"publicado_cliente": False, "aprobado_para_email": False}
 
 
 def resolve_link(session, row):
@@ -318,9 +323,15 @@ def run(dry_run=False):
                         {"campo": "enlace_oficial", "antes": before, "despues": replacement}))
                     codes = codes - {"enlace_roto"}
                 else:
-                    cases.append(build_case(inspection["id"], run_id, row, "enlace_pendiente_evidencia", "pendiente_evidencia",
-                        "No se encontró una URL alternativa DIAN suficientemente identificada para sustituir el enlace.",
-                        {"fuente": row.get("enlace_oficial")}))
+                    # Un 404 confirmado no es un dato que el suscriptor pueda
+                    # contrastar. Se conserva internamente con evidencia, pero
+                    # se retira de la publicación y de cualquier correo.
+                    if row.get("publicado_cliente") and not dry_run:
+                        requeue_after_change(db, row, source_quarantine_changes())
+                    cases.append(build_case(inspection["id"], run_id, row, "fuente_dian_en_cuarentena", "pendiente_evidencia",
+                        "La URL oficial respondió como inaccesible y no se encontró una sustitución DIAN inequívoca. El registro quedó fuera de la publicación hasta nueva comprobación.",
+                        {"fuente": row.get("enlace_oficial"), "decision": "cuarentena_de_publicacion",
+                         "revisar_en_proxima_inspeccion": True}))
                     codes = codes - {"enlace_roto"}
             if dry_run:
                 for code in sorted(codes):

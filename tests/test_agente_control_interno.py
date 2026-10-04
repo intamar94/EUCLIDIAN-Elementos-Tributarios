@@ -6,6 +6,7 @@ from scripts.agente_control_interno import (
     issue_codes,
     normalized_sources,
     priority,
+    source_quarantine_changes,
 )
 
 
@@ -56,6 +57,12 @@ Problema Jurídico
 Consulta
 """
         self.assertEqual(normalized_sources(text), ["Artículos 437-4 del Estatuto Tributario"])
+
+    def test_unavailable_official_source_is_removed_from_publication(self):
+        self.assertEqual(source_quarantine_changes(), {
+            "publicado_cliente": False,
+            "aprobado_para_email": False,
+        })
 
 
 if __name__ == "__main__":
