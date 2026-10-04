@@ -16,10 +16,16 @@
  */
 /* ═══════════ etiquetas ═══════════ */
 const MESES=['','ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+const MESES_LARGOS=['','enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
 function fechaCorta(f){
   if(!f) return '';
   const p = String(f).slice(0,10).split('-');
   return p.length===3 ? `${+p[2]} ${MESES[+p[1]]} ${p[0]}` : '';
+}
+function fechaLarga(f){
+  if(!f) return '';
+  const p=String(f).slice(0,10).split('-');
+  return p.length===3&&MESES_LARGOS[+p[1]] ? `${+p[2]} de ${MESES_LARGOS[+p[1]]} de ${p[0]}` : '';
 }
 
 const MESNUM = {enero:1,febrero:2,marzo:3,abril:4,mayo:5,junio:6,julio:7,
@@ -74,9 +80,9 @@ function anioIdentificador(d){
    lo publicó en su web; ambas pueden ser relevantes y no son equivalentes. */
 function fechaPrincipal(d){
   if (fechaDocumentoConfiable(d))
-    return `<span class="fecha-principal">Documento DIAN · ${fechaCorta(d.fecha_publicacion)}</span>`;
+    return `<span class="fecha-principal">Documento DIAN · ${fechaLarga(d.fecha_publicacion)}</span>`;
   if (d.fecha_publicacion_web)
-    return `<span class="fecha-principal">Publicada por DIAN · ${fechaCorta(d.fecha_publicacion_web)}</span>`;
+    return `<span class="fecha-principal">Publicada por DIAN · ${fechaLarga(d.fecha_publicacion_web)}</span>`;
   const anio=anioIdentificador(d)||d.anio_publicacion||d.anio||String(d.fecha_publicacion||'').slice(0,4);
   return anio?`<span class="fecha-principal aproximada" title="El índice DIAN solo permite identificar el año">Índice DIAN · ${esc(anio)}</span>`:'';
 }
@@ -121,7 +127,7 @@ function señal(d){
   if (d.clasificacion_obligatoriedad === 'obligatorio_dian_y_contribuyentes')
     return {rotulo:'Norma general · confirmar ámbito', tono:'orienta'};
 
-  return {rotulo:'Informativa', tono:'neutro'};
+  return {rotulo:'Criterio informativo', tono:'neutro'};
 }
 
 /* Los glifos van al modo de Byrne: la figura dice lo que diria una etiqueta. */
