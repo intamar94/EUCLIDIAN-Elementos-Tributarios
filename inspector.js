@@ -35,6 +35,14 @@ async function load() {
   const gestionRun = gestion.ejecucion;
   if (!gestionRun) {
     $('gestion').innerHTML = '<p>El agente de integridad aún no ha procesado esta inspección.</p>';
+  } else if (gestionRun.verificacion_id === run.id) {
+    const values = [
+      [number(gestionRun.corregidos), 'Corregidos con evidencia DIAN'],
+      [number(gestionRun.pendientes_evidencia), 'Pendientes de evidencia'],
+      [number(gestionRun.requieren_analisis), 'Para análisis documental']
+    ];
+    const rows = (gestion.casos || []).map(item => `<div class="resultado"><strong class="${item.estado === 'corregido' ? 'bien-texto' : 'fallo-texto'}">${escapeHtml(item.codigo.replaceAll('_', ' '))} · ${escapeHtml(item.estado.replaceAll('_', ' '))}</strong><p>${escapeHtml(item.detalle)}</p></div>`).join('');
+    $('gestion').innerHTML = `<p class="bien-texto"><strong>Ciclo verificado.</strong> Esta inspección se ejecutó después de aplicar las correcciones registradas.</p><div class="metricas">${values.map(([value,label]) => `<div class="metrica"><strong>${escapeHtml(value)}</strong><span>${escapeHtml(label)}</span></div>`).join('')}</div>${rows || '<p>Sin casos abiertos.</p>'}`;
   } else if (gestionRun.inspeccion_id !== run.id) {
     $('gestion').innerHTML = '<p>La gestión disponible corresponde a una inspección anterior. El nuevo análisis se incorporará al terminar.</p>';
   } else {

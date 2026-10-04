@@ -3,6 +3,7 @@
 create table if not exists public.control_interno_ejecuciones (
   id uuid primary key default gen_random_uuid(),
   inspeccion_id uuid not null references public.inspector_ejecuciones(id),
+  verificacion_id uuid references public.inspector_ejecuciones(id),
   estado text not null check (estado in ('en_curso', 'correcto', 'alerta', 'fallo')),
   iniciado_en timestamptz not null default now(),
   finalizado_en timestamptz,

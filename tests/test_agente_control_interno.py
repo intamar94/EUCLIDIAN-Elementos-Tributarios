@@ -1,6 +1,12 @@
 import unittest
 
-from scripts.agente_control_interno import date_correction, issue_codes, priority
+from scripts.agente_control_interno import (
+    complete_deadlines,
+    date_correction,
+    issue_codes,
+    normalized_sources,
+    priority,
+)
 
 
 class AgenteControlInternoTests(unittest.TestCase):
@@ -32,6 +38,24 @@ class AgenteControlInternoTests(unittest.TestCase):
         found = issue_codes([{"codigo": "plazo_cortado"}, {"codigo": "duplicado"}, {"detalle": "sin código"}])
         self.assertEqual(found, {"plazo_cortado", "duplicado"})
         self.assertEqual(priority(found), "alta")
+
+    def test_keeps_only_complete_deadline_sentence(self):
+        text = """RESUELVE
+El plazo para presentar la solicitud vence el 15 de octubre de 2026.
+El obligado tendrá hasta el 17 de diciembre
+"""
+        self.assertEqual(complete_deadlines(text), [
+            "El plazo para presentar la solicitud vence el 15 de octubre de 2026."
+        ])
+
+    def test_rebuilds_split_formal_source_without_guessing(self):
+        text = """Fuentes Formales
+Artículos
+437-4 del Estatuto Tributario
+Problema Jurídico
+Consulta
+"""
+        self.assertEqual(normalized_sources(text), ["Artículos 437-4 del Estatuto Tributario"])
 
 
 if __name__ == "__main__":

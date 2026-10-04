@@ -1,16 +1,16 @@
 """Agente de integridad documental de EUCLIDIAN.
 
-Convierte los hallazgos del inspector en una cola trazable. Solo hace dos
-correcciones automáticas: una fecha que la fuente DIAN fija inequívocamente y
-una URL reemplazada por otra URL oficial que identifica el mismo documento.
-Todo lo interpretativo se conserva como caso para análisis: el agente no
-rellena citas, tesis, plazos ni elimina duplicados por su cuenta.
+Convierte los hallazgos del inspector en una cola trazable. Corrige solamente
+datos recuperables de forma literal desde la fuente DIAN; tras la corrección,
+la siguiente inspección decide si el caso se cierra. Todo lo interpretativo se
+conserva para análisis y nunca se publica como dato completo por inferencia.
 """
 from __future__ import annotations
 
 import argparse
 import logging
 import os
+import re
 import sys
 from collections import Counter
 from datetime import datetime, timezone
@@ -23,13 +23,16 @@ SCRIPTS_DIR = Path(__file__).resolve().parent
 if str(SCRIPTS_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPTS_DIR))
 
+from inspector_euclidian import run as run_inspector
 from inspector_euclidian import source_dates, source_text, trusted_source
 from verificador_aprobacion import discover_official_url
+from lectores_dian import Lectores
+from patrones_dian import limpiar
 
 LOG = logging.getLogger("agente_control_interno")
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 PAGE = 300
-FIELDS = "id,numero_resolucion,titulo,enlace_oficial,fecha_publicacion,fecha_es_real"
+FIELDS = "id,numero_resolucion,titulo,enlace_oficial,fecha_publicacion,fecha_es_real,texto_completo,fuentes_formales,plazos_mencionados"
 
 SAFE_DATE_CODES = {"fecha_imposible", "orden_fechas", "fecha_centinal"}
 ANALYSIS_CODES = {
@@ -37,6 +40,60 @@ ANALYSIS_CODES = {
     "fecha_no_verificada", "anio_incoherente", "retroactividad_sin_periodo",
     "identificacion", "fuente", "fecha_sin_valor",
 }
+
+
+def complete_deadlines(text):
+    """Conserva únicamente plazos que terminan completos en la fuente DIAN."""
+    source = str(text or "")
+    start = re.search(r"\bRESUELVE\b", source, re.IGNORECASE)
+    if start:
+        source = source[start.end():]
+    date_pattern = r"\d{1,2}\s+de\s+[A-Za-záéíóúÁÉÍÓÚ]+\s+de\s+(?:19|20)\d{2}"
+    trigger = r"plazo|vencimiento|hasta el|a m[aá]s tardar|pagar[aá]n?|pago"
+    found = []
+    for line in source.splitlines():
+        clean = re.sub(r"\s+", " ", line).strip(" -•\t")
+        if not (25 <= len(clean) <= 420 and re.search(trigger, clean, re.IGNORECASE)):
+            continue
+        matches = list(re.finditer(date_pattern, clean, re.IGNORECASE))
+        if not matches:
+            continue
+        ending = clean[matches[-1].end():].strip()
+        if ending and not re.fullmatch(r"(?:inclusive|[).,;:»”\"]*)", ending, re.IGNORECASE):
+            continue
+        value = clean.rstrip(".,;: ") + "."
+        if value not in found:
+            found.append(value)
+    return found[:12]
+
+
+def normalized_sources(text):
+    """Une citas que el HTML del Normograma parte en líneas distintas."""
+    lines = Lectores()._bloque(limpiar(str(text or "")), r"Fuentes Formales")
+    joined = []
+    for line in lines:
+        line = line.strip(" .,;·-")
+        previous = joined[-1] if joined else ""
+        continuation = bool(previous) and (
+            re.fullmatch(r"art[ií]culos?", previous, re.IGNORECASE)
+            or re.search(r"\b(?:del|de la|de|y|arts?)$", previous, re.IGNORECASE)
+            or (re.search(r"\b(?:art[ií]culos?|ley|decreto|resoluci[oó]n)\s+\d+[.-]?\d*$", previous, re.IGNORECASE)
+                and re.match(r"^(?:\d+|del|de la|de)\b", line, re.IGNORECASE))
+        )
+        if continuation:
+            joined[-1] = f"{previous} {line}"
+        elif line:
+            joined.append(line)
+    valid = []
+    for item in joined:
+        item = re.sub(r"\s+", " ", item).strip(" .,;·-")
+        if not (8 <= len(item) <= 240):
+            continue
+        if not re.search(r"art[ií]culo|ley|decreto|resoluci[oó]n|estatuto|c[oó]digo|constituci[oó]n|sentencia", item, re.IGNORECASE):
+            continue
+        if not re.fullmatch(r"(?:art[ií]culos?|art[ií]culo|ley|decreto|resoluci[oó]n|estatuto|c[oó]digo)", item, re.IGNORECASE) and item not in valid:
+            valid.append(item)
+    return valid[:15]
 
 
 def issue_codes(hallazgos):
@@ -82,6 +139,17 @@ def latest_inspection(db):
     return rows[0] if rows else None
 
 
+def verify_cycle(db, source_inspection_id):
+    """Ejecuta el segundo control y conserva el identificador de su evidencia."""
+    run_inspector(link_sample=0, persist=True)
+    verified = latest_inspection(db)
+    if not verified or verified["id"] == source_inspection_id:
+        raise RuntimeError("La reinspección no produjo una evidencia independiente")
+    if verified.get("revisados") != verified.get("total") or not verified.get("total"):
+        raise RuntimeError("La reinspección no alcanzó cobertura completa")
+    return verified
+
+
 def documents_by_id(db, ids):
     out = {}
     for start in range(0, len(ids), 120):
@@ -124,6 +192,38 @@ def build_case(inspeccion_id, run_id, row, code, estado, detalle, evidencia):
 
 def process_document(db, session, inspection_id, run_id, row, codes):
     cases = []
+    # Un plazo partido puede inducir a una fecha límite equivocada. Se reemplaza
+    # únicamente por una frase completa de la fuente; si no existe, se vacía.
+    if "plazo_cortado" in codes:
+        deadlines = complete_deadlines(row.get("texto_completo"))
+        before = row.get("plazos_mencionados") or []
+        if deadlines != before:
+            requeue_after_change(db, row, {"plazos_mencionados": deadlines})
+        status = "corregido" if deadlines or before else "pendiente_evidencia"
+        detail = ("Se conservaron solo plazos expresados como una frase completa en la fuente DIAN."
+                  if deadlines else
+                  "Se retiró el fragmento de plazo: la fuente disponible no permite mostrar un vencimiento completo.")
+        cases.append(build_case(inspection_id, run_id, row, "plazo_corregido", status, detail,
+            {"campo": "plazos_mencionados", "antes": before, "despues": deadlines,
+             "fuente": row.get("enlace_oficial")}))
+        codes = codes - {"plazo_cortado"}
+    # El Normograma divide algunas fuentes jurídicas entre renglones. Solo se
+    # unen referencias con una continuidad gramatical y una figura jurídica.
+    if "cita_incompleta" in codes:
+        sources = normalized_sources(row.get("texto_completo"))
+        before = row.get("fuentes_formales") or []
+        if sources:
+            if sources != before:
+                requeue_after_change(db, row, {"fuentes_formales": sources})
+            cases.append(build_case(inspection_id, run_id, row, "cita_corregida", "corregido",
+                "Se recompuso la cita jurídica a partir del bloque de Fuentes Formales de DIAN.",
+                {"campo": "fuentes_formales", "antes": before, "despues": sources,
+                 "fuente": row.get("enlace_oficial")}))
+        else:
+            cases.append(build_case(inspection_id, run_id, row, "cita_pendiente_evidencia", "pendiente_evidencia",
+                "La fuente no permite reconstruir una cita jurídica completa con seguridad.",
+                {"fuente": row.get("enlace_oficial")}))
+        codes = codes - {"cita_incompleta"}
     # Primero una fecha inequívoca. Si DIAN no permite determinarla, no se toca.
     if codes & SAFE_DATE_CODES and trusted_source(row):
         try:
@@ -173,8 +273,10 @@ def run(dry_run=False):
         }).execute().data[0]
     run_id = created["id"] if created else "00000000-0000-0000-0000-000000000000"
     try:
+        # También gestionamos avisos: la severidad ordena la prioridad, pero no
+        # deja deuda documental fuera del ciclo por no ser crítica todavía.
         results = read_all(db.table("inspector_resultados").select("documento_id,hallazgos")
-                           .eq("ejecucion_id", inspection["id"]).eq("estado", "critico").order("documento_id"))
+                           .eq("ejecucion_id", inspection["id"]).order("documento_id"))
         by_doc = {item["documento_id"]: issue_codes(item.get("hallazgos")) for item in results}
         # Los casos centinela hacen comparaciones más profundas que el barrido
         # por fila. Sus discrepancias de fecha se incorporan a la misma cola.
@@ -228,8 +330,12 @@ def run(dry_run=False):
                   "pendientes_evidencia": counts["pendiente_evidencia"],
                   "requieren_analisis": counts["requiere_analisis"]}
         if not dry_run:
+            # El control no se limita a proponer un cambio: genera una nueva
+            # fotografía integral de la base para comprobarlo inmediatamente.
+            verification = verify_cycle(db, inspection["id"])
             state = "alerta" if result["pendientes_evidencia"] or result["requieren_analisis"] else "correcto"
             db.table("control_interno_ejecuciones").update({**result, "estado": state,
+                "verificacion_id": verification["id"],
                 "finalizado_en": datetime.now(timezone.utc).isoformat()}).eq("id", run_id).execute()
         LOG.info("Agente: %s", result)
         return result

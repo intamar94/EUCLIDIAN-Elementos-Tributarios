@@ -17,11 +17,12 @@ create table if not exists public.inspector_ejecuciones (
 );
 
 create table if not exists public.inspector_resultados (
-  documento_id uuid primary key references public.documentos_tributarios(id) on delete cascade,
-  ejecucion_id uuid references public.inspector_ejecuciones(id),
+  documento_id uuid not null references public.documentos_tributarios(id) on delete cascade,
+  ejecucion_id uuid not null references public.inspector_ejecuciones(id) on delete cascade,
   estado text not null check (estado in ('correcto','aviso','critico')),
   hallazgos jsonb not null default '[]'::jsonb,
-  verificado_en timestamptz not null default now()
+  verificado_en timestamptz not null default now(),
+  primary key (ejecucion_id, documento_id)
 );
 
 create index if not exists inspector_resultados_ejecucion_estado_idx

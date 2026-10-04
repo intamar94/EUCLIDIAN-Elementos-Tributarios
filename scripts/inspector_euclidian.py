@@ -256,7 +256,7 @@ def run(link_sample=500, persist=True):
                             "verificado_en": now.isoformat()})
         for start in range(0, len(results), PAGE):
             if persist:
-                db.table("inspector_resultados").upsert(results[start:start + PAGE], on_conflict="documento_id").execute()
+                db.table("inspector_resultados").upsert(results[start:start + PAGE], on_conflict="ejecucion_id,documento_id").execute()
         cases = [inspect_case(session, *definition, all_rows) for definition in CASES]
         # La red se muestrea por rotación; nunca se presenta como validación HTTP total.
         candidates = [d for d in all_rows if trusted_source(d)]
