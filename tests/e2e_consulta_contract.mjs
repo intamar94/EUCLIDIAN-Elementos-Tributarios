@@ -10,6 +10,7 @@ const auth=fs.readFileSync('auth.js','utf8');
 const authApi=fs.readFileSync('api/auth.js','utf8');
 const sessionApi=fs.readFileSync('api/session.js','utf8');
 const authServer=fs.readFileSync('lib/auth-server.js','utf8');
+const profileApi=fs.readFileSync('api/profile.js','utf8');
 
 const checks=[
  ['entrada de consulta',html.includes('id="consulta"')&&html.includes('id="formBuscar"')],
@@ -40,7 +41,9 @@ const checks=[
  ['P4 recuperación de contraseña',auth.includes("action:'update_password'")&&html.includes('authResetForm')],
  ['P4 service role no llega al navegador',!auth.includes('SUPABASE_SERVICE_KEY')&&!html.includes('SUPABASE_SERVICE_KEY')],
  ['P4 session endpoint',sessionApi.includes('verificarUsuario(req)')&&sessionApi.includes('estadoAcceso(user.id)')],
- ['P4 Auth API usa publicable',authApi.includes('SUPABASE_PUBLISHABLE_KEY')&&!authApi.includes('SUPABASE_SERVICE_KEY')]
+ ['P4 Auth API usa publicable',authApi.includes('SUPABASE_PUBLISHABLE_KEY')&&!authApi.includes('SUPABASE_SERVICE_KEY')],
+ ['P4 perfil editable',html.includes('perfilForm')&&auth.includes("fetch('/api/profile'")&&profileApi.includes("['GET','PATCH']")],
+ ['P4 ownership de perfil',profileApi.includes('verificarUsuario(req)')&&profileApi.includes('user.id')&&!profileApi.includes('req.body.user_id')]
 ];
 let failed=0;
 for(const [name,ok] of checks){console.log((ok?'OK':'FAIL')+' - '+name);if(!ok)failed++;}
