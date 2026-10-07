@@ -19,7 +19,11 @@ const checks=[
  ['fecha no verificada no se presenta como exacta',cards.includes('fechaDocumentoConfiable')&&cards.includes('fecha aproximada')&&cards.includes('Índice DIAN')],
  ['UI consulta API',nav.includes("fetch('/api/documentos?")],
  ['UI enlaza fuente DIAN',blocks.includes('enlace_oficial')&&blocks.includes('Abrir fuente DIAN')],
- ['UI muestra fuentes oficiales',blocks.includes('Fuentes oficiales')&&blocks.includes('Abrir documento oficial')]
+ ['UI muestra fuentes oficiales',blocks.includes('Fuentes oficiales')&&blocks.includes('Abrir documento oficial')],
+ ['P3 navegación completa',['Inicio','Consultar','Novedades','Explorar','Seguimientos','Cuenta'].every(x=>html.includes(x))],
+ ['P3 carga accesible',html.includes('cargaGeometrica')&&nav.includes('estadoCarga(true')&&nav.includes('estadoCarga(false)')],
+ ['P3 exploración funcional',html.includes('explorarTemas')&&nav.includes('renderExplorar(data)')],
+ ['P3 acciones de ficha',blocks.includes('ficha-acciones-lectura')&&blocks.includes('data-copy-ref')]
 ];
 let failed=0;
 for(const [name,ok] of checks){console.log((ok?'OK':'FAIL')+' - '+name);if(!ok)failed++;}
