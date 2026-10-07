@@ -169,3 +169,15 @@ article:after{content:"";position:absolute;width:54px;height:54px;right:-29px;to
 .estado-vacio-acciones{grid-column:2;display:flex;flex-wrap:wrap;gap:8px;margin-top:3px}.estado-vacio-acciones button,.estado-error button{min-height:40px;padding:8px 12px;border:1px solid #b8c5b6;border-radius:6px;background:#fffefa;color:#2f4437;font:600 12px 'IBM Plex Sans',sans-serif;cursor:pointer}.estado-vacio-acciones button:first-child{background:#203a2b;color:#fff;border-color:#203a2b}.estado-vacio-acciones button:hover,.estado-error button:hover{border-color:#78917f;background:#edf3ee;color:#22372b}.estado-vacio-acciones button:first-child:hover{background:#305f43;color:#fff}
 .estado-error button{margin-top:12px;border-color:#c87d72;color:#81382f}
 @media(max-width:620px){.estado-vacio,.estado-error{grid-template-columns:1fr;padding:20px 16px}.estado-vacio-acciones{grid-column:1;display:grid;grid-template-columns:1fr}.estado-vacio-acciones button,.estado-error button{width:100%}}
+
+
+/* Radar visual: la forma anticipa el tipo de novedad. */
+.hoy-resumen{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:14px 0}
+.radar-metrica{display:flex;align-items:center;gap:10px;min-height:58px;padding:9px 11px;border:1px solid #d5ddd5;border-radius:8px;background:#fffefa}
+.radar-metrica>span{display:grid;place-items:center;width:28px;height:28px;border:1px solid currentColor;border-radius:50%;font:600 15px/1 'IBM Plex Mono',monospace}
+.radar-metrica b{display:block;color:#20362a;font:600 18px/1 'IBM Plex Mono',monospace}.radar-metrica small{display:block;margin-top:3px;color:#637067;font-size:10.5px}
+.radar-metrica.nuevo{color:#315d77}.radar-metrica.plazo{color:#8b5b28}.radar-metrica.cambio{color:#9b3f36}
+.hoy-item{position:relative;overflow:hidden;border-left-width:4px}.hoy-item.tipo-cambio{border-left-color:#b23a32}.hoy-item.tipo-plazo{border-left-color:#9a6a32}.hoy-item.tipo-retro{border-left-color:#7a4d7a}.hoy-item.tipo-nuevo{border-left-color:#3d82b8}.hoy-item.tipo-seguido{border-left-color:#2f6b4f}
+.hoy-item-cab{display:flex;align-items:center;gap:7px}.hoy-senal{display:grid;place-items:center;width:23px;height:23px;border:1px solid currentColor;border-radius:50%;color:#6b776e;font:600 12px/1 'IBM Plex Mono',monospace}.tipo-cambio .hoy-senal{color:#b23a32}.tipo-plazo .hoy-senal{color:#9a6a32}.tipo-retro .hoy-senal{color:#7a4d7a}.tipo-nuevo .hoy-senal{color:#3d82b8}.tipo-seguido .hoy-senal{color:#2f6b4f}
+.hoy-item button{display:inline-flex;align-items:center;gap:8px;min-height:38px;padding:8px 11px;background:#fffefa;border:1px solid #9fafa2;border-radius:6px}.hoy-item button b{font:600 13px 'IBM Plex Mono',monospace}.hoy-item button:hover{background:#edf3ee;border-color:#78917f}
+@media(max-width:760px){.hoy-resumen{grid-template-columns:1fr}.radar-metrica{min-height:52px}}
