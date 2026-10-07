@@ -5,6 +5,9 @@ on:
     paths:
       - 'scripts/inspector_euclidian.py'
       - '.github/workflows/inspector_euclidian.yml'
+  workflow_run:
+    workflows: ["Actualización automática DIAN"]
+    types: [completed]
   schedule:
     - cron: '25 15 * * *'
   workflow_dispatch:
@@ -15,6 +18,7 @@ concurrency:
 
 jobs:
   inspeccionar:
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     timeout-minutes: 120
     steps:
