@@ -116,6 +116,12 @@
     <div class="cuenta-dato"><small>Plan</small><strong id="cuentaPlan">—</strong></div>
     <div class="cuenta-dato"><small>Periodo</small><strong id="cuentaPeriodo">—</strong></div>
   </div>
+  <form class="perfil-form" id="perfilForm">
+    <div><label for="perfilNombre">Nombre</label><input id="perfilNombre" name="nombre" maxlength="120" autocomplete="name" placeholder="Cómo quieres que te llamemos"></div>
+    <div><label for="perfilCiudad">Ciudad</label><input id="perfilCiudad" name="ciudad" maxlength="120" autocomplete="address-level2" placeholder="Tu ciudad"></div>
+    <button type="submit">Guardar perfil</button>
+    <span id="perfilEstado" role="status" aria-live="polite"></span>
+  </form>
   <div class="cuenta-acciones">
     <button type="button" id="cuentaRecuperar">Cambiar contraseña</button>
     <button type="button" id="cuentaSalir" class="secundaria">Cerrar sesión</button>
