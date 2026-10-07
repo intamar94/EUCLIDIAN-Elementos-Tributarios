@@ -4,6 +4,7 @@ import fs from 'node:fs';
 const landing=fs.readFileSync('index.html','utf8');
 const html=fs.readFileSync('app.html','utf8');
 const landingCss=fs.readFileSync('landing.css','utf8');
+const appCss=fs.readFileSync('estilo.css','utf8');
 const api=fs.readFileSync('api/documentos.js','utf8');
 const nav=fs.readFileSync('bandeja.js','utf8');
 const blocks=fs.readFileSync('bloques.js','utf8');
@@ -32,6 +33,7 @@ const checks=[
  ['UI consulta API',nav.includes("fetch('/api/documentos?")],
  ['UI enlaza fuente DIAN',blocks.includes('enlace_oficial')&&blocks.includes('Abrir fuente DIAN')],
  ['UI muestra fuentes oficiales',blocks.includes('Fuentes oficiales')&&blocks.includes('Abrir documento oficial')],
+ ['P3 accesibilidad transversal',appCss.includes(':focus-visible')&&appCss.includes('prefers-reduced-motion')],
  ['P3 navegación completa',['Inicio','Consultar','Novedades','Explorar','Seguimientos','Cuenta'].every(x=>html.includes(x))],
  ['P3 carga accesible',html.includes('cargaGeometrica')&&nav.includes('estadoCarga(true')&&nav.includes('estadoCarga(false)')],
  ['P3 exploración funcional',html.includes('explorarTemas')&&nav.includes('renderExplorar(data)')],
