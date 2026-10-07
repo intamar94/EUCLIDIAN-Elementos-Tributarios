@@ -67,7 +67,7 @@ function configurarNavegacion(){
   document.getElementById('cerrarExplorar')?.addEventListener('click',()=>{const seccion=document.getElementById('explorar');if(seccion)seccion.hidden=true;marcarNavegacion('navInicio');document.getElementById('hoy')?.scrollIntoView({behavior:'smooth',block:'start'});});
   document.getElementById('navSeguir')?.addEventListener('click',()=>{marcarNavegacion('navSeguir');document.querySelector('.seguimiento')?.scrollIntoView({behavior:'smooth',block:'center'});});
   const cuenta=document.getElementById('navCuenta');
-  if(cuenta){cuenta.setAttribute('aria-disabled','true');cuenta.title='Cuenta personal en integración segura';cuenta.addEventListener('click',e=>{e.preventDefault();document.getElementById('estadoConsulta').textContent='La cuenta personal se habilitará cuando termine la integración segura de acceso y suscripción.';document.getElementById('estadoConsulta')?.scrollIntoView({behavior:'smooth',block:'center'});});}
+  if(cuenta){cuenta.removeAttribute('aria-disabled');cuenta.removeAttribute('title');cuenta.addEventListener('click',async e=>{e.preventDefault();marcarNavegacion('navCuenta');if(window.euclidianTieneSesion?.()){await window.euclidianMostrarCuenta?.();return;}const panel=document.getElementById('cuentaPanel');if(panel){document.getElementById('cuentaEmail').textContent='Acceso interno';document.getElementById('cuentaEstado').textContent='Interno';document.getElementById('cuentaPlan').textContent='—';document.getElementById('cuentaPeriodo').textContent='—';panel.hidden=false;panel.scrollIntoView({behavior:'smooth',block:'start'});}});}
 }
 
 function textoDocumento(d){return [d.titulo,d.resumen_humano,d.resumen_borrador,d.descripcion_limpia,d.materia,...(d.temas||[])].filter(Boolean).join(' ').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();}
@@ -104,17 +104,14 @@ function renderPanelHoy(data){
   renderTemasSeguidos(data);panel.hidden=false;
 }
 
-async function entrar(e){
-  e.preventDefault();
-  const input=document.getElementById('clave'), btn=e.submitter || document.querySelector('#puerta button'), mal=document.getElementById('mal');
-  const valor=input.value.trim();
-  if(!valor) return;
-  CLAVE=valor;
-  if(btn){btn.disabled=true;btn.textContent='COMPROBANDO…';}
+async function entrarInterno(valor){
+  const mal=document.getElementById('mal');
+  CLAVE=String(valor||'').trim();if(!CLAVE)return;
   if(mal)mal.textContent='';
-  try{await cargar(true);}catch(err){CLAVE='';sessionStorage.removeItem('euclidian_clave');if(mal)mal.textContent=err.message||'No se pudo comprobar el acceso.';}
-  finally{if(btn){btn.disabled=false;btn.textContent='ENTRAR';}}
+  try{await cargar(true);sessionStorage.setItem('euclidian_clave',CLAVE);}
+  catch(err){CLAVE='';sessionStorage.removeItem('euclidian_clave');throw err;}
 }
+window.euclidianEntrarInterno=entrarInterno;
 async function alternarRevision(){
   const btn=document.getElementById('btnRevision');
   if(REVISOR){REVISOR='';sessionStorage.removeItem('euclidian_revisor_clave');window.euclidianPuedeRevisar=false;if(btn)btn.textContent='Modo revisión';await cargar();return;}
@@ -125,10 +122,44 @@ function contar(id){const t=document.getElementById('r-'+id),c=document.getEleme
 function usarBorrador(id){const t=document.getElementById('r-'+id),b=document.querySelector(`article[data-id="${id}"] .borrador p`);if(!t||!b)return;t.value=b.textContent.trim();contar(id);t.focus();}
 async function guardarResumen(id){const t=document.getElementById('r-'+id);if(!t)return;const valor=t.value.trim();if(t.dataset.guardado===valor)return;try{const r=await fetch('/api/decidir',{method:'POST',headers:{'Content-Type':'application/json','x-clave':REVISOR},body:JSON.stringify({id,decision:'devolver',resumen:valor})});if(!r.ok)throw new Error('no se guardó');t.dataset.guardado=valor;t.style.borderColor='';const art=t.closest('article');if(art)art.classList.toggle('escrito',!!valor);}catch(e){t.style.borderColor='var(--regla)';}}
 async function cargar(autenticar=false){
-  const lista=document.getElementById('lista'),btn=document.getElementById('btnRecargar'),mal=document.getElementById('mal');if(btn)btn.disabled=true;estadoCarga(true,F.q?'Buscando y verificando…':'Ordenando la información…');if(lista)lista.innerHTML=skeletonConsulta();document.getElementById('paginas').innerHTML='';
+  const lista=document.getElementById('lista'),btn=document.getElementById('btnRecargar'),mal=document.getElementById('mal');
+  if(btn)btn.disabled=true;estadoCarga(true,F.q?'Buscando y verificando…':'Ordenando la información…');
+  if(lista)lista.innerHTML=skeletonConsulta();document.getElementById('paginas').innerHTML='';
   const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),15000);
-  try{const q=new URLSearchParams({estado:F.estado,orden:F.orden,periodo:F.periodo,pagina:F.pagina});if(F.q)q.set('q',F.q);if(F.tema)q.set('tema',F.tema);const r=await fetch('/api/documentos?'+q,{headers:{'x-clave':CLAVE},cache:'no-store',signal:controller.signal});if(r.status===401)throw new Error('Clave incorrecta.');const data=await r.json().catch(()=>({error:'Respuesta inválida del servidor.'}));if(!r.ok)throw new Error(data.detalle||data.error||'No se pudo leer la base.');sessionStorage.setItem('euclidian_clave',CLAVE);document.getElementById('puerta').hidden=true;if(mal)mal.textContent='';document.getElementById('cab').hidden=false;document.getElementById('hoy').hidden=false;document.getElementById('controles').hidden=false;document.getElementById('barra').hidden=false;marcarActivos();poblarTemas(data.temas||[]);renderPanelHoy(data);renderExplorar(data);describirConsulta(data);if(!data.documentos.length){lista.innerHTML=vistaVacia();return data;}lista.innerHTML=data.documentos.map(ficha).join('');paginacion(data);window.scrollTo({top:0,behavior:'smooth'});return data;
-  }catch(e){if(e.name==='AbortError')throw new Error('El servidor tardó demasiado en responder. Inténtalo de nuevo.');if(autenticar){if(lista)lista.innerHTML='';throw e;}if(lista)lista.innerHTML=vistaError(e.message);throw e;}finally{clearTimeout(timer);estadoCarga(false);if(btn)btn.disabled=false;}}
+  try{
+    const q=new URLSearchParams({estado:F.estado,orden:F.orden,periodo:F.periodo,pagina:F.pagina});
+    if(F.q)q.set('q',F.q);if(F.tema)q.set('tema',F.tema);
+    const token=await window.euclidianAuthToken?.();
+    const headers=token?{Authorization:`Bearer ${token}`}:CLAVE?{'x-clave':CLAVE}:{};
+    const r=await fetch('/api/documentos?'+q,{headers,cache:'no-store',signal:controller.signal});
+    const data=await r.json().catch(()=>({error:'Respuesta inválida del servidor.'}));
+    if(r.status===401){
+      if(token)window.euclidianAuthExpirada?.();
+      throw new Error(token?'Tu sesión terminó. Vuelve a entrar.':'Clave interna incorrecta.');
+    }
+    if(r.status===402){
+      document.getElementById('puerta').hidden=true;
+      document.getElementById('cab').hidden=false;
+      ['hoy','controles','barra'].forEach(id=>{const el=document.getElementById(id);if(el)el.hidden=true;});
+      if(lista)lista.innerHTML='';
+      await window.euclidianAuthSinSuscripcion?.(data);
+      return data;
+    }
+    if(!r.ok)throw new Error(data.detalle||data.error||'No se pudo leer la base.');
+    if(CLAVE&&!token)sessionStorage.setItem('euclidian_clave',CLAVE);
+    document.getElementById('puerta').hidden=true;if(mal)mal.textContent='';
+    document.getElementById('cab').hidden=false;document.getElementById('hoy').hidden=false;document.getElementById('controles').hidden=false;document.getElementById('barra').hidden=false;
+    document.getElementById('cuentaPanel').hidden=true;
+    marcarActivos();poblarTemas(data.temas||[]);renderPanelHoy(data);renderExplorar(data);describirConsulta(data);
+    if(!data.documentos.length){lista.innerHTML=vistaVacia();return data;}
+    lista.innerHTML=data.documentos.map(ficha).join('');paginacion(data);window.scrollTo({top:0,behavior:'smooth'});return data;
+  }catch(e){
+    if(e.name==='AbortError')throw new Error('El servidor tardó demasiado en responder. Inténtalo de nuevo.');
+    if(autenticar){if(lista)lista.innerHTML='';throw e;}
+    if(lista&&!document.getElementById('puerta')?.hidden===false)lista.innerHTML=vistaError(e.message);
+    throw e;
+  }finally{clearTimeout(timer);estadoCarga(false);if(btn)btn.disabled=false;}
+}
 function poblarTemas(temas){const sel=document.getElementById('selTema');if(!sel)return;const actual=sel.value;const orden=[...temas].sort((a,b)=>nombreTema(a).localeCompare(nombreTema(b),'es'));sel.innerHTML='<option value="">Todos los temas</option>'+orden.map(t=>`<option value="${t}">${nombreTema(t)}</option>`).join('');sel.value=actual;}
 function seleccionarAnio(anio){F.periodo=anio||'todo';F.pagina=1;marcarActivos();cargar();}
 function paginacion(data){const cont=document.getElementById('paginas'),{pagina,paginas,total,porPagina}=data;if(total===0){cont.innerHTML='';return;}const primero=(pagina-1)*porPagina+1,ultimo=Math.min(pagina*porPagina,total),r=document.getElementById('rango');if(r)r.textContent=`${Number(total).toLocaleString('es-CO')} documentos disponibles · mostrando ${primero}–${ultimo}`;let html='';if(paginas>1){html+=`<button onclick="irA(${pagina-1})" ${pagina<=1?'disabled':''}>‹</button>`;const nums=new Set([1,paginas,pagina,pagina-1,pagina+1]),orden=[...nums].filter(n=>n>=1&&n<=paginas).sort((a,b)=>a-b);let previo=0;orden.forEach(n=>{if(n-previo>1)html+='<span style="color:var(--tenue)">…</span>';html+=`<button onclick="irA(${n})" aria-current="${n===pagina}">${n}</button>`;previo=n;});html+=`<button onclick="irA(${pagina+1})" ${pagina>=paginas?'disabled':''}>›</button>`;}cont.innerHTML=html;}
@@ -139,7 +170,7 @@ function limpiar(){F.q='';F.tema='';F.estado='todos';F.periodo='todo';F.pagina=1
 document.getElementById('selAnio').addEventListener('change',e=>seleccionarAnio(e.target.value));document.getElementById('selTema').addEventListener('change',e=>{F.tema=e.target.value;F.pagina=1;cargar();});document.getElementById('selEstado').addEventListener('change',e=>{F.estado=e.target.value;F.pagina=1;cargar();});document.getElementById('selOrden').addEventListener('change',e=>{F.orden=e.target.value;F.pagina=1;cargar();});document.getElementById('formBuscar').addEventListener('submit',e=>{e.preventDefault();F.q=document.getElementById('consulta').value.trim();F.pagina=1;cargar();});
 configurarNavegacion();
 if(REVISOR){const b=document.getElementById('btnRevision');if(b)b.textContent='Salir del modo revisión';}
-if(CLAVE)cargar().catch(()=>{});else document.getElementById('puerta').hidden=false;
+if(CLAVE||window.euclidianTieneSesion?.())cargar().catch(()=>{if(!CLAVE&&!window.euclidianTieneSesion?.())document.getElementById('puerta').hidden=false;});else document.getElementById('puerta').hidden=false;
 
 if(!window.__euclidianRecoveryActions){window.__euclidianRecoveryActions=true;document.addEventListener('click',e=>{
   const accion=e.target.closest('[data-empty-action]');if(accion){const tipo=accion.dataset.emptyAction;if(tipo==='todo'){limpiar();return;}if(tipo==='explorar'){const seccion=document.getElementById('explorar');if(seccion){seccion.hidden=false;seccion.scrollIntoView({behavior:'smooth',block:'start'});}marcarNavegacion('navExplorar');return;}if(tipo==='nuevos'){F.estado='nuevos';F.pagina=1;const sel=document.getElementById('selEstado');if(sel)sel.value='nuevos';marcarNavegacion('navNovedades');cargar();return;}}
