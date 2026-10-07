@@ -41,6 +41,11 @@ jobs:
         run: python -m compileall -q scripts
       - name: Verificar contrato E2E de consulta trazable
         run: node tests/e2e_consulta_contract.mjs
+      - name: Eval de consultas contra datos reales
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: node tests/eval_consulta_datos.mjs
       - name: Verificar contrato determinista de alta confianza
         run: |
           cd scripts
