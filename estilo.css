@@ -277,3 +277,19 @@ a:hover{text-decoration-color:var(--tinta)}
   .menu{flex:1 1 100%}
   .menu-panel{position:static;max-height:none;box-shadow:none;margin-top:5px}
 }
+
+
+/* P3 — accesibilidad transversal: foco inequívoco y movimiento opcional. */
+:where(a,button,input,select,summary,[tabindex]):focus-visible{
+  outline:3px solid var(--obliga);
+  outline-offset:3px;
+}
+@media (prefers-reduced-motion: reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{
+    scroll-behavior:auto!important;
+    animation-duration:.01ms!important;
+    animation-iteration-count:1!important;
+    transition-duration:.01ms!important;
+  }
+}
