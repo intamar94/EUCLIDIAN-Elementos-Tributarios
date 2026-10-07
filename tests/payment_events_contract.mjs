@@ -21,7 +21,7 @@ const {reclamarEventoPago,finalizarEventoPago}=await import('../lib/payment-even
 }
 {
   let body;
-  global.fetch=async(_url,options)=>{body=JSON.parse(options.body);return new Response('',{status:204});};
+  global.fetch=async(_url,options)=>{body=JSON.parse(options.body);return new Response(null,{status:204});};
   const ok=await finalizarEventoPago({proveedor:'sandbox',evento_id:'evt_1',ok:true});
   assert.equal(ok,true);assert.equal(body.estado,'procesado');assert.equal(body.error,null);
   console.log('OK - evento procesado queda cerrado');
