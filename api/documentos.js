@@ -1,4 +1,4 @@
-import { autorizarConsulta } from '../lib/auth-server.js';
+import { autorizarConsulta, registrarUsoConsulta } from '../lib/auth-server.js';
 // EUCLIDIAN — catálogo completo de documentos.
 // La vista cliente muestra todo el corpus; el estado fiscal se conserva como dato informativo.
 const SUPABASE_URL = process.env.SUPABASE_URL;
@@ -18,6 +18,7 @@ const DIAS_NOVEDAD = 14;
 function fechaCorteNovedades(){const f=new Date();f.setUTCDate(f.getUTCDate()-DIAS_NOVEDAD);return f.toISOString().slice(0,10);}
 function esNovedadOficial(d){const corte=fechaCorteNovedades();return [d.fecha_publicacion_web,d.fecha_publicacion].some(f=>typeof f==='string'&&f.slice(0,10)>=corte);}
 export default async function handler(req,res){
+  const started=Date.now();
   // Fail closed: Supabase server configuration is mandatory. The old shared key
   // remains only as an internal transition path; customers use Supabase Auth.
   if(!SUPABASE_URL||!SUPABASE_KEY)return res.status(500).json({error:'falta_configuracion'});
@@ -63,6 +64,9 @@ export default async function handler(req,res){
     }
     const rResumen=await fetch(`${SUPABASE_URL}/rest/v1/rpc/conteos_bandeja_api`,{method:'POST',headers:{...cabeceras,'Content-Type':'application/json'},body:JSON.stringify({p_periodo:periodo,p_tema:tema||null,p_estado:estado,p_prioridad:null,p_naturaleza:null})});
     let resumen={}; try{if(rResumen.ok)resumen=(await rResumen.json())||{};}catch(e){}
+    if(acceso.modo==='usuario'&&acceso.user?.id){
+      await registrarUsoConsulta(acceso.user.id,{latencia_ms:Date.now()-started,resultados:total,estado:total?'ok':'sin_resultados'});
+    }
     res.setHeader('Cache-Control','no-store'); return res.status(200).json({documentos,total,pagina,porPagina:POR_PAGINA,paginas:Math.max(1,Math.ceil(total/POR_PAGINA)),temas:resumen.temas||[],periodo,periodos:resumen.periodos||{},actualizado:resumen.actualizado||null});
   }catch(e){return res.status(500).json({error:'fallo_lectura',detalle:String(e).slice(0,200)});}
 }
