@@ -225,6 +225,11 @@ def main():
                         # Fecha del control automático. La bandera
                         # revisado_por_humano permanece separada.
                         "revisado_fiscal_en": now,
+                        # Un documento nuevo que supera todos los controles
+                        # técnicos queda disponible automáticamente en la
+                        # consulta. La revisión humana sigue siendo una capa
+                        # adicional y nunca se finge.
+                        "publicado_cliente": True,
                         "observaciones_revisor": None,
                         "borrador_confianza": "pendiente",
                         "borrador_advertencias": ["Controles técnicos superados; falta revisión humana del contenido y su aplicación."],
