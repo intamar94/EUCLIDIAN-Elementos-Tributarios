@@ -64,6 +64,8 @@ jobs:
           node --check lib/auth-server.js
       - name: Verificar contrato E2E de consulta trazable
         run: node tests/e2e_consulta_contract.mjs
+      - name: Contrato determinista de Auth y entitlement
+        run: node tests/auth_flow_contract.mjs
       - name: Eval de consultas contra datos reales
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
