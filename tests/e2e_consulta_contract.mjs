@@ -6,10 +6,14 @@ const api=fs.readFileSync('api/documentos.js','utf8');
 const nav=fs.readFileSync('bandeja.js','utf8');
 const blocks=fs.readFileSync('bloques.js','utf8');
 const cards=fs.readFileSync('fichas.js','utf8');
+const auth=fs.readFileSync('auth.js','utf8');
+const authApi=fs.readFileSync('api/auth.js','utf8');
+const sessionApi=fs.readFileSync('api/session.js','utf8');
+const authServer=fs.readFileSync('lib/auth-server.js','utf8');
 
 const checks=[
  ['entrada de consulta',html.includes('id="consulta"')&&html.includes('id="formBuscar"')],
- ['API fail-closed',api.includes('falta_configuracion')&&api.includes('clave_incorrecta')],
+ ['API fail-closed',api.includes('falta_configuracion')&&api.includes('autorizarConsulta(req)')],
  ['solo documentos publicables',api.includes('publicado_cliente=is.true')],
  ['fuente oficial expuesta',api.includes('enlace_oficial')&&api.includes('normograma.dian.gov.co')],
  ['vigencia expuesta',api.includes('estado_vigencia')&&api.includes('fecha_entrada_vigencia')],
@@ -28,7 +32,15 @@ const checks=[
  ['P3 historia normativa',blocks.includes('relaciones-vivas')&&blocks.includes('timeline-relaciones')],
  ['P3 estados recuperables',nav.includes('vistaVacia')&&nav.includes('vistaError')&&nav.includes('data-retry-load')],
  ['P3 contexto de consulta',nav.includes('describirConsulta(data)')],
- ['P3 radar visual',nav.includes('visualPrioridad')&&nav.includes('radar-metrica')&&nav.includes('hoy-senal')]
+ ['P3 radar visual',nav.includes('visualPrioridad')&&nav.includes('radar-metrica')&&nav.includes('hoy-senal')],
+ ['P4 acceso personal visible',html.includes('authLoginForm')&&html.includes('authRegisterForm')&&html.includes('cuentaPanel')],
+ ['P4 flujo auth cliente',auth.includes("action:'signin'")&&auth.includes("action:'signup'")&&auth.includes("action:'refresh'")&&auth.includes("action:'recover'")&&auth.includes("action:'logout'")],
+ ['P4 consultas usan bearer',nav.includes('Authorization:')&&nav.includes('Bearer')&&api.includes('autorizarConsulta(req)')],
+ ['P4 entitlement server-side',authServer.includes('euclidian_estado_acceso')&&authServer.includes("error:'suscripcion_requerida'")],
+ ['P4 recuperación de contraseña',auth.includes("action:'update_password'")&&html.includes('authResetForm')],
+ ['P4 service role no llega al navegador',!auth.includes('SUPABASE_SERVICE_KEY')&&!html.includes('SUPABASE_SERVICE_KEY')],
+ ['P4 session endpoint',sessionApi.includes('verificarUsuario(req)')&&sessionApi.includes('estadoAcceso(user.id)')],
+ ['P4 Auth API usa publicable',authApi.includes('SUPABASE_PUBLISHABLE_KEY')&&!authApi.includes('SUPABASE_SERVICE_KEY')]
 ];
 let failed=0;
 for(const [name,ok] of checks){console.log((ok?'OK':'FAIL')+' - '+name);if(!ok)failed++;}
