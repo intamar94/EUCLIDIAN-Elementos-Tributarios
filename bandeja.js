@@ -7,6 +7,42 @@ const F = { estado:'todos', periodo:'todo', tema:'', q:(consultaInicial.get('q')
 const cajaConsulta=document.getElementById('consulta'); if(cajaConsulta)cajaConsulta.value=F.q;
 const TEMAS_DIARIOS=['Renta','IVA','Retención','Facturación electrónica','SIMPLE'];
 
+function estadoCarga(activo,mensaje='Ordenando la información…'){
+  const indicador=document.getElementById('cargaGeometrica');
+  const lista=document.getElementById('lista');
+  if(indicador){
+    indicador.hidden=!activo;
+    const texto=indicador.querySelector('span:last-child');
+    if(texto)texto.textContent=mensaje;
+  }
+  if(lista)lista.setAttribute('aria-busy',activo?'true':'false');
+}
+function marcarNavegacion(id){
+  document.querySelectorAll('.nav-item').forEach(el=>{el.classList.remove('activo');el.removeAttribute('aria-current');});
+  const activo=document.getElementById(id);
+  if(activo){activo.classList.add('activo');activo.setAttribute('aria-current','page');}
+}
+function renderExplorar(data){
+  const seccion=document.getElementById('explorar'), cont=document.getElementById('explorarTemas');
+  if(!seccion||!cont)return;
+  const temas=(data.temas||[]).slice().sort((a,b)=>nombreTema(a).localeCompare(nombreTema(b),'es'));
+  cont.innerHTML=temas.map((t,i)=>`<button type="button" class="tema-explora" data-explora-tema="${esc(t)}"><span class="tema-indice">${String(i+1).padStart(2,'0')}</span><strong>${esc(nombreTema(t))}</strong><span class="tema-flecha" aria-hidden="true">↗</span></button>`).join('');
+  cont.querySelectorAll('[data-explora-tema]').forEach(btn=>btn.addEventListener('click',()=>{F.tema=btn.dataset.exploraTema;F.pagina=1;const sel=document.getElementById('selTema');if(sel)sel.value=F.tema;seccion.hidden=true;marcarNavegacion('navConsultar');cargar();}));
+}
+function configurarNavegacion(){
+  const inicio=document.querySelector('.nav-item[href="#hoy"]');
+  const consultar=document.querySelector('.nav-item[href="#controles"]');
+  const novedades=document.querySelector('.nav-item[href="#hoyLista"]');
+  if(inicio){inicio.id='navInicio';inicio.addEventListener('click',()=>marcarNavegacion('navInicio'));}
+  if(consultar){consultar.id='navConsultar';consultar.addEventListener('click',()=>marcarNavegacion('navConsultar'));}
+  if(novedades){novedades.id='navNovedades';novedades.addEventListener('click',e=>{e.preventDefault();F.estado='nuevos';F.pagina=1;const sel=document.getElementById('selEstado');if(sel)sel.value='nuevos';marcarNavegacion('navNovedades');cargar().then(()=>document.getElementById('lista')?.scrollIntoView({behavior:'smooth',block:'start'}));});}
+  document.getElementById('navExplorar')?.addEventListener('click',()=>{const seccion=document.getElementById('explorar');if(seccion){seccion.hidden=false;seccion.scrollIntoView({behavior:'smooth',block:'start'});}marcarNavegacion('navExplorar');});
+  document.getElementById('cerrarExplorar')?.addEventListener('click',()=>{const seccion=document.getElementById('explorar');if(seccion)seccion.hidden=true;marcarNavegacion('navInicio');document.getElementById('hoy')?.scrollIntoView({behavior:'smooth',block:'start'});});
+  document.getElementById('navSeguir')?.addEventListener('click',()=>{marcarNavegacion('navSeguir');document.querySelector('.seguimiento')?.scrollIntoView({behavior:'smooth',block:'center'});});
+  const cuenta=document.getElementById('navCuenta');
+  if(cuenta){cuenta.setAttribute('aria-disabled','true');cuenta.title='Cuenta personal en integración segura';cuenta.addEventListener('click',e=>{e.preventDefault();document.getElementById('estadoConsulta').textContent='La cuenta personal se habilitará cuando termine la integración segura de acceso y suscripción.';document.getElementById('estadoConsulta')?.scrollIntoView({behavior:'smooth',block:'center'});});}
+}
+
 function textoDocumento(d){return [d.titulo,d.resumen_humano,d.resumen_borrador,d.descripcion_limpia,d.materia,...(d.temas||[])].filter(Boolean).join(' ').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();}
 function temasSeguidos(){try{return JSON.parse(localStorage.getItem('euclidian_temas_seguidos')||'[]');}catch(e){return [];}}
 function guardarTemas(temas){localStorage.setItem('euclidian_temas_seguidos',JSON.stringify(temas));}
@@ -36,10 +72,10 @@ function contar(id){const t=document.getElementById('r-'+id),c=document.getEleme
 function usarBorrador(id){const t=document.getElementById('r-'+id),b=document.querySelector(`article[data-id="${id}"] .borrador p`);if(!t||!b)return;t.value=b.textContent.trim();contar(id);t.focus();}
 async function guardarResumen(id){const t=document.getElementById('r-'+id);if(!t)return;const valor=t.value.trim();if(t.dataset.guardado===valor)return;try{const r=await fetch('/api/decidir',{method:'POST',headers:{'Content-Type':'application/json','x-clave':REVISOR},body:JSON.stringify({id,decision:'devolver',resumen:valor})});if(!r.ok)throw new Error('no se guardó');t.dataset.guardado=valor;t.style.borderColor='';const art=t.closest('article');if(art)art.classList.toggle('escrito',!!valor);}catch(e){t.style.borderColor='var(--regla)';}}
 async function cargar(autenticar=false){
-  const lista=document.getElementById('lista'),btn=document.getElementById('btnRecargar'),mal=document.getElementById('mal');if(btn)btn.disabled=true;if(lista)lista.innerHTML='<div class="aviso">Leyendo…</div>';document.getElementById('paginas').innerHTML='';
+  const lista=document.getElementById('lista'),btn=document.getElementById('btnRecargar'),mal=document.getElementById('mal');if(btn)btn.disabled=true;estadoCarga(true,F.q?'Buscando y verificando…':'Ordenando la información…');if(lista)lista.innerHTML='<div class="aviso"><b>Preparando tu lectura</b>Estamos ordenando fuentes, vigencia y contexto.</div>';document.getElementById('paginas').innerHTML='';
   const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),15000);
-  try{const q=new URLSearchParams({estado:F.estado,orden:F.orden,periodo:F.periodo,pagina:F.pagina});if(F.q)q.set('q',F.q);if(F.tema)q.set('tema',F.tema);const r=await fetch('/api/documentos?'+q,{headers:{'x-clave':CLAVE},cache:'no-store',signal:controller.signal});if(r.status===401)throw new Error('Clave incorrecta.');const data=await r.json().catch(()=>({error:'Respuesta inválida del servidor.'}));if(!r.ok)throw new Error(data.detalle||data.error||'No se pudo leer la base.');sessionStorage.setItem('euclidian_clave',CLAVE);document.getElementById('puerta').hidden=true;if(mal)mal.textContent='';document.getElementById('cab').hidden=false;document.getElementById('hoy').hidden=false;document.getElementById('controles').hidden=false;document.getElementById('barra').hidden=false;marcarActivos();poblarTemas(data.temas||[]);renderPanelHoy(data);if(!data.documentos.length){lista.innerHTML='<div class="aviso"><b>Nada por aquí</b>Prueba con otro filtro.</div>';return data;}lista.innerHTML=data.documentos.map(ficha).join('');paginacion(data);window.scrollTo({top:0,behavior:'smooth'});return data;
-  }catch(e){if(e.name==='AbortError')throw new Error('El servidor tardó demasiado en responder. Inténtalo de nuevo.');if(autenticar){if(lista)lista.innerHTML='';throw e;}if(lista)lista.innerHTML=`<div class="error">No se pudo leer la base.<code>${esc(e.message)}</code></div>`;throw e;}finally{clearTimeout(timer);if(btn)btn.disabled=false;}}
+  try{const q=new URLSearchParams({estado:F.estado,orden:F.orden,periodo:F.periodo,pagina:F.pagina});if(F.q)q.set('q',F.q);if(F.tema)q.set('tema',F.tema);const r=await fetch('/api/documentos?'+q,{headers:{'x-clave':CLAVE},cache:'no-store',signal:controller.signal});if(r.status===401)throw new Error('Clave incorrecta.');const data=await r.json().catch(()=>({error:'Respuesta inválida del servidor.'}));if(!r.ok)throw new Error(data.detalle||data.error||'No se pudo leer la base.');sessionStorage.setItem('euclidian_clave',CLAVE);document.getElementById('puerta').hidden=true;if(mal)mal.textContent='';document.getElementById('cab').hidden=false;document.getElementById('hoy').hidden=false;document.getElementById('controles').hidden=false;document.getElementById('barra').hidden=false;marcarActivos();poblarTemas(data.temas||[]);renderPanelHoy(data);renderExplorar(data);if(!data.documentos.length){lista.innerHTML='<div class="aviso"><b>Nada por aquí</b>Prueba con otro filtro.</div>';return data;}lista.innerHTML=data.documentos.map(ficha).join('');paginacion(data);window.scrollTo({top:0,behavior:'smooth'});return data;
+  }catch(e){if(e.name==='AbortError')throw new Error('El servidor tardó demasiado en responder. Inténtalo de nuevo.');if(autenticar){if(lista)lista.innerHTML='';throw e;}if(lista)lista.innerHTML=`<div class="error">No se pudo leer la base.<code>${esc(e.message)}</code></div>`;throw e;}finally{clearTimeout(timer);estadoCarga(false);if(btn)btn.disabled=false;}}
 function poblarTemas(temas){const sel=document.getElementById('selTema');if(!sel)return;const actual=sel.value;const orden=[...temas].sort((a,b)=>nombreTema(a).localeCompare(nombreTema(b),'es'));sel.innerHTML='<option value="">Todos los temas</option>'+orden.map(t=>`<option value="${t}">${nombreTema(t)}</option>`).join('');sel.value=actual;}
 function seleccionarAnio(anio){F.periodo=anio||'todo';F.pagina=1;marcarActivos();cargar();}
 function paginacion(data){const cont=document.getElementById('paginas'),{pagina,paginas,total,porPagina}=data;if(total===0){cont.innerHTML='';return;}const primero=(pagina-1)*porPagina+1,ultimo=Math.min(pagina*porPagina,total),r=document.getElementById('rango');if(r)r.textContent=`${Number(total).toLocaleString('es-CO')} documentos disponibles · mostrando ${primero}–${ultimo}`;let html='';if(paginas>1){html+=`<button onclick="irA(${pagina-1})" ${pagina<=1?'disabled':''}>‹</button>`;const nums=new Set([1,paginas,pagina,pagina-1,pagina+1]),orden=[...nums].filter(n=>n>=1&&n<=paginas).sort((a,b)=>a-b);let previo=0;orden.forEach(n=>{if(n-previo>1)html+='<span style="color:var(--tenue)">…</span>';html+=`<button onclick="irA(${n})" aria-current="${n===pagina}">${n}</button>`;previo=n;});html+=`<button onclick="irA(${pagina+1})" ${pagina>=paginas?'disabled':''}>›</button>`;}cont.innerHTML=html;}
@@ -48,5 +84,6 @@ async function decidir(id,decision){const art=document.querySelector(`article[da
 function marcarActivos(){const n=[F.q,F.tema,F.estado!=='todos'?F.estado:'',F.periodo!=='todo'?F.periodo:''].filter(Boolean).length;const btn=document.getElementById('btnLimpiar');if(btn)btn.hidden=n===0;}
 function limpiar(){F.q='';F.tema='';F.estado='todos';F.periodo='todo';F.pagina=1;const consulta=document.getElementById('consulta');if(consulta)consulta.value='';document.getElementById('selTema').value='';const anio=document.getElementById('selAnio');if(anio)anio.value='';const estado=document.getElementById('selEstado');if(estado)estado.value='todos';cargar();}
 document.getElementById('selAnio').addEventListener('change',e=>seleccionarAnio(e.target.value));document.getElementById('selTema').addEventListener('change',e=>{F.tema=e.target.value;F.pagina=1;cargar();});document.getElementById('selEstado').addEventListener('change',e=>{F.estado=e.target.value;F.pagina=1;cargar();});document.getElementById('selOrden').addEventListener('change',e=>{F.orden=e.target.value;F.pagina=1;cargar();});document.getElementById('formBuscar').addEventListener('submit',e=>{e.preventDefault();F.q=document.getElementById('consulta').value.trim();F.pagina=1;cargar();});
+configurarNavegacion();
 if(REVISOR){const b=document.getElementById('btnRevision');if(b)b.textContent='Salir del modo revisión';}
 if(CLAVE)cargar().catch(()=>{});else document.getElementById('puerta').hidden=false;
