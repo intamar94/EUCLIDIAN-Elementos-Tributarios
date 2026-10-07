@@ -11,6 +11,8 @@ const authApi=fs.readFileSync('api/auth.js','utf8');
 const sessionApi=fs.readFileSync('api/session.js','utf8');
 const authServer=fs.readFileSync('lib/auth-server.js','utf8');
 const profileApi=fs.readFileSync('api/profile.js','utf8');
+const usageApi=fs.readFileSync('api/usage.js','utf8');
+const usageSql=fs.readFileSync('sql/medicion_uso_consultas_euclidian.sql','utf8');
 
 const checks=[
  ['entrada de consulta',html.includes('id="consulta"')&&html.includes('id="formBuscar"')],
@@ -43,7 +45,9 @@ const checks=[
  ['P4 session endpoint',sessionApi.includes('verificarUsuario(req)')&&sessionApi.includes('estadoAcceso(user.id)')],
  ['P4 Auth API usa publicable',authApi.includes('SUPABASE_PUBLISHABLE_KEY')&&!authApi.includes('SUPABASE_SERVICE_KEY')],
  ['P4 perfil editable',html.includes('perfilForm')&&auth.includes("fetch('/api/profile'")&&profileApi.includes("['GET','PATCH']")],
- ['P4 ownership de perfil',profileApi.includes('verificarUsuario(req)')&&profileApi.includes('user.id')&&!profileApi.includes('req.body.user_id')]
+ ['P4 ownership de perfil',profileApi.includes('verificarUsuario(req)')&&profileApi.includes('user.id')&&!profileApi.includes('req.body.user_id')],
+ ['P5 uso mensual por usuario',usageApi.includes('verificarUsuario(req)')&&usageApi.includes('consultas_mes')&&html.includes('cuentaUso')],
+ ['P5 telemetría sin texto de consulta',usageSql.includes('No almacena el texto')&&!usageSql.includes('query_text')&&!usageSql.includes('consulta_texto')]
 ];
 let failed=0;
 for(const [name,ok] of checks){console.log((ok?'OK':'FAIL')+' - '+name);if(!ok)failed++;}
