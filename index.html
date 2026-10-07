@@ -20,8 +20,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/landing.css">
 <script>
-if(location.hash.includes('access_token=')||location.hash.includes('type=recovery')){
-  location.replace('/app.html'+location.hash);
+if(location.search.includes('q=')||location.search.includes('doc=')||location.hash.includes('access_token=')||location.hash.includes('type=recovery')){
+  location.replace('/app.html'+location.search+location.hash);
 }
 </script>
 </head>

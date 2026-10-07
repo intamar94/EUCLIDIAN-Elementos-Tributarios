@@ -178,6 +178,7 @@ class Generador:
                 "anos_afectados,zonas_afectadas,temas,plazos_mencionados,"
                 "anotaciones_vigencia,modificado_por,modifica_a"
             ).eq("aprobado_para_email", True) \
+             .eq("publicado_cliente", True) \
              .gte("fecha_publicacion", self.desde.isoformat()) \
              .lte("fecha_publicacion", self.hasta.isoformat()) \
              .execute()
@@ -209,8 +210,6 @@ class Generador:
             p = 0
             if d["estado_vigencia"] in ("suspendido", "inexequible", "revocado"):
                 p += 100
-            if d.get("tiene_efectos_retroactivos"):
-                p += 60
             if d["clasificacion_obligatoriedad"] == "obligatorio_dian_y_contribuyentes":
                 p += 40
             if d.get("plazos_mencionados"):
@@ -232,7 +231,7 @@ class Generador:
         no hay falsedades pequenas.
         """
         n = len(docs)
-        cambio = "cambio" if n == 1 else "cambios"
+        cambio = "documento" if n == 1 else "documentos"
         fechas = [d["fecha_publicacion"] for d in docs
                   if d.get("fecha_es_real") and d.get("fecha_publicacion")]
         periodo = "de esta semana"
@@ -256,15 +255,11 @@ class Generador:
         graves = sum(1 for d in docs
                      if d["estado_vigencia"] in ("suspendido", "inexequible", "revocado"))
         if graves:
-            return f"{n} {cambio} DIAN — {graves} con norma caída"
-        retro = sum(1 for d in docs if d.get("tiene_efectos_retroactivos"))
-        if retro:
-            plural = "afecta" if retro == 1 else "afectan"
-            return f"{n} {cambio} DIAN — {retro} {plural} años anteriores"
+            return f"{n} {cambio} DIAN — {graves} con vigencia afectada"
         return f"{n} {cambio} DIAN {periodo}"
 
     def _glifo(self, d):
-        if d["estado_vigencia"] != "vigente":
+        if d["estado_vigencia"] in ("suspendido", "inexequible", "revocado", "derogado"):
             return GLIFOS["caido"], REGLA
         if d.get("clasificacion_obligatoriedad") == "obligatorio_dian_y_contribuyentes":
             return GLIFOS["obliga"], AZUL
@@ -272,7 +267,7 @@ class Generador:
 
     def _leyenda(self, d):
         if d["estado_vigencia"] != "vigente":
-            return d["estado_vigencia"].upper()
+            return f"Vigencia registrada: {d.get('estado_vigencia') or 'no determinada'}; confirma en la fuente"
         oblig = d.get("clasificacion_obligatoriedad")
         if oblig == "obligatorio_dian_y_contribuyentes":
             return "Norma general: confirmar ámbito de aplicación y vigencia"
@@ -280,8 +275,7 @@ class Generador:
             return "Criterio DIAN: revisar alcance y efecto jurídico"
         if oblig == "vinculante_jurisprudencia":
             return "Jurisprudencia vinculante"
-        # Documentos internos y circulares: no obligan a nadie de afuera.
-        return "Informativo: no genera obligaciones"
+        return "Alcance por verificar en el documento oficial"
 
     def _cuerpo_util(self, d):
         """El resumen humano manda. Si no hay, va lo literal de la DIAN."""
@@ -303,8 +297,8 @@ class Generador:
         return " · ".join(partes)
 
     def _enlace_ficha(self, d):
-        """Abre la ficha del documento en EUCLIDIAN, ya filtrada por número."""
-        return f"{BASE_URL}/?q={quote(str(d['numero_resolucion']))}"
+        """Abre exactamente la ficha publicada que originó el correo."""
+        return f"{BASE_URL}/app.html?doc={quote(str(d['id']))}"
 
     # ==================================================================
 
@@ -345,9 +339,9 @@ class Generador:
   </div>
   <div style="font-family:'Courier New',monospace;font-size:11px;color:{TENUE};
     line-height:1.7;padding-top:14px;">
-    Solo se incluyen documentos publicados por la DIAN, con enlace a la
-    fuente oficial. Nada sale sin revisión humana previa.<br>
-    Si encuentras un error, responde este correo: se corrige al día siguiente.
+    Cada ficha enlaza el documento de la DIAN. Verifica en la fuente las
+    condiciones y fechas aplicables a tu caso.<br>
+    Si encuentras un error, responde este correo para solicitar su revisión.
   </div>
   <div style="font-family:'Courier New',monospace;font-size:10px;color:{TENUE};
     padding-top:16px;">
@@ -384,14 +378,10 @@ class Generador:
             resto = f" y {len(despues) - 3} más" if len(despues) > 3 else ""
             extras.append(f"Una norma posterior la tocó: {nums}{resto}. "
                           f"Verifica el alcance antes de aplicarla.")
-        if d.get("tiene_efectos_retroactivos") and d.get("anos_afectados"):
-            anios = ", ".join(str(a) for a in d["anos_afectados"][:5])
-            extras.append(f"Menciona años anteriores ({anios}). "
-                          f"Revisa si afecta declaraciones ya presentadas.")
         if d.get("zonas_afectadas"):
-            extras.append("Aplica a: " + ", ".join(d["zonas_afectadas"][:8]))
+            extras.append("Zonas mencionadas: " + ", ".join(d["zonas_afectadas"][:8]))
         if d.get("plazos_mencionados"):
-            extras.insert(0, "PLAZO: " + d["plazos_mencionados"][0][:200])
+            extras.insert(0, "Fecha o plazo mencionado; confirma su aplicación: " + d["plazos_mencionados"][0][:200])
 
         bloque_extras = ""
         if extras:
@@ -443,7 +433,7 @@ class Generador:
         """
         L = []
         L.append(f"EUCLiDIAN — Elementos Tributarios")
-        L.append(f"Cambios DIAN al {fecha_larga(self.hasta)}")
+        L.append(f"Documentos DIAN revisados al {fecha_larga(self.hasta)}")
         L.append("")
 
         for i, d in enumerate(docs, 1):
@@ -458,13 +448,10 @@ class Generador:
 
             L.append(f"   {cuerpo[:400]}")
 
-            if d.get("tiene_efectos_retroactivos") and d.get("anos_afectados"):
-                anios = ", ".join(str(x) for x in d["anos_afectados"][:5])
-                L.append(f"   Menciona años anteriores ({anios}).")
             if d.get("zonas_afectadas"):
-                L.append(f"   Aplica a: {', '.join(d['zonas_afectadas'][:8])}")
+                L.append(f"   Zonas mencionadas: {', '.join(d['zonas_afectadas'][:8])}")
             if d.get("plazos_mencionados"):
-                L.append(f"   PLAZO: {d['plazos_mencionados'][0][:180]}")
+                L.append(f"   Fecha o plazo mencionado; confirma su aplicación: {d['plazos_mencionados'][0][:180]}")
             if d.get("modificado_por"):
                 nums = ", ".join(str(x.get("numero", ""))
                                  for x in d["modificado_por"][:3])

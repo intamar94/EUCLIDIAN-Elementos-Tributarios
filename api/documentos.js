@@ -38,14 +38,16 @@ export default async function handler(req,res){
   const estadoSolicitado=req.query.estado; const estado=ESTADOS[estadoSolicitado]!==undefined?estadoSolicitado:'todos';
   const tema=req.query.tema||'';
   const q=String(req.query.q||'').trim().slice(0,160);
+  const doc=String(req.query.doc||'').trim();
+  if(doc&&!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(doc))return res.status(400).json({error:'documento_invalido'});
   const orden=ORDENES[req.query.orden]||ORDENES.recientes; const pagina=Math.max(1,parseInt(req.query.pagina,10)||1);
   const cabeceras={apikey:SUPABASE_KEY,Authorization:`Bearer ${SUPABASE_KEY}`};
-  let filtro=/^\d{4}$/.test(periodo)?`anio_publicacion=eq.${periodo}`:(PERIODOS[periodo]!==undefined?PERIODOS[periodo]:'id=not.is.null');
+  let filtro=doc?`id=eq.${doc}`:/^\d{4}$/.test(periodo)?`anio_publicacion=eq.${periodo}`:(PERIODOS[periodo]!==undefined?PERIODOS[periodo]:'id=not.is.null');
   filtro+='&publicado_cliente=is.true';
-  if(estado==='nuevos'){const corte=fechaCorteNovedades();filtro+=`&or=(fecha_publicacion.gte.${corte},fecha_publicacion_web.gte.${corte})`;}
-  if(tema)filtro+=`&temas=cs.{${encodeURIComponent(tema)}}`;
-  if(q){const termino=q.replace(/[(),]/g,' ').replace(/[*]/g,' ').trim();if(termino)filtro+=`&or=${encodeURIComponent(`(numero_resolucion.ilike.*${termino}*,titulo.ilike.*${termino}*,contenido.ilike.*${termino}*,descripcion_limpia.ilike.*${termino}*)`)}`;}
-  const primera=(pagina-1)*POR_PAGINA;
+  if(!doc&&estado==='nuevos'){const corte=fechaCorteNovedades();filtro+=`&or=(fecha_publicacion.gte.${corte},fecha_publicacion_web.gte.${corte})`;}
+  if(!doc&&tema)filtro+=`&temas=cs.{${encodeURIComponent(tema)}}`;
+  if(!doc&&q){const termino=q.replace(/[(),]/g,' ').replace(/[*]/g,' ').trim();if(termino)filtro+=`&or=${encodeURIComponent(`(numero_resolucion.ilike.*${termino}*,titulo.ilike.*${termino}*,contenido.ilike.*${termino}*,descripcion_limpia.ilike.*${termino}*)`)}`;}
+  const primera=doc?0:(pagina-1)*POR_PAGINA;
   try{
     const rDocs=await fetch(`${SUPABASE_URL}/rest/v1/v_bandeja?select=${CAMPOS}&${filtro}&order=${orden}`,{headers:{...cabeceras,Prefer:'count=exact',Range:`${primera}-${primera+POR_PAGINA-1}`}});
     if(!rDocs.ok){const detalle=await rDocs.text();return res.status(502).json({error:'supabase',detalle:detalle.slice(0,300)});}
@@ -60,13 +62,13 @@ export default async function handler(req,res){
       // Una publicación reciente solo aparece como novedad cuando conserva
       // fecha exacta, texto fuente y enlace DIAN. Así la urgencia no rebaja
       // el estándar de evidencia de la biblioteca.
-      if(estado==='nuevos'){documentos=documentos.filter(d=>d.fecha_es_real===true&&String(d.texto_completo||'').trim().length>=200&&String(d.enlace_oficial||'').startsWith('https://normograma.dian.gov.co/dian/compilacion/'));total=documentos.length;}
+      if(!doc&&estado==='nuevos'){documentos=documentos.filter(d=>d.fecha_es_real===true&&String(d.texto_completo||'').trim().length>=200&&String(d.enlace_oficial||'').startsWith('https://normograma.dian.gov.co/dian/compilacion/'));total=documentos.length;}
     }
     const rResumen=await fetch(`${SUPABASE_URL}/rest/v1/rpc/conteos_bandeja_api`,{method:'POST',headers:{...cabeceras,'Content-Type':'application/json'},body:JSON.stringify({p_periodo:periodo,p_tema:tema||null,p_estado:estado,p_prioridad:null,p_naturaleza:null})});
     let resumen={}; try{if(rResumen.ok)resumen=(await rResumen.json())||{};}catch(e){}
     if(acceso.modo==='usuario'&&acceso.user?.id){
       await registrarUsoConsulta(acceso.user.id,{latencia_ms:Date.now()-started,resultados:total,estado:total?'ok':'sin_resultados'});
     }
-    res.setHeader('Cache-Control','no-store'); return res.status(200).json({documentos,total,pagina,porPagina:POR_PAGINA,paginas:Math.max(1,Math.ceil(total/POR_PAGINA)),temas:resumen.temas||[],periodo,periodos:resumen.periodos||{},actualizado:resumen.actualizado||null});
+    res.setHeader('Cache-Control','no-store'); return res.status(200).json({documentos,total,pagina:doc?1:pagina,porPagina:POR_PAGINA,paginas:Math.max(1,Math.ceil(total/POR_PAGINA)),temas:resumen.temas||[],periodo,periodos:resumen.periodos||{},actualizado:resumen.actualizado||null});
   }catch(e){return res.status(500).json({error:'fallo_lectura',detalle:String(e).slice(0,200)});}
 }

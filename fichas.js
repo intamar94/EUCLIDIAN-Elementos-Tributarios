@@ -107,7 +107,7 @@ function esc(s){
    evalua primero, porque la accion manda sobre la clasificacion. */
 function señal(d){
   if (d.estado_vigencia && d.estado_vigencia !== 'vigente' && d.estado_vigencia !== 'desconocido')
-    return {rotulo:'No la apliques', tono:'alerta'};
+    return {rotulo:'Revisa su vigencia', tono:'alerta'};
   if (!d.estado_vigencia || d.estado_vigencia === 'desconocido')
     return {rotulo:'Vigencia por confirmar', tono:'orienta'};
   if (d.nivel_alerta === 'critica')
@@ -116,14 +116,12 @@ function señal(d){
   const f = fechaDePlazo((d.plazos_mencionados||[])[0]);
   const dias = f ? diasHasta(f) : null;
   if (dias !== null && dias >= 0 && dias <= 30)
-    return {rotulo:'Vence pronto', tono:'alerta'};
-  if (d.tiene_efectos_retroactivos)
-    return {rotulo:'Puede tocar años pasados', tono:'alerta'};
+    return {rotulo:'Fecha próxima mencionada', tono:'orienta'};
 
   if ((d.modificado_por||[]).length)
     return {rotulo:'Hay norma posterior', tono:'orienta'};
   if (dias !== null && dias >= 0)
-    return {rotulo:'Tiene plazo', tono:'obliga'};
+    return {rotulo:'Fecha o plazo mencionado', tono:'orienta'};
   if (d.clasificacion_obligatoriedad === 'obligatorio_dian_y_contribuyentes')
     return {rotulo:'Norma general · confirmar ámbito', tono:'orienta'};
 
