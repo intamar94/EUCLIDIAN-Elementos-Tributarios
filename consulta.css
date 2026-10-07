@@ -226,3 +226,11 @@ article:after{content:"";position:absolute;width:54px;height:54px;right:-29px;to
 #perfilEstado{grid-column:1/-1;min-height:17px;color:#536158;font-size:11px}
 @media(max-width:720px){.perfil-form{grid-template-columns:1fr 1fr}.perfil-form button{grid-column:1/-1}}
 @media(max-width:480px){.perfil-form{grid-template-columns:1fr}}
+
+
+.suscripcion-oferta{margin-top:16px;padding:16px;border:1px solid #cad7cd;border-radius:9px;background:linear-gradient(135deg,#f6faf6,#eef4ef)}
+.suscripcion-oferta-cab{display:flex;align-items:center;gap:10px;margin-bottom:11px}.suscripcion-oferta-cab small{display:block;color:#5e6f63;font:600 9px 'IBM Plex Mono',monospace;letter-spacing:.12em}.suscripcion-oferta-cab h3{margin:2px 0 0;font:600 17px 'Spectral',Georgia,serif}
+.planes-disponibles{display:grid;gap:8px}.plan-candidato{display:flex;justify-content:space-between;gap:18px;align-items:center;padding:13px 14px;border:1px solid #d3dcd4;border-left:4px solid #305f43;border-radius:7px;background:#fffefa;box-shadow:none}
+.plan-candidato small{color:#728078;font:600 9px 'IBM Plex Mono',monospace;letter-spacing:.1em}.plan-candidato h4{margin:3px 0 4px;font:600 15px 'IBM Plex Sans',sans-serif}.plan-candidato p{margin:0;max-width:570px;color:#5c695f;font-size:12px;line-height:1.45}
+.plan-meta{flex:none;display:grid;gap:4px;text-align:right}.plan-meta span{color:#657168;font-size:10.5px}.plan-meta strong{color:#283f31;font-size:12px}.suscripcion-nota{margin:10px 0 0;color:#69746c;font-size:10.5px;line-height:1.45}
+@media(max-width:620px){.plan-candidato{display:grid}.plan-meta{text-align:left}}
