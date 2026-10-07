@@ -1,7 +1,9 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 
-const html=fs.readFileSync('index.html','utf8');
+const landing=fs.readFileSync('index.html','utf8');
+const html=fs.readFileSync('app.html','utf8');
+const landingCss=fs.readFileSync('landing.css','utf8');
 const api=fs.readFileSync('api/documentos.js','utf8');
 const nav=fs.readFileSync('bandeja.js','utf8');
 const blocks=fs.readFileSync('bloques.js','utf8');
@@ -15,6 +17,9 @@ const usageApi=fs.readFileSync('api/usage.js','utf8');
 const usageSql=fs.readFileSync('sql/medicion_uso_consultas_euclidian.sql','utf8');
 
 const checks=[
+ ['SEO portada indexable',landing.includes('name="robots" content="index,follow"')&&landing.includes('name="description"')&&landing.includes('/app.html')],
+ ['SEO demuestra valor sin prueba abierta',landing.includes('Sin prueba gratuita abierta')&&landing.includes('Fuente oficial')&&landing.includes('Vigencia visible')],
+ ['SEO responsive',landingCss.includes('@media(max-width:620px)')&&landingCss.includes('prefers-reduced-motion')],
  ['entrada de consulta',html.includes('id="consulta"')&&html.includes('id="formBuscar"')],
  ['API fail-closed',api.includes('falta_configuracion')&&api.includes('autorizarConsulta(req)')],
  ['solo documentos publicables',api.includes('publicado_cliente=is.true')],
