@@ -17,15 +17,51 @@
 <body>
 <a class="saltar-contenido" href="#lista">Ir a los documentos</a>
 <div id="puerta">
-  <form onsubmit="entrar(event)">
+  <div class="auth-caja">
     <img class="ilustracion" src="/euclides.png" alt="Euclides explica a sus discípulos" width="1400" height="770">
-    <div class="marca">EUCL<em>i</em>DIAN</div>
-    <div class="sub">Elementos Tributarios</div>
-    <p><label for="clave">Clave de acceso</label></p>
-    <input id="clave" type="password" autocomplete="current-password" required placeholder="Ingrese su contraseña">
-    <button type="submit">Entrar</button>
-    <div class="mal" id="mal" role="alert"></div>
-  </form>
+    <div class="auth-identidad"><div class="marca">EUCL<em>i</em>DIAN</div><div class="sub">Elementos Tributarios</div></div>
+
+    <div class="auth-tabs" role="tablist" aria-label="Acceso a EUCLIDIAN">
+      <button type="button" id="tabEntrar" role="tab" aria-selected="true" aria-controls="authLoginForm">Entrar</button>
+      <button type="button" id="tabCrear" role="tab" aria-selected="false" aria-controls="authRegisterForm">Crear cuenta</button>
+    </div>
+
+    <form id="authLoginForm" class="auth-form" aria-labelledby="tabEntrar">
+      <label for="authEmail">Correo</label>
+      <input id="authEmail" type="email" autocomplete="email" required placeholder="tu@correo.com">
+      <label for="authPassword">Contraseña</label>
+      <input id="authPassword" type="password" autocomplete="current-password" required minlength="8" placeholder="Tu contraseña">
+      <button type="submit" class="auth-principal">Entrar a EUCLIDIAN</button>
+      <button type="button" class="auth-link" id="authRecover">Olvidé mi contraseña</button>
+    </form>
+
+    <form id="authRegisterForm" class="auth-form" hidden aria-labelledby="tabCrear">
+      <p class="auth-intro">Crea tu acceso personal. La suscripción y el uso quedan ligados a esta cuenta.</p>
+      <label for="authRegisterEmail">Correo</label>
+      <input id="authRegisterEmail" type="email" autocomplete="email" required placeholder="tu@correo.com">
+      <label for="authRegisterPassword">Contraseña</label>
+      <input id="authRegisterPassword" type="password" autocomplete="new-password" required minlength="8" placeholder="Mínimo 8 caracteres">
+      <button type="submit" class="auth-principal">Crear mi cuenta</button>
+    </form>
+
+    <form id="authResetForm" class="auth-form" hidden aria-label="Definir nueva contraseña">
+      <p class="auth-intro">Define una nueva contraseña para recuperar tu cuenta.</p>
+      <label for="authResetPassword">Nueva contraseña</label>
+      <input id="authResetPassword" type="password" autocomplete="new-password" required minlength="8">
+      <button type="submit" class="auth-principal">Guardar nueva contraseña</button>
+    </form>
+
+    <div class="mal" id="mal" role="status" aria-live="polite"></div>
+
+    <details class="acceso-interno">
+      <summary>Acceso interno</summary>
+      <form id="authInternoForm">
+        <label class="solo-lectores" for="clave">Clave interna</label>
+        <input id="clave" type="password" autocomplete="current-password" required placeholder="Clave interna">
+        <button type="submit">Entrar</button>
+      </form>
+    </details>
+  </div>
 </div>
 
 <header hidden id="cab">
@@ -69,6 +105,23 @@
   <div class="explorar-temas" id="explorarTemas" aria-label="Temas disponibles"></div>
 </section>
 
+<section class="cuenta-panel marco" hidden id="cuentaPanel" aria-labelledby="cuentaTitulo">
+  <div class="cuenta-cabecera">
+    <div class="titulo-consulta"><span class="seccion-numero" aria-hidden="true">03</span><div><span class="seccion-kicker">CUENTA</span><h2 id="cuentaTitulo">Tu acceso a EUCLIDIAN</h2><p>Identidad, estado de suscripción y acceso, sin mezclarlo con la lectura jurídica.</p></div></div>
+    <button type="button" class="accion-textual" id="cerrarCuenta">Cerrar</button>
+  </div>
+  <div class="cuenta-grid">
+    <div class="cuenta-dato"><small>Correo</small><strong id="cuentaEmail">—</strong></div>
+    <div class="cuenta-dato"><small>Acceso</small><strong id="cuentaEstado">—</strong></div>
+    <div class="cuenta-dato"><small>Plan</small><strong id="cuentaPlan">—</strong></div>
+    <div class="cuenta-dato"><small>Periodo</small><strong id="cuentaPeriodo">—</strong></div>
+  </div>
+  <div class="cuenta-acciones">
+    <button type="button" id="cuentaRecuperar">Cambiar contraseña</button>
+    <button type="button" id="cuentaSalir" class="secundaria">Cerrar sesión</button>
+  </div>
+</section>
+
 <section class="controles marco" hidden id="controles" aria-label="Buscar documentos DIAN">
   <div class="titulo-consulta"><span class="seccion-numero" aria-hidden="true">02</span><div><span class="seccion-kicker">CONSULTAR</span><h2>Pregunta al corpus, conserva la evidencia</h2><p>Busca una idea, número o tema. EUCLIDIAN separa la lectura rápida de la fuente que la respalda.</p></div></div>
   <form class="buscador" id="formBuscar" role="search">
@@ -96,6 +149,7 @@
 <script src="/temas.js" defer></script>
 <script src="/fichas.js" defer></script>
 <script src="/bloques.js" defer></script>
+<script src="/auth.js" defer></script>
 <script src="/bandeja.js" defer></script>
 </body>
 </html>
