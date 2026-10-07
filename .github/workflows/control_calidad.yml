@@ -11,6 +11,8 @@ on:
       - 'tests/**'
       - 'api/**'
       - 'index.html'
+      - 'app.html'
+      - 'landing.css'
       - 'bandeja.js'
       - 'auth.js'
       - 'lib/**'
