@@ -46,6 +46,11 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
         run: node tests/eval_consulta_datos.mjs
+      - name: Ejecutar handler real de consulta contra Supabase
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: node tests/e2e_documentos_handler.mjs
       - name: Verificar contrato determinista de alta confianza
         run: |
           cd scripts
