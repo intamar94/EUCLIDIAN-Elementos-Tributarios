@@ -66,6 +66,8 @@ jobs:
         run: node tests/e2e_consulta_contract.mjs
       - name: Contrato determinista de Auth y entitlement
         run: node tests/auth_flow_contract.mjs
+      - name: Contrato de idempotencia de pagos
+        run: node tests/payment_events_contract.mjs
       - name: Eval de consultas contra datos reales
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
