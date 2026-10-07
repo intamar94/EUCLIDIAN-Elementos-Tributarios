@@ -59,3 +59,24 @@ button:disabled{opacity:.55;cursor:wait}.error button,.aviso button{margin-top:1
 @media(max-width:760px){.hoy{padding:17px}.hoy-cabecera,.seguimiento{display:block}.hoy-cabecera .estado-fuente{margin-top:9px}.hoy-lista{grid-template-columns:1fr}.temas-seguidos{justify-content:flex-start;margin-top:10px}.guia-pasos{grid-template-columns:1fr}}@media(max-width:620px){#cab .cab{min-height:65px;gap:10px}.identidad .marca{font-size:23px}.cab-descripcion{display:none}#btnRecargar{margin-left:auto;font-size:12px;padding:6px 9px}.titulo-consulta{padding-top:15px}.titulo-consulta h2{font-size:23px}.titulo-consulta p{font-size:13px}.buscador{flex-wrap:nowrap}.buscador input{flex:1;min-width:0;font-size:14px;padding:10px}.buscador button{padding:10px 13px}.filtros-directos{gap:8px}.filtro{min-width:110px}.filtro:last-of-type{flex:1 1 100%}#barra{gap:8px}#rango{flex:1 1 100%}#barra select{min-height:36px}.acceso-editorial{margin-left:auto}.fecha-principal{white-space:normal}.cobertura-nota{font-size:12px}.diagnostico-cab span{text-align:left}.revision-acciones button{width:100%}}
 @media(max-height:550px){#puerta{align-items:flex-start}#puerta .ilustracion{height:90px;margin-bottom:12px}}
 @media print{#cab,#controles,#barra,#paginas,.pie-consulta,.revision-editor,.saltar-contenido{display:none!important}body{background:white}article{break-inside:avoid;box-shadow:none;animation:none}.marco{max-width:none}.documento-detalle{display:block}a{color:inherit}}
+
+
+/* EUCLIDIAN product shell v1 — cada forma comunica función. */
+#cab{position:sticky;top:0;z-index:50;box-shadow:0 8px 24px rgba(24,34,28,.055)}
+#cab .cab{max-width:1480px}
+.nav-principal{display:flex;align-items:center;justify-content:center;gap:4px;flex:1;min-width:0}
+.nav-item{position:relative;display:inline-flex;align-items:center;gap:7px;min-height:42px;padding:8px 10px;border:0;border-radius:7px;background:transparent;color:#506057;text-decoration:none;font:500 12px/1.2 'IBM Plex Sans',sans-serif;cursor:pointer;white-space:nowrap}
+.nav-item:hover{background:#ebe8df;color:#183526}.nav-item.activo{background:#e3ece5;color:#173e29;font-weight:600}
+.nav-item.activo:after{content:"";position:absolute;left:12px;right:12px;bottom:4px;height:2px;background:#305f43;border-radius:2px}
+.nav-glyph{display:grid;place-items:center;width:18px;height:18px;color:#8b382f;font:600 15px/1 'IBM Plex Mono',monospace}
+.nav-accion{appearance:none}.accion-secundaria{display:inline-flex;align-items:center;gap:7px;background:#fffefa!important;color:#264332!important;border:1px solid #b8c5b6!important}
+.accion-secundaria:hover{background:#edf3ee!important;border-color:#78917f!important}
+.hoy-promesa{max-width:620px;margin:7px 0 0;color:#506057;font-size:13px;line-height:1.45}
+.titulo-consulta{display:flex;gap:14px;align-items:flex-start}.seccion-numero{display:grid;place-items:center;flex:none;width:34px;height:34px;border:1px solid #9bb0a0;border-radius:50%;color:#3f6a58;font:600 10px 'IBM Plex Mono',monospace}
+.seccion-kicker{display:block;margin:1px 0 3px;color:#8b382f;font:600 10px/1.2 'IBM Plex Mono',monospace;letter-spacing:.14em}
+.carga-geometrica{position:fixed;right:20px;bottom:20px;z-index:80;display:flex;align-items:center;gap:10px;padding:10px 13px;border:1px solid #c9d4ca;border-radius:10px;background:rgba(251,250,245,.96);box-shadow:0 10px 28px rgba(20,33,25,.12);color:#405548;font-size:12px;backdrop-filter:blur(8px)}
+.carga-geometrica[hidden]{display:none}.geo-orbita{position:relative;width:26px;height:26px;border:1px solid #9eb0a1;border-radius:50%;animation:euclidian-orbita 1.8s linear infinite}.geo-orbita:before,.geo-orbita:after{content:"";position:absolute;background:#8b382f;border-radius:50%}.geo-orbita:before{width:5px;height:5px;top:-3px;left:10px}.geo-orbita:after{width:4px;height:4px;right:-2px;top:11px}.geo-orbita i{position:absolute;left:5px;right:5px;top:12px;height:1px;background:#305f43;transform-origin:center}.geo-orbita i:nth-child(2){transform:rotate(60deg)}.geo-orbita i:nth-child(3){transform:rotate(120deg)}
+@keyframes euclidian-orbita{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){.geo-orbita{animation:none}}
+@media(max-width:980px){#cab .cab{flex-wrap:wrap}.nav-principal{order:3;flex-basis:100%;justify-content:flex-start;overflow-x:auto;padding:3px 0 1px;scrollbar-width:none}.nav-principal::-webkit-scrollbar{display:none}.nav-item{flex:0 0 auto}}
+@media(max-width:620px){#cab{position:sticky}.nav-principal{margin:0 -2px}.nav-item{min-height:40px;padding:7px 9px;font-size:11px}.nav-glyph{width:16px}.accion-secundaria span:last-child{display:none}.accion-secundaria{width:40px;justify-content:center;padding:0!important}.hoy-promesa{font-size:12px}.carga-geometrica{left:12px;right:12px;bottom:12px;justify-content:center}.titulo-consulta{gap:10px}.seccion-numero{width:30px;height:30px}}
