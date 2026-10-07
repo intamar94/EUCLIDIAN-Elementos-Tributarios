@@ -5,6 +5,7 @@ const html=fs.readFileSync('index.html','utf8');
 const api=fs.readFileSync('api/documentos.js','utf8');
 const nav=fs.readFileSync('bandeja.js','utf8');
 const blocks=fs.readFileSync('bloques.js','utf8');
+const cards=fs.readFileSync('fichas.js','utf8');
 
 const checks=[
  ['entrada de consulta',html.includes('id="consulta"')&&html.includes('id="formBuscar"')],
@@ -15,7 +16,8 @@ const checks=[
  ['trazabilidad expuesta',api.includes('fuentes_formales')&&api.includes('modifica_a')&&api.includes('modificado_por')],
  ['verificacion expuesta',api.includes('fecha_es_real')&&api.includes('anotaciones_vigencia')],
  ['novedades exigen evidencia',api.includes('fecha_es_real===true')&&api.includes('texto_completo')],
- ['UI consulta API',nav.includes("fetch('/api/documentos?" )],
+ ['fecha no verificada no se presenta como exacta',cards.includes('fechaDocumentoConfiable')&&cards.includes('fecha aproximada')&&cards.includes('Índice DIAN')],
+ ['UI consulta API',nav.includes("fetch('/api/documentos?")],
  ['UI enlaza fuente DIAN',blocks.includes('enlace_oficial')&&blocks.includes('Abrir fuente DIAN')],
  ['UI muestra fuentes oficiales',blocks.includes('Fuentes oficiales')&&blocks.includes('Abrir documento oficial')]
 ];
