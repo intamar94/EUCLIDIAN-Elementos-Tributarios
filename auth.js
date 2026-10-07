@@ -62,16 +62,24 @@ function authRecuperacionDesdeHash(){
 }
 async function authCuenta(){
   const token=await authToken();if(!token){authMostrarPuerta();return null;}
-  const r=await fetch('/api/session',{headers:{Authorization:`Bearer ${token}`},cache:'no-store'});
-  const data=await r.json().catch(()=>({}));
-  if(r.status===401){authClear();authMostrarPuerta();return null;}
-  if(!r.ok)return null;
+  const headers={Authorization:`Bearer ${token}`};
+  const [sessionRes,profileRes]=await Promise.all([
+    fetch('/api/session',{headers,cache:'no-store'}),
+    fetch('/api/profile',{headers,cache:'no-store'})
+  ]);
+  const data=await sessionRes.json().catch(()=>({}));
+  if(sessionRes.status===401){authClear();authMostrarPuerta();return null;}
+  if(!sessionRes.ok)return null;
+  const perfil=profileRes.ok?await profileRes.json().catch(()=>({})): {};
   const panel=document.getElementById('cuentaPanel');
   document.getElementById('cuentaEmail').textContent=data.user?.email||'—';
   document.getElementById('cuentaEstado').textContent=data.access?.permitido?'Activo':String(data.access?.estado||'Pendiente').replaceAll('_',' ');
   document.getElementById('cuentaPlan').textContent=data.access?.plan_codigo||'Sin plan activo';
   const fin=data.access?.periodo_fin?new Date(data.access.periodo_fin):null;
   document.getElementById('cuentaPeriodo').textContent=fin&&!Number.isNaN(fin.getTime())?fin.toLocaleDateString('es-CO'):'—';
+  const p=perfil.profile||{};
+  const nombre=document.getElementById('perfilNombre'),ciudad=document.getElementById('perfilCiudad'),form=document.getElementById('perfilForm');
+  if(nombre)nombre.value=p.nombre||'';if(ciudad)ciudad.value=p.ciudad||'';if(form)form.hidden=false;
   if(panel){panel.hidden=false;panel.scrollIntoView({behavior:'smooth',block:'start'});}
   return data;
 }
@@ -152,3 +160,21 @@ document.getElementById('cuentaRecuperar')?.addEventListener('click',()=>{
 });
 document.getElementById('cerrarCuenta')?.addEventListener('click',()=>{document.getElementById('cuentaPanel').hidden=true;});
 authRecuperacionDesdeHash();
+
+document.getElementById('perfilForm')?.addEventListener('submit',async e=>{
+  e.preventDefault();const btn=e.submitter,estado=document.getElementById('perfilEstado');
+  if(btn)btn.disabled=true;if(estado)estado.textContent='Guardando…';
+  try{
+    const token=await authToken();if(!token)throw new Error('Sesión expirada.');
+    const r=await fetch('/api/profile',{
+      method:'PATCH',
+      headers:{Authorization:`Bearer ${token}`,'Content-Type':'application/json'},
+      body:JSON.stringify({nombre:document.getElementById('perfilNombre').value,ciudad:document.getElementById('perfilCiudad').value})
+    });
+    const data=await r.json().catch(()=>({}));
+    if(!r.ok)throw new Error(data.error||'No se pudo guardar el perfil.');
+    if(estado)estado.textContent='Perfil guardado';
+    setTimeout(()=>{if(estado)estado.textContent='';},1800);
+  }catch(err){if(estado)estado.textContent=err.message||'No se pudo guardar.';}
+  finally{if(btn)btn.disabled=false;}
+});
