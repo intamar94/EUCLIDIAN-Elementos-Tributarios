@@ -1,3 +1,4 @@
+import { autorizarConsulta } from '../lib/auth-server.js';
 // EUCLIDIAN — catálogo completo de documentos.
 // La vista cliente muestra todo el corpus; el estado fiscal se conserva como dato informativo.
 const SUPABASE_URL = process.env.SUPABASE_URL;
@@ -17,9 +18,20 @@ const DIAS_NOVEDAD = 14;
 function fechaCorteNovedades(){const f=new Date();f.setUTCDate(f.getUTCDate()-DIAS_NOVEDAD);return f.toISOString().slice(0,10);}
 function esNovedadOficial(d){const corte=fechaCorteNovedades();return [d.fecha_publicacion_web,d.fecha_publicacion].some(f=>typeof f==='string'&&f.slice(0,10)>=corte);}
 export default async function handler(req,res){
-  // Fail closed: a missing access secret must never make this privileged API public.
-  if(!CLAVE||!SUPABASE_URL||!SUPABASE_KEY)return res.status(500).json({error:'falta_configuracion'});
-  if(req.headers['x-clave']!==CLAVE)return res.status(401).json({error:'clave_incorrecta'});
+  // Fail closed: Supabase server configuration is mandatory. The old shared key
+  // remains only as an internal transition path; customers use Supabase Auth.
+  if(!SUPABASE_URL||!SUPABASE_KEY)return res.status(500).json({error:'falta_configuracion'});
+  const acceso=await autorizarConsulta(req);
+  if(!acceso.ok){
+    return res.status(acceso.status||401).json({
+      error:acceso.error||'acceso_denegado',
+      access:acceso.acceso?{
+        estado:acceso.acceso.estado||'pendiente',
+        plan_codigo:acceso.acceso.plan_codigo||null,
+        periodo_fin:acceso.acceso.periodo_fin||null
+      }:undefined
+    });
+  }
   const periodoSolicitado=String(req.query.periodo||'2026');
   const periodo=/^\d{4}$/.test(periodoSolicitado)?periodoSolicitado:(PERIODOS[periodoSolicitado]!==undefined?periodoSolicitado:'2026');
   const estadoSolicitado=req.query.estado; const estado=ESTADOS[estadoSolicitado]!==undefined?estadoSolicitado:'todos';
