@@ -25,6 +25,30 @@ function marcarNavegacion(id){
   const activo=document.getElementById(id);
   if(activo){activo.classList.add('activo');activo.setAttribute('aria-current','page');}
 }
+function vistaVacia(){
+  return `<section class="estado-vacio" aria-labelledby="estadoVacioTitulo">
+    <span class="estado-vacio-figura" aria-hidden="true">◇</span>
+    <div><span class="estado-vacio-kicker">SIN COINCIDENCIAS</span><h2 id="estadoVacioTitulo">No encontramos algo fiable con estos filtros</h2>
+    <p>No significa que el tema no exista. Amplía la consulta o entra por una de estas rutas.</p></div>
+    <div class="estado-vacio-acciones">
+      <button type="button" data-empty-action="todo">Ver todo</button>
+      <button type="button" data-empty-action="explorar">Explorar temas</button>
+      <button type="button" data-empty-action="nuevos">Ver novedades</button>
+    </div>
+  </section>`;
+}
+function vistaError(mensaje){
+  return `<section class="estado-error" role="alert"><span class="estado-error-figura" aria-hidden="true">×</span><div><span class="estado-vacio-kicker">NO PUDIMOS COMPLETAR LA CONSULTA</span><h2>Tu información no se perdió</h2><p>${esc(mensaje||'No se pudo leer la base.')}</p><button type="button" data-retry-load>Reintentar</button></div></section>`;
+}
+function describirConsulta(data){
+  const partes=[];
+  if(F.q)partes.push(`“${F.q}”`);
+  if(F.tema)partes.push(nombreTema(F.tema));
+  if(F.estado==='nuevos')partes.push('publicaciones recientes');
+  if(F.periodo!=='todo')partes.push(F.periodo);
+  const estado=document.getElementById('estadoConsulta');
+  if(estado)estado.textContent=partes.length?`${Number(data.total||0).toLocaleString('es-CO')} resultados · ${partes.join(' · ')}`:`${Number(data.total||0).toLocaleString('es-CO')} documentos disponibles`;
+}
 function renderExplorar(data){
   const seccion=document.getElementById('explorar'), cont=document.getElementById('explorarTemas');
   if(!seccion||!cont)return;
@@ -77,8 +101,8 @@ async function guardarResumen(id){const t=document.getElementById('r-'+id);if(!t
 async function cargar(autenticar=false){
   const lista=document.getElementById('lista'),btn=document.getElementById('btnRecargar'),mal=document.getElementById('mal');if(btn)btn.disabled=true;estadoCarga(true,F.q?'Buscando y verificando…':'Ordenando la información…');if(lista)lista.innerHTML=skeletonConsulta();document.getElementById('paginas').innerHTML='';
   const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),15000);
-  try{const q=new URLSearchParams({estado:F.estado,orden:F.orden,periodo:F.periodo,pagina:F.pagina});if(F.q)q.set('q',F.q);if(F.tema)q.set('tema',F.tema);const r=await fetch('/api/documentos?'+q,{headers:{'x-clave':CLAVE},cache:'no-store',signal:controller.signal});if(r.status===401)throw new Error('Clave incorrecta.');const data=await r.json().catch(()=>({error:'Respuesta inválida del servidor.'}));if(!r.ok)throw new Error(data.detalle||data.error||'No se pudo leer la base.');sessionStorage.setItem('euclidian_clave',CLAVE);document.getElementById('puerta').hidden=true;if(mal)mal.textContent='';document.getElementById('cab').hidden=false;document.getElementById('hoy').hidden=false;document.getElementById('controles').hidden=false;document.getElementById('barra').hidden=false;marcarActivos();poblarTemas(data.temas||[]);renderPanelHoy(data);renderExplorar(data);if(!data.documentos.length){lista.innerHTML='<div class="aviso"><b>Nada por aquí</b>Prueba con otro filtro.</div>';return data;}lista.innerHTML=data.documentos.map(ficha).join('');paginacion(data);window.scrollTo({top:0,behavior:'smooth'});return data;
-  }catch(e){if(e.name==='AbortError')throw new Error('El servidor tardó demasiado en responder. Inténtalo de nuevo.');if(autenticar){if(lista)lista.innerHTML='';throw e;}if(lista)lista.innerHTML=`<div class="error">No se pudo leer la base.<code>${esc(e.message)}</code></div>`;throw e;}finally{clearTimeout(timer);estadoCarga(false);if(btn)btn.disabled=false;}}
+  try{const q=new URLSearchParams({estado:F.estado,orden:F.orden,periodo:F.periodo,pagina:F.pagina});if(F.q)q.set('q',F.q);if(F.tema)q.set('tema',F.tema);const r=await fetch('/api/documentos?'+q,{headers:{'x-clave':CLAVE},cache:'no-store',signal:controller.signal});if(r.status===401)throw new Error('Clave incorrecta.');const data=await r.json().catch(()=>({error:'Respuesta inválida del servidor.'}));if(!r.ok)throw new Error(data.detalle||data.error||'No se pudo leer la base.');sessionStorage.setItem('euclidian_clave',CLAVE);document.getElementById('puerta').hidden=true;if(mal)mal.textContent='';document.getElementById('cab').hidden=false;document.getElementById('hoy').hidden=false;document.getElementById('controles').hidden=false;document.getElementById('barra').hidden=false;marcarActivos();poblarTemas(data.temas||[]);renderPanelHoy(data);renderExplorar(data);describirConsulta(data);if(!data.documentos.length){lista.innerHTML=vistaVacia();return data;}lista.innerHTML=data.documentos.map(ficha).join('');paginacion(data);window.scrollTo({top:0,behavior:'smooth'});return data;
+  }catch(e){if(e.name==='AbortError')throw new Error('El servidor tardó demasiado en responder. Inténtalo de nuevo.');if(autenticar){if(lista)lista.innerHTML='';throw e;}if(lista)lista.innerHTML=vistaError(e.message);throw e;}finally{clearTimeout(timer);estadoCarga(false);if(btn)btn.disabled=false;}}
 function poblarTemas(temas){const sel=document.getElementById('selTema');if(!sel)return;const actual=sel.value;const orden=[...temas].sort((a,b)=>nombreTema(a).localeCompare(nombreTema(b),'es'));sel.innerHTML='<option value="">Todos los temas</option>'+orden.map(t=>`<option value="${t}">${nombreTema(t)}</option>`).join('');sel.value=actual;}
 function seleccionarAnio(anio){F.periodo=anio||'todo';F.pagina=1;marcarActivos();cargar();}
 function paginacion(data){const cont=document.getElementById('paginas'),{pagina,paginas,total,porPagina}=data;if(total===0){cont.innerHTML='';return;}const primero=(pagina-1)*porPagina+1,ultimo=Math.min(pagina*porPagina,total),r=document.getElementById('rango');if(r)r.textContent=`${Number(total).toLocaleString('es-CO')} documentos disponibles · mostrando ${primero}–${ultimo}`;let html='';if(paginas>1){html+=`<button onclick="irA(${pagina-1})" ${pagina<=1?'disabled':''}>‹</button>`;const nums=new Set([1,paginas,pagina,pagina-1,pagina+1]),orden=[...nums].filter(n=>n>=1&&n<=paginas).sort((a,b)=>a-b);let previo=0;orden.forEach(n=>{if(n-previo>1)html+='<span style="color:var(--tenue)">…</span>';html+=`<button onclick="irA(${n})" aria-current="${n===pagina}">${n}</button>`;previo=n;});html+=`<button onclick="irA(${pagina+1})" ${pagina>=paginas?'disabled':''}>›</button>`;}cont.innerHTML=html;}
@@ -90,3 +114,8 @@ document.getElementById('selAnio').addEventListener('change',e=>seleccionarAnio(
 configurarNavegacion();
 if(REVISOR){const b=document.getElementById('btnRevision');if(b)b.textContent='Salir del modo revisión';}
 if(CLAVE)cargar().catch(()=>{});else document.getElementById('puerta').hidden=false;
+
+if(!window.__euclidianRecoveryActions){window.__euclidianRecoveryActions=true;document.addEventListener('click',e=>{
+  const accion=e.target.closest('[data-empty-action]');if(accion){const tipo=accion.dataset.emptyAction;if(tipo==='todo'){limpiar();return;}if(tipo==='explorar'){const seccion=document.getElementById('explorar');if(seccion){seccion.hidden=false;seccion.scrollIntoView({behavior:'smooth',block:'start'});}marcarNavegacion('navExplorar');return;}if(tipo==='nuevos'){F.estado='nuevos';F.pagina=1;const sel=document.getElementById('selEstado');if(sel)sel.value='nuevos';marcarNavegacion('navNovedades');cargar();return;}}
+  if(e.target.closest('[data-retry-load]'))cargar().catch(()=>{});
+});}
