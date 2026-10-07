@@ -1,0 +1,74 @@
+name: Verificación histórica DIAN
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '40 03 * * 0'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: euclidian-verificacion-historica
+  cancel-in-progress: false
+
+jobs:
+  verificar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Instalar dependencias
+        run: pip install -r scripts/requirements.txt
+
+      - name: Registrar inicio
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python scripts/registrar_actualizacion.py --estado iniciado --run-id "historico-${{ github.run_id }}"
+
+      - name: Validar fuentes oficiales DIAN
+        run: python scripts/validar_fuentes_dian.py
+
+      - name: Barrido histórico completo del Normograma
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python scripts/scraper.py --historico
+
+      - name: Revisar boletines históricos
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python scripts/boletines_dian.py --historico
+
+      - name: Reenriquecer documentos pendientes
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python scripts/enriquecedor_fechas_v2.py --limite 2000
+
+      - name: Retirar fechas imposibles
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python scripts/quarantine_future_dates.py
+
+      - name: Registrar éxito
+        if: success()
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python scripts/registrar_actualizacion.py --estado exitoso --run-id "historico-${{ github.run_id }}"
+
+      - name: Registrar fallo
+        if: failure()
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python scripts/registrar_actualizacion.py --estado error --run-id "historico-${{ github.run_id }}" --mensaje "La verificación histórica DIAN falló. Revisar GitHub Actions."
