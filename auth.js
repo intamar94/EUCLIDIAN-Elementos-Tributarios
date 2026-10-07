@@ -60,19 +60,45 @@ function authRecuperacionDesdeHash(){
   authMostrarPuerta();authStatus('Enlace verificado. Define tu nueva contraseña.','ok');
   return true;
 }
+function renderPlanesCuenta(payload,access){
+  const oferta=document.getElementById('suscripcionOferta');
+  const cont=document.getElementById('planesDisponibles');
+  if(!oferta||!cont)return;
+  oferta.hidden=!!access?.permitido;
+  cont.replaceChildren();
+  if(oferta.hidden)return;
+  const planes=Array.isArray(payload?.planes)?payload.planes:[];
+  for(const plan of planes){
+    const art=document.createElement('article');art.className='plan-candidato';
+    const top=document.createElement('div');
+    const small=document.createElement('small');small.textContent='PLAN';
+    const h=document.createElement('h4');h.textContent=String(plan.nombre||plan.codigo||'EUCLIDIAN');
+    const p=document.createElement('p');p.textContent=String(plan.descripcion||'Acceso a EUCLIDIAN');
+    top.append(small,h,p);
+    const meta=document.createElement('div');meta.className='plan-meta';
+    const lim=document.createElement('span');lim.textContent=plan.limite_consultas_mensual?Number(plan.limite_consultas_mensual).toLocaleString('es-CO')+' consultas/mes':'Capacidad sin límite configurado';
+    const price=document.createElement('strong');
+    price.textContent=plan.pricing_publicado&&Number.isFinite(Number(plan.precio_mensual))
+      ?new Intl.NumberFormat('es-CO',{style:'currency',currency:plan.moneda||'COP',maximumFractionDigits:0}).format(Number(plan.precio_mensual))+' / mes'
+      :'Precio pendiente de aprobación';
+    meta.append(lim,price);art.append(top,meta);cont.append(art);
+  }
+}
 async function authCuenta(){
   const token=await authToken();if(!token){authMostrarPuerta();return null;}
   const headers={Authorization:`Bearer ${token}`};
-  const [sessionRes,profileRes,usageRes]=await Promise.all([
+  const [sessionRes,profileRes,usageRes,plansRes]=await Promise.all([
     fetch('/api/session',{headers,cache:'no-store'}),
     fetch('/api/profile',{headers,cache:'no-store'}),
-    fetch('/api/usage',{headers,cache:'no-store'})
+    fetch('/api/usage',{headers,cache:'no-store'}),
+    fetch('/api/plans',{headers,cache:'no-store'})
   ]);
   const data=await sessionRes.json().catch(()=>({}));
   if(sessionRes.status===401){authClear();authMostrarPuerta();return null;}
   if(!sessionRes.ok)return null;
   const perfil=profileRes.ok?await profileRes.json().catch(()=>({})): {};
   const uso=usageRes.ok?await usageRes.json().catch(()=>({})): {};
+  const planes=plansRes.ok?await plansRes.json().catch(()=>({planes:[]})):{planes:[]};
   const panel=document.getElementById('cuentaPanel');
   document.getElementById('cuentaEmail').textContent=data.user?.email||'—';
   document.getElementById('cuentaEstado').textContent=data.access?.permitido?'Activo':String(data.access?.estado||'Pendiente').replaceAll('_',' ');
@@ -84,6 +110,7 @@ async function authCuenta(){
   const p=perfil.profile||{};
   const nombre=document.getElementById('perfilNombre'),ciudad=document.getElementById('perfilCiudad'),form=document.getElementById('perfilForm');
   if(nombre)nombre.value=p.nombre||'';if(ciudad)ciudad.value=p.ciudad||'';if(form)form.hidden=false;
+  renderPlanesCuenta(planes,data.access);
   if(panel){panel.hidden=false;panel.scrollIntoView({behavior:'smooth',block:'start'});}
   return data;
 }
