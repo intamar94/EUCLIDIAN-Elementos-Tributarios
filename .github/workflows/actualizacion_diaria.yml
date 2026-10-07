@@ -2,6 +2,14 @@ name: Actualización automática DIAN
 
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/actualizacion_diaria.yml'
+      - 'scripts/registrar_actualizacion.py'
+      - 'scripts/scraper.py'
+      - 'scripts/sincronizador_dian.py'
+      - 'scripts/boletines_dian.py'
   schedule:
     - cron: '15 */6 * * *'
 
