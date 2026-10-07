@@ -47,7 +47,9 @@ function authCambiarTab(registro){
 }
 function authRecuperacionDesdeHash(){
   const hash=new URLSearchParams(location.hash.replace(/^#/,''));
+  window.euclidianEnRecuperacion=false;
   if(hash.get('type')!=='recovery'||!hash.get('access_token'))return false;
+  window.euclidianEnRecuperacion=true;
   authSet(AUTH_KEYS.access,hash.get('access_token'));
   if(hash.get('refresh_token'))authSet(AUTH_KEYS.refresh,hash.get('refresh_token'));
   authSet(AUTH_KEYS.expires,Math.floor(Date.now()/1000)+Number(hash.get('expires_in')||3600));
@@ -129,7 +131,7 @@ document.getElementById('authResetForm')?.addEventListener('submit',async e=>{
     const access=await authToken(),password=document.getElementById('authResetPassword').value;
     const {r,data}=await authPost({action:'update_password',access_token:access,password});
     if(!r.ok)throw new Error(data.message||'No se pudo actualizar la contraseña.');
-    authStatus('Contraseña actualizada. Ya puedes usar EUCLIDIAN.','ok');authOcultarPuerta();await window.cargar?.();
+    window.euclidianEnRecuperacion=false;authStatus('Contraseña actualizada. Ya puedes usar EUCLIDIAN.','ok');authOcultarPuerta();await window.cargar?.();
   }catch(err){authStatus(err.message||'No se pudo actualizar la contraseña.','error');}
   finally{btn.disabled=false;}
 });
