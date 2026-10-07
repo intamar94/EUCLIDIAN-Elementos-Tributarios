@@ -31,14 +31,25 @@
 <header hidden id="cab">
   <div class="cab marco">
     <div class="identidad"><a class="marca" href="/" aria-label="EUCLIDIAN inicio">EUCL<em>i</em>DIAN</a><span class="sub">Elementos Tributarios</span></div>
-    <p class="cab-descripcion">Consulta DIAN con fuentes, vigencia y contexto verificable</p>
-    <button type="button" class="recargar" id="btnRecargar" onclick="cargar()">Actualizar consulta</button>
+    <nav class="nav-principal" aria-label="Navegación principal">
+      <a href="#hoy" class="nav-item activo" aria-current="page"><span class="nav-glyph" aria-hidden="true">◇</span>Inicio</a>
+      <a href="#controles" class="nav-item"><span class="nav-glyph" aria-hidden="true">⌕</span>Consultar</a>
+      <a href="#hoyLista" class="nav-item"><span class="nav-glyph" aria-hidden="true">△</span>Novedades</a>
+      <button type="button" class="nav-item nav-accion" id="navExplorar"><span class="nav-glyph" aria-hidden="true">◫</span>Explorar</button>
+      <button type="button" class="nav-item nav-accion" id="navSeguir"><span class="nav-glyph" aria-hidden="true">◎</span>Seguimientos</button>
+      <button type="button" class="nav-item nav-accion" id="navCuenta"><span class="nav-glyph" aria-hidden="true">○</span>Cuenta</button>
+    </nav>
+    <button type="button" class="recargar accion-secundaria" id="btnRecargar" onclick="cargar()"><span aria-hidden="true">↻</span><span>Actualizar</span></button>
   </div>
 </header>
 
+<div class="carga-geometrica" id="cargaGeometrica" hidden role="status" aria-live="polite">
+  <span class="geo-orbita" aria-hidden="true"><i></i><i></i><i></i></span><span>Ordenando la información…</span>
+</div>
+
 <section class="hoy marco" hidden id="hoy" aria-label="Atención prioritaria">
   <div class="hoy-cabecera">
-    <div><span class="hoy-sobrelinea">PARA TU JORNADA</span><h1>Atención prioritaria</h1></div>
+    <div><span class="hoy-sobrelinea">TU RADAR · HOY</span><h1>Lo importante, antes que el ruido</h1><p class="hoy-promesa">Cambios, vigencia y fuentes ordenados para decidir dónde mirar primero.</p></div>
     <p id="estadoFuente" class="estado-fuente" aria-live="polite"></p>
   </div>
   <p class="hoy-intro" id="hoyIntro"></p>
@@ -51,7 +62,7 @@
 </section>
 
 <section class="controles marco" hidden id="controles" aria-label="Buscar documentos DIAN">
-  <div class="titulo-consulta"><h2>Normas, doctrina y boletines</h2><p>Encuentra la fuente DIAN, entiende el alcance y documenta tu criterio.</p></div>
+  <div class="titulo-consulta"><span class="seccion-numero" aria-hidden="true">02</span><div><span class="seccion-kicker">CONSULTAR</span><h2>Pregunta al corpus, conserva la evidencia</h2><p>Busca una idea, número o tema. EUCLIDIAN separa la lectura rápida de la fuente que la respalda.</p></div></div>
   <form class="buscador" id="formBuscar" role="search">
     <label class="solo-lectores" for="consulta">Buscar por número, título o contenido</label>
     <input id="consulta" type="search" maxlength="160" placeholder="Busca por número, título o tema, p. ej. retención en la fuente" autocomplete="off">
