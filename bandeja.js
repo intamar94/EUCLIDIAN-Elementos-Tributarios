@@ -76,7 +76,33 @@ function guardarTemas(temas){localStorage.setItem('euclidian_temas_seguidos',JSO
 function prioridadDiaria(d,temas){const texto=textoDocumento(d);let puntos=0,razon='',accion='Abre la ficha y confirma el alcance para el caso concreto.';if(d.estado_vigencia&&d.estado_vigencia!=='vigente'&&d.estado_vigencia!=='desconocido'){puntos+=100;razon='Cambio de vigencia';accion='No lo uses sin revisar la norma posterior y su efecto.';}const plazo=fechaDePlazo((d.plazos_mencionados||[])[0]);const dias=plazo?diasHasta(plazo):null;if(dias!==null&&dias>=0&&dias<=30){puntos+=90;razon='Plazo próximo';accion='Confirma obligación, periodo y contribuyente antes de agendarlo.';}if(d.tiene_efectos_retroactivos){puntos+=70;razon='Puede afectar periodos anteriores';accion='Revisa declaraciones ya presentadas y el alcance temporal.';}if(d.es_nuevo){puntos+=40;if(!razon)razon='Publicación DIAN reciente';}if(temas.some(t=>texto.includes(t.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase()))){puntos+=30;if(!razon)razon='Tema que sigues';}return {puntos,razon:razon||'Para consulta',accion};}
 function fechaActualizacion(valor){if(!valor)return 'Fuente DIAN disponible en cada ficha.';const f=new Date(valor);if(Number.isNaN(f.getTime()))return 'Fuente DIAN disponible en cada ficha.';return `Biblioteca actualizada el ${f.toLocaleDateString('es-CO',{day:'numeric',month:'short',year:'numeric'})}.`;}
 function renderTemasSeguidos(data){const cont=document.getElementById('temasSeguidos');if(!cont)return;const activos=temasSeguidos();cont.innerHTML=TEMAS_DIARIOS.map(t=>`<button type="button" class="tema-seguido ${activos.includes(t)?'activo':''}" data-tema-diario="${esc(t)}" aria-pressed="${activos.includes(t)}">${activos.includes(t)?'✓ ': '+'}${esc(t)}</button>`).join('');cont.querySelectorAll('[data-tema-diario]').forEach(b=>b.addEventListener('click',()=>{const tema=b.dataset.temaDiario;const siguientes=temasSeguidos();const i=siguientes.indexOf(tema);if(i>=0)siguientes.splice(i,1);else siguientes.push(tema);guardarTemas(siguientes);renderPanelHoy(data);}));}
-function renderPanelHoy(data){const panel=document.getElementById('hoy');if(!panel)return;const docs=data.documentos||[],seguidos=temasSeguidos();const priorizados=docs.map(d=>({d,...prioridadDiaria(d,seguidos)})).sort((a,b)=>b.puntos-a.puntos).filter(x=>x.puntos>0).slice(0,3);const nuevos=docs.filter(d=>d.es_nuevo).length,plazos=docs.filter(d=>{const f=fechaDePlazo((d.plazos_mencionados||[])[0]);return f&&diasHasta(f)>=0&&diasHasta(f)<=30;}).length,cambios=docs.filter(d=>d.estado_vigencia&&d.estado_vigencia!=='vigente'&&d.estado_vigencia!=='desconocido').length;document.getElementById('estadoFuente').textContent=fechaActualizacion(data.actualizado);document.getElementById('hoyIntro').textContent=priorizados.length?'Estos documentos merecen una revisión antes de aplicarlos o cerrar una obligación.':'No hay plazos próximos ni cambios de vigencia entre los documentos de esta consulta.';document.getElementById('hoyResumen').innerHTML=`<span><b>${nuevos}</b> publicaciones DIAN recientes</span><span><b>${plazos}</b> plazos próximos</span><span><b>${cambios}</b> cambios de vigencia</span>`;const lista=document.getElementById('hoyLista');lista.innerHTML=priorizados.map(({d,razon,accion})=>`<article class="hoy-item"><div><span class="hoy-etiqueta">${esc(razon)}</span><h3>${esc(d.titulo||d.numero_resolucion)}</h3><p>${esc(accion)}</p></div><button type="button" data-abrir-doc="${esc(d.id)}">Ver ficha</button></article>`).join('')||'<p class="hoy-vacio">Usa los temas que sigues o busca una obligación para priorizar tu consulta.</p>';lista.querySelectorAll('[data-abrir-doc]').forEach(b=>b.addEventListener('click',()=>document.querySelector(`article[data-id="${b.dataset.abrirDoc}"]`)?.scrollIntoView({behavior:'smooth',block:'start'})));renderTemasSeguidos(data);panel.hidden=false;}
+function visualPrioridad(razon){
+  const r=String(razon||'').toLowerCase();
+  if(r.includes('vigencia'))return {clase:'cambio',glifo:'×'};
+  if(r.includes('plazo'))return {clase:'plazo',glifo:'△'};
+  if(r.includes('anteriores'))return {clase:'retro',glifo:'↶'};
+  if(r.includes('reciente'))return {clase:'nuevo',glifo:'○'};
+  if(r.includes('sigues'))return {clase:'seguido',glifo:'◎'};
+  return {clase:'info',glifo:'◇'};
+}
+function renderPanelHoy(data){
+  const panel=document.getElementById('hoy');if(!panel)return;
+  const docs=data.documentos||[],seguidos=temasSeguidos();
+  const priorizados=docs.map(d=>({d,...prioridadDiaria(d,seguidos)})).sort((a,b)=>b.puntos-a.puntos).filter(x=>x.puntos>0).slice(0,3);
+  const nuevos=docs.filter(d=>d.es_nuevo).length;
+  const plazos=docs.filter(d=>{const f=fechaDePlazo((d.plazos_mencionados||[])[0]);return f&&diasHasta(f)>=0&&diasHasta(f)<=30;}).length;
+  const cambios=docs.filter(d=>d.estado_vigencia&&d.estado_vigencia!=='vigente'&&d.estado_vigencia!=='desconocido').length;
+  document.getElementById('estadoFuente').textContent=fechaActualizacion(data.actualizado);
+  document.getElementById('hoyIntro').textContent=priorizados.length?'EUCLIDIAN separó lo que merece atención del resto del archivo. Empieza por aquí y profundiza solo cuando lo necesites.':'No detectamos cambios de vigencia ni plazos próximos en esta vista.';
+  document.getElementById('hoyResumen').innerHTML=`
+    <div class="radar-metrica nuevo"><span aria-hidden="true">○</span><div><b>${nuevos}</b><small>publicaciones recientes</small></div></div>
+    <div class="radar-metrica plazo"><span aria-hidden="true">△</span><div><b>${plazos}</b><small>plazos próximos</small></div></div>
+    <div class="radar-metrica cambio"><span aria-hidden="true">×</span><div><b>${cambios}</b><small>cambios de vigencia</small></div></div>`;
+  const lista=document.getElementById('hoyLista');
+  lista.innerHTML=priorizados.map(({d,razon,accion})=>{const v=visualPrioridad(razon);return `<article class="hoy-item tipo-${v.clase}"><div class="hoy-item-cab"><span class="hoy-senal" aria-hidden="true">${v.glifo}</span><span class="hoy-etiqueta">${esc(razon)}</span></div><div><h3>${esc(d.titulo||d.numero_resolucion)}</h3><p>${esc(accion)}</p></div><button type="button" data-abrir-doc="${esc(d.id)}"><span>Ver ficha</span><b aria-hidden="true">→</b></button></article>`;}).join('')||'<p class="hoy-vacio">El radar está tranquilo en esta vista. Explora un tema o realiza una consulta para cambiar el contexto.</p>';
+  lista.querySelectorAll('[data-abrir-doc]').forEach(b=>b.addEventListener('click',()=>document.querySelector(`article[data-id="${b.dataset.abrirDoc}"]`)?.scrollIntoView({behavior:'smooth',block:'start'})));
+  renderTemasSeguidos(data);panel.hidden=false;
+}
 
 async function entrar(e){
   e.preventDefault();
