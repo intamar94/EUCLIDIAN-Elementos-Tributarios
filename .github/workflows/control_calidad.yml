@@ -4,6 +4,10 @@ on:
   push:
     paths:
       - 'scripts/**'
+      - 'tests/**'
+      - 'api/**'
+      - 'index.html'
+      - 'bandeja.js'
       - '.github/workflows/control_calidad.yml'
   schedule:
     - cron: '0 14 * * *'
@@ -28,10 +32,15 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
       - name: Instalar dependencias
         run: pip install -r scripts/requirements.txt
       - name: Verificar sintaxis de todos los scripts Python
         run: python -m compileall -q scripts
+      - name: Verificar contrato E2E de consulta trazable
+        run: node tests/e2e_consulta_contract.mjs
       - name: Verificar contrato determinista de alta confianza
         run: |
           cd scripts
