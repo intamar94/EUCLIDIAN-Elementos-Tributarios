@@ -63,20 +63,24 @@ function authRecuperacionDesdeHash(){
 async function authCuenta(){
   const token=await authToken();if(!token){authMostrarPuerta();return null;}
   const headers={Authorization:`Bearer ${token}`};
-  const [sessionRes,profileRes]=await Promise.all([
+  const [sessionRes,profileRes,usageRes]=await Promise.all([
     fetch('/api/session',{headers,cache:'no-store'}),
-    fetch('/api/profile',{headers,cache:'no-store'})
+    fetch('/api/profile',{headers,cache:'no-store'}),
+    fetch('/api/usage',{headers,cache:'no-store'})
   ]);
   const data=await sessionRes.json().catch(()=>({}));
   if(sessionRes.status===401){authClear();authMostrarPuerta();return null;}
   if(!sessionRes.ok)return null;
   const perfil=profileRes.ok?await profileRes.json().catch(()=>({})): {};
+  const uso=usageRes.ok?await usageRes.json().catch(()=>({})): {};
   const panel=document.getElementById('cuentaPanel');
   document.getElementById('cuentaEmail').textContent=data.user?.email||'—';
   document.getElementById('cuentaEstado').textContent=data.access?.permitido?'Activo':String(data.access?.estado||'Pendiente').replaceAll('_',' ');
   document.getElementById('cuentaPlan').textContent=data.access?.plan_codigo||'Sin plan activo';
   const fin=data.access?.periodo_fin?new Date(data.access.periodo_fin):null;
   document.getElementById('cuentaPeriodo').textContent=fin&&!Number.isNaN(fin.getTime())?fin.toLocaleDateString('es-CO'):'—';
+  const usoTexto=Number.isFinite(Number(uso.consultas_mes))?Number(uso.consultas_mes).toLocaleString('es-CO'):'—';
+  document.getElementById('cuentaUso').textContent=uso.limite_consultas_mensual?usoTexto+' / '+Number(uso.limite_consultas_mensual).toLocaleString('es-CO'):usoTexto;
   const p=perfil.profile||{};
   const nombre=document.getElementById('perfilNombre'),ciudad=document.getElementById('perfilCiudad'),form=document.getElementById('perfilForm');
   if(nombre)nombre.value=p.nombre||'';if(ciudad)ciudad.value=p.ciudad||'';if(form)form.hidden=false;
