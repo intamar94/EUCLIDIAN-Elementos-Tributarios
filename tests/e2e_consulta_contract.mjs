@@ -27,7 +27,8 @@ const checks=[
  ['P3 estado esencial legible',blocks.includes('bloqueEstadoClave')&&blocks.includes('Estado esencial del documento')],
  ['P3 historia normativa',blocks.includes('relaciones-vivas')&&blocks.includes('timeline-relaciones')],
  ['P3 estados recuperables',nav.includes('vistaVacia')&&nav.includes('vistaError')&&nav.includes('data-retry-load')],
- ['P3 contexto de consulta',nav.includes('describirConsulta(data)')]
+ ['P3 contexto de consulta',nav.includes('describirConsulta(data)')],
+ ['P3 radar visual',nav.includes('visualPrioridad')&&nav.includes('radar-metrica')&&nav.includes('hoy-senal')]
 ];
 let failed=0;
 for(const [name,ok] of checks){console.log((ok?'OK':'FAIL')+' - '+name);if(!ok)failed++;}
