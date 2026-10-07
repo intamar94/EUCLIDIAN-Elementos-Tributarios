@@ -1,5 +1,9 @@
 name: Control de calidad
 
+concurrency:
+  group: control-calidad-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 on:
   push:
     paths:
