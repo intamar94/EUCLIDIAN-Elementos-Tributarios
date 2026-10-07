@@ -72,6 +72,8 @@ jobs:
         run: node tests/payment_events_contract.mjs
       - name: Regresión comercial y ownership
         run: node tests/commercial_access_contract.mjs
+      - name: Contrato portada pública y SEO
+        run: node tests/public_landing_contract.mjs
       - name: Eval de consultas contra datos reales
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
