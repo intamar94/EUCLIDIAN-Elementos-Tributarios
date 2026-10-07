@@ -131,3 +131,16 @@ button:disabled{opacity:.55;cursor:wait}.error button,.aviso button{margin-top:1
 @keyframes euclidian-skeleton{to{transform:translateX(100%)}}
 @media(prefers-reduced-motion:reduce){.skeleton-linea:after,.skeleton-bloque:after{animation:none;display:none}}
 @media(max-width:700px){.skeleton-ficha{padding:16px}.skeleton-grid{grid-template-columns:1fr}.skeleton-lateral{display:none}.skeleton-linea.mini{width:32%}.skeleton-linea.titulo{width:88%}}
+
+
+/* P3 refinement: geometry carries hierarchy, not decoration. */
+.hoy{position:relative;overflow:hidden}
+.hoy:before{content:"";position:absolute;width:190px;height:190px;right:-74px;top:-92px;border:1px solid rgba(48,95,67,.16);border-radius:50%;pointer-events:none}
+.hoy:after{content:"";position:absolute;width:130px;height:1px;right:18px;top:72px;background:rgba(139,56,47,.28);transform:rotate(-28deg);transform-origin:right;pointer-events:none}
+article{position:relative;overflow:hidden}
+article:after{content:"";position:absolute;width:54px;height:54px;right:-29px;top:-29px;border:1px solid rgba(48,95,67,.14);transform:rotate(45deg);pointer-events:none}
+.detalle-seccion>summary{transition:border-color .14s ease,background .14s ease}
+.detalle-seccion[open]>summary{background:#eef3ed;border-color:#9aab9d}
+.error{border-left:4px solid #8b382f!important;background:#fff8f4!important}
+.aviso{border-left:4px solid #78917f!important;background:#f7faf6!important}
+@media(prefers-reduced-motion:reduce){.detalle-seccion>summary{transition:none}}
