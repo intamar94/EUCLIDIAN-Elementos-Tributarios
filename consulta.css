@@ -94,3 +94,14 @@ button:disabled{opacity:.55;cursor:wait}.error button,.aviso button{margin-top:1
 @media(prefers-reduced-motion:reduce){.tema-explora{transition:none}.tema-explora:hover{transform:none}}
 @media(max-width:900px){.explorar-temas{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:620px){.explorar{padding:16px 14px}.explorar-cabecera{gap:10px}.explorar-temas{grid-template-columns:1fr;gap:7px}.tema-explora{min-height:54px}.tema-explora strong{font-size:12.5px}}
+
+
+/* Acciones de ficha: acciones parecen acciones; metadatos no. */
+.ficha-acciones-lectura{display:flex;flex-wrap:wrap;gap:8px;margin:-2px 0 15px}
+.accion-documento{display:inline-flex;align-items:center;justify-content:center;gap:9px;min-height:38px;padding:8px 11px;border-radius:6px;font:600 12px/1.2 'IBM Plex Sans',sans-serif;text-decoration:none;cursor:pointer}
+.accion-documento b{font:600 13px/1 'IBM Plex Mono',monospace}.accion-documento.primaria{background:#203a2b;color:#fff;border:1px solid #203a2b}.accion-documento.primaria:hover{background:#305f43;border-color:#305f43}
+.accion-documento.secundaria{background:#fffefa;color:#2f4437;border:1px solid #bfc9c0}.accion-documento.secundaria:hover{background:#edf3ee;border-color:#78917f}.accion-documento.copiado{background:#e7f1e9;border-color:#77a184;color:#244d33}
+.codigo-enlace{display:inline-flex;align-items:center;gap:4px;border-bottom:1px solid #aeb9af;color:#304d3a}.codigo-enlace:hover{color:#173e29;border-color:#173e29}.codigo-texto{border:0;color:#68756c}
+.cintas .cinta,.cintas .nuevo{display:inline-flex;align-items:center;min-height:24px;padding:4px 9px;border-radius:999px}
+.marcas span{min-height:26px;display:inline-flex;align-items:center}
+@media(max-width:620px){.ficha-acciones-lectura{display:grid;grid-template-columns:1fr 1fr}.accion-documento{width:100%;min-height:42px}.cintas{gap:5px}.cintas .cinta,.cintas .nuevo{font-size:9px}}
