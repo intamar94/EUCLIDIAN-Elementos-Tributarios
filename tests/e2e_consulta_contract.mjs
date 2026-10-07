@@ -23,7 +23,9 @@ const checks=[
  ['P3 navegación completa',['Inicio','Consultar','Novedades','Explorar','Seguimientos','Cuenta'].every(x=>html.includes(x))],
  ['P3 carga accesible',html.includes('cargaGeometrica')&&nav.includes('estadoCarga(true')&&nav.includes('estadoCarga(false)')],
  ['P3 exploración funcional',html.includes('explorarTemas')&&nav.includes('renderExplorar(data)')],
- ['P3 acciones de ficha',blocks.includes('ficha-acciones-lectura')&&blocks.includes('data-copy-ref')]
+ ['P3 acciones de ficha',blocks.includes('ficha-acciones-lectura')&&blocks.includes('data-copy-ref')],
+ ['P3 estado esencial legible',blocks.includes('bloqueEstadoClave')&&blocks.includes('Estado esencial del documento')],
+ ['P3 historia normativa',blocks.includes('relaciones-vivas')&&blocks.includes('timeline-relaciones')]
 ];
 let failed=0;
 for(const [name,ok] of checks){console.log((ok?'OK':'FAIL')+' - '+name);if(!ok)failed++;}
