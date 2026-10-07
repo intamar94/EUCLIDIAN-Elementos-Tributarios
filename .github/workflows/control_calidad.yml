@@ -8,6 +8,8 @@ on:
       - 'api/**'
       - 'index.html'
       - 'bandeja.js'
+      - 'auth.js'
+      - 'lib/**'
       - 'bloques.js'
       - 'fichas.js'
       - 'temas.js'
@@ -47,6 +49,15 @@ jobs:
         run: pip install -r scripts/requirements.txt
       - name: Verificar sintaxis de todos los scripts Python
         run: python -m compileall -q scripts
+      - name: Verificar sintaxis JavaScript de interfaz y Auth
+        run: |
+          node --check bandeja.js
+          node --check auth.js
+          node --check bloques.js
+          node --check api/auth.js
+          node --check api/session.js
+          node --check api/documentos.js
+          node --check lib/auth-server.js
       - name: Verificar contrato E2E de consulta trazable
         run: node tests/e2e_consulta_contract.mjs
       - name: Eval de consultas contra datos reales
