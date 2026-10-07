@@ -181,3 +181,40 @@ article:after{content:"";position:absolute;width:54px;height:54px;right:-29px;to
 .hoy-item-cab{display:flex;align-items:center;gap:7px}.hoy-senal{display:grid;place-items:center;width:23px;height:23px;border:1px solid currentColor;border-radius:50%;color:#6b776e;font:600 12px/1 'IBM Plex Mono',monospace}.tipo-cambio .hoy-senal{color:#b23a32}.tipo-plazo .hoy-senal{color:#9a6a32}.tipo-retro .hoy-senal{color:#7a4d7a}.tipo-nuevo .hoy-senal{color:#3d82b8}.tipo-seguido .hoy-senal{color:#2f6b4f}
 .hoy-item button{display:inline-flex;align-items:center;gap:8px;min-height:38px;padding:8px 11px;background:#fffefa;border:1px solid #9fafa2;border-radius:6px}.hoy-item button b{font:600 13px 'IBM Plex Mono',monospace}.hoy-item button:hover{background:#edf3ee;border-color:#78917f}
 @media(max-width:760px){.hoy-resumen{grid-template-columns:1fr}.radar-metrica{min-height:52px}}
+
+
+/* Cuenta y acceso: la identidad geométrica empieza antes de entrar. */
+#puerta{align-items:center;background:
+  radial-gradient(circle at 18% 16%,rgba(48,95,67,.08) 0 1px,transparent 2px) 0 0/34px 34px,
+  linear-gradient(135deg,#f3f0e8 0%,#edf1e9 100%)}
+#puerta .auth-caja{position:relative;width:min(100%,460px);background:#fbfaf5;border:1px solid #d7d3c9;border-radius:18px;overflow:hidden;box-shadow:0 22px 55px rgba(25,35,28,.12)}
+#puerta .auth-caja:before{content:"";position:absolute;z-index:2;width:120px;height:120px;right:-52px;top:116px;border:1px solid rgba(48,95,67,.18);border-radius:50%;pointer-events:none}
+#puerta .auth-caja:after{content:"";position:absolute;z-index:2;width:92px;height:1px;right:18px;top:172px;background:rgba(139,56,47,.32);transform:rotate(-28deg);pointer-events:none}
+#puerta .auth-caja>.ilustracion{display:block;width:100%;height:176px;object-fit:cover;object-position:center 40%;margin:0;border:0;border-bottom:1px solid #d7d3c9}
+.auth-identidad{position:relative;z-index:3;padding:20px 26px 13px}.auth-identidad .marca{font-size:34px;text-align:left;margin:0}.auth-identidad .sub{display:block;text-align:left;margin-top:2px}
+.auth-tabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin:0 26px 16px;padding:4px;border:1px solid #d6d7d0;border-radius:10px;background:#eeece4}
+.auth-tabs button{min-height:40px;border:0;border-radius:7px;background:transparent;color:#667168;font:600 12px 'IBM Plex Sans',sans-serif;cursor:pointer}
+.auth-tabs button[aria-selected="true"]{background:#fffefa;color:#20372a;box-shadow:0 1px 4px rgba(28,38,31,.08)}
+#puerta .auth-form{display:grid;width:auto;max-width:none;gap:7px;margin:0;padding:0 26px 22px}
+#puerta .auth-form label{margin:3px 0 0;color:#536158;font:600 11px 'IBM Plex Sans',sans-serif}
+#puerta .auth-form input{width:100%;min-height:46px;padding:10px 12px;border:1px solid #c5ccc3;border-radius:7px;background:#fffefa;color:#17211c;font:14px 'IBM Plex Sans',sans-serif}
+#puerta .auth-form input:focus{outline:2px solid #2c4c8f;outline-offset:2px;border-color:#2c4c8f}
+#puerta .auth-form .auth-principal{width:100%;min-height:46px;margin:6px 0 0;border:1px solid #203a2b;border-radius:7px;background:#203a2b;color:#fff;font:600 13px 'IBM Plex Sans',sans-serif;cursor:pointer}
+#puerta .auth-form .auth-principal:hover{background:#305f43;border-color:#305f43}
+#puerta .auth-form .auth-link{width:auto;justify-self:center;min-height:32px;margin:1px 0 0;padding:4px 8px;border:0;background:transparent;color:#4b6655;text-decoration:underline;text-underline-offset:3px;font:500 11.5px 'IBM Plex Sans',sans-serif;cursor:pointer}
+.auth-intro{margin:0 0 5px!important;color:#5b675f!important;font-size:12px!important;line-height:1.5}
+#puerta #mal{min-height:20px;margin:0 26px 16px;padding:0;color:#6a756d;font-size:12px;line-height:1.4}
+#puerta #mal[data-tipo="error"]{color:#9b3f36}#puerta #mal[data-tipo="ok"]{color:#2f6b4f}#puerta #mal[data-tipo="aviso"]{color:#805d2d}
+.acceso-interno{margin:0 26px 22px;padding-top:12px;border-top:1px solid #ddd9cf}
+.acceso-interno summary{cursor:pointer;color:#727a74;font:500 10.5px 'IBM Plex Sans',sans-serif}
+#puerta .acceso-interno form{display:flex;gap:7px;width:auto;max-width:none;margin:10px 0 0;padding:0}
+#puerta .acceso-interno input{flex:1;min-width:0;min-height:38px;padding:7px 9px;border:1px solid #d0d4cd;border-radius:6px;background:#fffefa;font:12px 'IBM Plex Sans',sans-serif}
+#puerta .acceso-interno button{width:auto;min-height:38px;margin:0;padding:7px 11px;border:1px solid #b9c3ba;border-radius:6px;background:#fffefa;color:#405348;font-size:11px}
+
+.cuenta-panel{margin-top:18px;margin-bottom:18px;padding:22px;border:1px solid #d4d9d2;border-radius:11px;background:#fbfaf5;box-shadow:0 8px 26px rgba(24,34,28,.05)}
+.cuenta-cabecera{display:flex;align-items:flex-start;justify-content:space-between;gap:18px}.cuenta-cabecera .titulo-consulta{padding:0}
+.cuenta-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:18px}.cuenta-dato{min-height:72px;padding:11px 12px;border:1px solid #d9ddd6;border-radius:8px;background:#fffefa}
+.cuenta-dato small{display:block;margin-bottom:6px;color:#707970;font:600 9px 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase}.cuenta-dato strong{display:block;color:#283a2f;font:600 12.5px/1.35 'IBM Plex Sans',sans-serif;overflow-wrap:anywhere}
+.cuenta-acciones{display:flex;gap:8px;margin-top:14px}.cuenta-acciones button{min-height:40px;padding:8px 12px;border:1px solid #203a2b;border-radius:6px;background:#203a2b;color:#fff;font:600 12px 'IBM Plex Sans',sans-serif;cursor:pointer}.cuenta-acciones .secundaria{background:#fffefa;color:#405348;border-color:#b9c3ba}
+@media(max-width:720px){#puerta .auth-caja{border-radius:14px}.auth-identidad{padding-inline:20px}.auth-tabs{margin-inline:20px}#puerta .auth-form{padding-inline:20px}#puerta #mal,.acceso-interno{margin-inline:20px}.cuenta-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:480px){#puerta{padding:12px}#puerta .auth-caja>.ilustracion{height:135px}.auth-identidad .marca{font-size:29px}.cuenta-grid{grid-template-columns:1fr}.cuenta-acciones{display:grid}.cuenta-acciones button{width:100%}}
