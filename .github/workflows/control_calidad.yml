@@ -70,6 +70,8 @@ jobs:
         run: node tests/auth_flow_contract.mjs
       - name: Contrato de idempotencia de pagos
         run: node tests/payment_events_contract.mjs
+      - name: Regresión comercial y ownership
+        run: node tests/commercial_access_contract.mjs
       - name: Eval de consultas contra datos reales
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
