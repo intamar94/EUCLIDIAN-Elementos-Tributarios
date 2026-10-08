@@ -68,14 +68,39 @@ class EnriquecedorFechasV2:
             if self.anio:q=q.gte("fecha_publicacion",f"{self.anio}-01-01").lte("fecha_publicacion",f"{self.anio}-12-31")
             r=q.order("fecha_publicacion",desc=True).order("numero_resolucion",desc=True).limit(self.limite).execute()
             for d in r.data or []:encontrados[d["id"]]=d
-            total=self.db.table("documentos_tributarios").select("id",count="exact").gte("fecha_publicacion","1950-01-01").lte("fecha_publicacion",f"{datetime.now().year+1}-12-31").eq("fecha_es_real",True).limit(1).execute().count or 0
-            for start in range(0,total,PAGE):
-                r=self.db.table("documentos_tributarios").select(campos).eq("fecha_es_real",True).gte("fecha_publicacion","1950-01-01").lte("fecha_publicacion",f"{datetime.now().year+1}-12-31").range(start,start+PAGE-1).execute()
-                for d in r.data or []:
+            # Recorrer metadatos pequeños por ID evita OFFSET profundo sobre
+            # 17.000 filas con texto_completo, que puede agotar statement_timeout.
+            ultimo_id=None; ids_criticos=[]; ids_enero=[]
+            while True:
+                q=(self.db.table("documentos_tributarios")
+                   .select("id,numero_resolucion,fecha_publicacion")
+                   .eq("fecha_es_real",True)
+                   .gte("fecha_publicacion","1950-01-01")
+                   .lte("fecha_publicacion",f"{datetime.now().year+1}-12-31"))
+                if ultimo_id:q=q.gt("id",ultimo_id)
+                lote=q.order("id").limit(PAGE).execute().data or []
+                if not lote:break
+                for d in lote:
                     fecha=str(d.get("fecha_publicacion") or "")
                     anio=re.search(r"-((?:19|20)\d{2})$",str(d.get("numero_resolucion") or ""))
-                    if anio and fecha and fecha[:4]!=anio.group(1):prioritarios[d["id"]]=d
-                    elif fecha.endswith("-01-01"):encontrados[d["id"]]=d
+                    if anio and fecha and fecha[:4]!=anio.group(1):ids_criticos.append(d["id"])
+                    elif fecha.endswith("-01-01"):ids_enero.append(d["id"])
+                ultimo_id=lote[-1]["id"]
+                if len(lote)<PAGE:break
+            # Traer el texto completo solo para los casos que realmente se
+            # procesarán. Los años contradictorios conservan prioridad.
+            for id_ in ids_criticos:
+                if id_ in encontrados:prioritarios[id_]=encontrados.pop(id_)
+            criticos=set(ids_criticos)
+            faltantes=[i for i in ids_criticos+ids_enero if i not in prioritarios and i not in encontrados]
+            for start in range(0,min(len(faltantes),self.limite),50):
+                ids=faltantes[start:start+50]
+                r=self.db.table("documentos_tributarios").select(campos).in_("id",ids).execute()
+                por_id={d["id"]:d for d in r.data or []}
+                for id_ in ids:
+                    if id_ in por_id:
+                        if id_ in criticos:prioritarios[id_]=por_id[id_]
+                        else:encontrados[id_]=por_id[id_]
         except Exception as e:
             log.error("No se pudo leer la cola: %s",str(e)[:250]); raise
         # Una fecha que contradice el número del acto tiene prioridad sobre
