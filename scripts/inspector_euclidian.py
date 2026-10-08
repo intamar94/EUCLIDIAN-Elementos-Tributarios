@@ -106,8 +106,8 @@ def inspect_row(row, today):
             found.append(issue("ficha_escasa", "aviso", "La síntesis visible no explica suficientemente el documento."))
         if not row.get("fecha_es_real") and not web_date:
             found.append(issue("fecha_no_verificada", "aviso", "No hay fecha exacta comprobada."))
-        if row.get("tiene_efectos_retroactivos") and not row.get("anos_afectados"):
-            found.append(issue("retroactividad_sin_periodo", "aviso", "La alerta no identifica el período afectado."))
+    if row.get("tiene_efectos_retroactivos") and not row.get("anos_afectados"):
+        found.append(issue("retroactividad_sin_periodo", "aviso", "La alerta no identifica el período afectado."))
     # Estos campos se reinspeccionan incluso durante la cuarentena: ocultar
     # temporalmente una ficha no puede hacer desaparecer el motivo del control.
     for deadline in row.get("plazos_mencionados") or []:
