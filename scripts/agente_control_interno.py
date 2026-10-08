@@ -30,6 +30,7 @@ from inspector_euclidian import canonical_identity, check_link, official_url, so
 from verificador_aprobacion import discover_official_url
 from lectores_dian import Lectores
 from patrones_dian import limpiar
+from plazos_dian import complete_deadlines
 
 LOG = logging.getLogger("agente_control_interno")
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
@@ -49,31 +50,6 @@ QUARANTINE_CODES = {
     "cita_centinal", "pregunta_respuesta_centinal", "zona_centinal",
     "ambito_centinal", "plazo_centinal", "fecha_web_centinal",
 }
-
-
-def complete_deadlines(text):
-    """Conserva únicamente plazos que terminan completos en la fuente DIAN."""
-    source = str(text or "")
-    start = re.search(r"\bRESUELVE\b", source, re.IGNORECASE)
-    if start:
-        source = source[start.end():]
-    date_pattern = r"\d{1,2}\s+de\s+[A-Za-záéíóúÁÉÍÓÚ]+\s+de\s+(?:19|20)\d{2}"
-    trigger = r"plazo|vencimiento|hasta el|a m[aá]s tardar|pagar[aá]n?|pago"
-    found = []
-    for line in source.splitlines():
-        clean = re.sub(r"\s+", " ", line).strip(" -•\t")
-        if not (25 <= len(clean) <= 420 and re.search(trigger, clean, re.IGNORECASE)):
-            continue
-        matches = list(re.finditer(date_pattern, clean, re.IGNORECASE))
-        if not matches:
-            continue
-        ending = clean[matches[-1].end():].strip()
-        if ending and not re.fullmatch(r"(?:inclusive|[).,;:»”\"]*)", ending, re.IGNORECASE):
-            continue
-        value = clean.rstrip(".,;: ") + "."
-        if value not in found:
-            found.append(value)
-    return found[:12]
 
 
 def normalized_sources(text):
