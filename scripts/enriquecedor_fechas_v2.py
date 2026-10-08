@@ -18,6 +18,7 @@ from urllib3.util.retry import Retry
 from bs4 import BeautifulSoup
 from supabase import create_client
 from plazos_dian import complete_deadlines
+from retroactividad_dian import explicit_retroactivity
 
 OFFICIAL_HOST="normograma.dian.gov.co"; OFFICIAL_PREFIX="/dian/compilacion/"; TIMEOUT=30; PAUSA=0.15; PAGE=1000
 MESES={"enero":1,"febrero":2,"marzo":3,"abril":4,"mayo":5,"junio":6,"julio":7,"agosto":8,"septiembre":9,"setiembre":9,"octubre":10,"noviembre":11,"diciembre":12}
@@ -231,7 +232,7 @@ class EnriquecedorFechasV2:
         if re.search(r"\bderogad[oa]\b",t):return "derogado","Anotación del Normograma: "+next((x for x in anot if "derogad" in x.lower()),anot[0])[:200]
         return None,None
     def _retroactividad(self,texto):
-        m=re.search(r"\bDE\s+((?:19|20)\d{2})\b",texto[:800],re.I);anio=int(m.group(1)) if m else None;anos=sorted({int(x) for x in re.findall(r"(?:año|a[ñn]os|per[ií]odos? gravables?)\s+((?:19|20)\d{2})",texto,re.I)});anteriores=[x for x in anos if anio and x<anio];return bool(anteriores or re.search(r"retroactiv|efectos? hacia atr[aá]s",texto,re.I)),anteriores[:8]
+        return explicit_retroactivity(texto)
     def _zonas(self,texto):
         ventana=texto[:15000];halladas=[d for d in DEPARTAMENTOS if re.search(rf"\b{re.escape(d)}\b",ventana,re.I)];return halladas[:15] if len(halladas)>=2 and re.search(r"emergencia|calamidad|desastre|afectad|damnificad|zona",ventana,re.I) else []
     def _plazos(self,texto):
