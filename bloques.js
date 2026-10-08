@@ -66,10 +66,12 @@ function fichaBoletin(d){
   const pdf=enlaceDianSeguro(d.enlace_oficial);
   const indice=enlaceDianSeguro(d.fuente_indice);
   const raiz=enlaceDianSeguro(d.fuente_raiz);
+  const cotejo=d.estado_fuente_verificacion==='pdf_oficial_con_texto'&&d.fuente_verificada_en
+    ?`<p class="cobertura-nota">PDF consultado en la DIAN el ${esc(fechaCorta(d.fuente_verificada_en))}.</p>`:'';
   const enlace=(url,nombre)=>url?`<div class="fuente-item"><a href="${esc(url)}" target="_blank" rel="noopener noreferrer">${esc(nombre)} ↗</a></div>`:'';
   const fuentes=`<details class="detalle-seccion fuentes"><summary>Publicación y procedencia DIAN</summary>${enlace(pdf,'PDF de la edición')}${enlace(indice,'Índice de esta publicación')}${enlace(raiz,'Novedades y boletines en el Normograma')}</details>`;
   const textoFuente=bloqueTextoFuente(d);
-  return `<article data-id="${esc(d.id)}" class="t-neutro escrito ficha-boletin"><div class="cintas"><span class="cinta">Boletín informativo DIAN</span></div><div class="fila-id">${glifo(d)}<span class="codigo codigo-texto">Edición institucional</span></div><h2>${esc(tituloFicha(d))}</h2><div class="cuerpo"><div class="principal">${bloqueContenido(d)}<section class="guia-uso" aria-label="Uso de la edición"><div class="guia-rotulo">Para tu trabajo</div><p>Consulta los apartados y páginas citados en la síntesis. Para aplicar un criterio a un cliente, abre el acto o sentencia original y comprueba su alcance.</p>${pdf?`<div class="guia-accion"><a class="abrir-fuente" href="${esc(pdf)}" target="_blank" rel="noopener noreferrer">Abrir PDF en la DIAN</a></div>`:''}</section>${fuentes}</div></div>${textoFuente}</article>`;
+  return `<article data-id="${esc(d.id)}" class="t-neutro escrito ficha-boletin"><div class="cintas"><span class="cinta">Boletín informativo DIAN</span></div><div class="fila-id">${glifo(d)}<span class="codigo codigo-texto">Edición institucional</span></div><h2>${esc(tituloFicha(d))}</h2>${cotejo}<div class="cuerpo"><div class="principal">${bloqueContenido(d)}<section class="guia-uso" aria-label="Uso de la edición"><div class="guia-rotulo">Para tu trabajo</div><p>Consulta los apartados y páginas citados en la síntesis. Para aplicar un criterio a un cliente, abre el acto o sentencia original y comprueba su alcance.</p>${pdf?`<div class="guia-accion"><a class="abrir-fuente" href="${esc(pdf)}" target="_blank" rel="noopener noreferrer">Abrir PDF en la DIAN</a></div>`:''}</section>${fuentes}</div></div>${textoFuente}</article>`;
 }
 ficha = function(d){
   if(d.tipo_documento==='boletin')return fichaBoletin(d);
