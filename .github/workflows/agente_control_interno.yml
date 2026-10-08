@@ -1,6 +1,11 @@
 name: EUCLIDIAN — Agente de integridad documental
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/agente_control_interno.py'
+      - '.github/workflows/agente_control_interno.yml'
   workflow_run:
     workflows: ["Inspector documental EUCLIDIAN"]
     types: [completed]
