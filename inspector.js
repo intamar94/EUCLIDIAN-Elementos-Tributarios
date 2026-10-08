@@ -50,7 +50,9 @@ async function load() {
     const d = item.documento || {};
     const source = safeOfficialUrl(item.fuente_url) || safeOfficialUrl(d.enlace_oficial);
     const evidence = item.evidencia || {};
-    return `<article class="expediente ${item.prioridad === 'alta' ? 'prioridad-alta' : ''}"><div class="expediente-titulo"><strong>${escapeHtml(d.titulo || d.numero_resolucion || item.documento_id || 'Documento no identificado')}</strong><span>${escapeHtml(labels[item.estado] || item.estado)}</span></div><p><b>${escapeHtml(item.codigo.replaceAll('_',' '))}</b> · prioridad ${escapeHtml(item.prioridad)} · detectado ${when(item.primera_deteccion)} · ${number(item.intentos)} controles</p><p>${escapeHtml(item.detalle)}</p><p><b>Siguiente paso:</b> ${escapeHtml(item.accion_requerida)}</p><p class="evidencia">Último control: ${when(item.ultimo_control_en)}${evidence.sha256 ? ' · huella de fuente: ' + escapeHtml(evidence.sha256.slice(0,16)) + '…' : ''}${item.verificacion_id ? ' · reinspección registrada' : ''}</p>${source ? `<a href="${escapeHtml(source)}" target="_blank" rel="noopener noreferrer">Abrir fuente DIAN</a>` : '<span class="fallo-texto">Sin fuente individual comprobable</span>'}</article>`;
+    const ready = item.estado === 'correccion_verificada' && d.id && !d.publicado_cliente;
+    const editor = ready ? `<div class="editor-expediente"><p><b>Para volver a publicar:</b> coteja la fuente DIAN, la fecha y la síntesis que leerá el contador.</p><p>Fecha del documento: ${escapeHtml(d.fecha_es_real ? d.fecha_publicacion || 'Sin dato' : 'No verificada')} · publicación web: ${escapeHtml(d.fecha_publicacion_web || 'Sin dato')}</p><label for="resumen-${escapeHtml(item.id)}">Síntesis para el contador</label><textarea id="resumen-${escapeHtml(item.id)}" rows="5" maxlength="4000">${escapeHtml(d.resumen_humano || d.resumen_borrador || d.descripcion_limpia || '')}</textarea><button type="button" data-publicar="${escapeHtml(d.id)}" data-resumen="resumen-${escapeHtml(item.id)}">Publicar ficha comprobada</button></div>` : '';
+    return `<article class="expediente ${item.prioridad === 'alta' ? 'prioridad-alta' : ''}"><div class="expediente-titulo"><strong>${escapeHtml(d.titulo || d.numero_resolucion || item.documento_id || 'Documento no identificado')}</strong><span>${escapeHtml(d.publicado_cliente && item.estado === 'correccion_verificada' ? 'Publicada; pendiente cierre en el próximo control' : labels[item.estado] || item.estado)}</span></div><p><b>${escapeHtml(item.codigo.replaceAll('_',' '))}</b> · prioridad ${escapeHtml(item.prioridad)} · detectado ${when(item.primera_deteccion)} · ${number(item.intentos)} controles</p><p>${escapeHtml(item.detalle)}</p><p><b>Siguiente paso:</b> ${escapeHtml(item.accion_requerida)}</p><p class="evidencia">Último control: ${when(item.ultimo_control_en)}${evidence.sha256 ? ' · huella de fuente: ' + escapeHtml(evidence.sha256.slice(0,16)) + '…' : ''}${item.verificacion_id ? ' · reinspección registrada' : ''}</p>${source ? `<a href="${escapeHtml(source)}" target="_blank" rel="noopener noreferrer">Abrir fuente DIAN</a>` : '<span class="fallo-texto">Sin fuente individual comprobable</span>'}${editor}</article>`;
   }).join('') || '<p>No hay expedientes en este filtro.</p>';
   $('casosPagina').textContent = `Página ${casePage} de ${Math.max(1,Math.ceil(caseTotal/25))} · ${number(caseTotal)} expedientes`;
   $('casosAnterior').disabled = casePage <= 1;
@@ -80,6 +82,19 @@ $('filtro').addEventListener('change', () => { currentPage = 1; load().catch(err
 $('filtroCasos').addEventListener('change', () => { casePage = 1; load().catch(error => { $('estado').textContent = error.message; }); });
 $('casosAnterior').addEventListener('click', () => { casePage--; load().catch(error => { $('estado').textContent = error.message; }); });
 $('casosSiguiente').addEventListener('click', () => { casePage++; load().catch(error => { $('estado').textContent = error.message; }); });
+$('expedientes').addEventListener('click', async event => {
+  const button = event.target.closest('[data-publicar]');
+  if (!button) return;
+  const summary = $(button.dataset.resumen)?.value.trim() || '';
+  const messages = {sintesis_insuficiente:'La síntesis necesita al menos 80 caracteres comprobados.',inspeccion_no_vigente:'Hace falta una inspección completa y reciente.',expediente_bloqueante_abierto:'La ficha conserva un expediente bloqueante.',hallazgo_bloqueante:'La reinspección conserva un hallazgo bloqueante.',fecha_no_verificada:'La fecha del documento o de publicación no está comprobada.',fuente_no_verificable:'La fuente individual DIAN no es verificable.'};
+  button.disabled = true;
+  try {
+    const response = await fetch('/api/decidir',{method:'POST',headers:{'Content-Type':'application/json','x-clave':reviewKey},body:JSON.stringify({id:button.dataset.publicar,decision:'aprobar',resumen:summary})});
+    const data = await response.json();
+    if (!response.ok) throw new Error(messages[data.motivo] || data.motivo || data.error || 'No se pudo publicar.');
+    await load();
+  } catch(error) { button.insertAdjacentHTML('afterend',`<p class="fallo-texto" role="alert">${escapeHtml(error.message)}</p>`); button.disabled = false; }
+});
 $('anterior').addEventListener('click', () => { currentPage--; load().catch(error => { $('estado').textContent = error.message; }); });
 $('siguiente').addEventListener('click', () => { currentPage++; load().catch(error => { $('estado').textContent = error.message; }); });
 if (reviewKey) load().catch(() => { $('errorAcceso').textContent = 'Vuelve a ingresar la clave de revisión.'; reviewKey = ''; sessionStorage.removeItem('euclidian_revisor_clave'); });
