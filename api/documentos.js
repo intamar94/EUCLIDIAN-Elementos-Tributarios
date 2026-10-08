@@ -74,11 +74,26 @@ export default async function handler(req,res){
       const ids=documentos.map(d=>d.id).filter(Boolean);
       for(let i=0;i<ids.length;i+=50){
         const inFilter=`in.(${ids.slice(i,i+50).join(',')})`;
-        const rTexto=await fetch(`${SUPABASE_URL}/rest/v1/documentos_tributarios?select=id,texto_completo,notas_verificacion,estado_fuente_verificacion,fuente_verificada_en&id=${encodeURIComponent(inFilter)}`,{headers:cabeceras});
-        if(!rTexto.ok&&novedades)return res.status(502).json({error:'evidencia_no_disponible'});
+        const rTexto=await fetch(`${SUPABASE_URL}/rest/v1/documentos_tributarios?select=id,texto_completo,notas_verificacion,estado_fuente_verificacion,fuente_verificada_en,hash_contenido&id=${encodeURIComponent(inFilter)}`,{headers:cabeceras});
+        if(!rTexto.ok)return res.status(502).json({error:'evidencia_no_disponible'});
         if(rTexto.ok)for(const x of await rTexto.json())porTexto.set(x.id,x);
       }
       for(const d of documentos){const x=porTexto.get(d.id)||{};const nota=String(x.notas_verificacion||'');const raiz=nota.match(/raiz:\s*(https:\/\/[^\s|]+)/i);const indice=nota.match(/indice:\s*(https:\/\/[^\s|]+)/i);d.texto_completo=x.texto_completo||null;d.estado_fuente_verificacion=x.estado_fuente_verificacion||null;d.fuente_verificada_en=x.fuente_verificada_en||null;d.fuente_raiz=(raiz&&raiz[1])||((d.temas||[]).includes('boletin_mensual')||d.tipo_documento==='boletin'?FUENTES.novedades:FUENTES.tributario);d.fuente_indice=(indice&&indice[1])||null;}
+      const boletines=documentos.filter(d=>d.tipo_documento==='boletin');
+      if(boletines.length){
+        const porBoletin=new Map(boletines.map(d=>[d.id,d]));
+        for(const d of boletines)d.referencias_boletin=[];
+        for(let i=0;i<boletines.length;i+=50){
+          const inFilter=`in.(${boletines.slice(i,i+50).map(d=>d.id).join(',')})`;
+          const rRefs=await fetch(`${SUPABASE_URL}/rest/v1/boletin_referencias?select=boletin_id,pagina,tipo,referencia,url_oficial,pdf_hash&boletin_id=${encodeURIComponent(inFilter)}&order=pagina.asc`,{headers:cabeceras});
+          if(!rRefs.ok)return res.status(502).json({error:'referencias_no_disponibles'});
+          for(const ref of await rRefs.json()){
+            const boletin=porBoletin.get(ref.boletin_id);
+            if(boletin?.estado_fuente_verificacion==='pdf_oficial_con_texto'&&ref.pdf_hash===porTexto.get(boletin.id)?.hash_contenido&&String(ref.url_oficial||'').startsWith('https://normograma.dian.gov.co/dian/compilacion/docs/'))
+              boletin.referencias_boletin.push({pagina:ref.pagina,tipo:ref.tipo,referencia:ref.referencia,url_oficial:ref.url_oficial});
+          }
+        }
+      }
       for(const d of documentos){d.es_nuevo=esNovedadOficial(d);if(!d.fuente_raiz)d.fuente_raiz=(d.temas||[]).includes('boletin_mensual')||d.tipo_documento==='boletin'?FUENTES.novedades:FUENTES.tributario;}
       // Una publicación reciente solo aparece como novedad cuando conserva
       // fecha exacta, texto fuente y enlace DIAN. Así la urgencia no rebaja
