@@ -1,6 +1,8 @@
 # Boletines DIAN: criterio para publicar una ficha
 
-Estado observado el 8 de octubre de 2026: 42 PDF descubiertos desde la cadena oficial `Novedades y boletines → Novedades jurídicas en el portal DIAN → índice de publicaciones`; 41 tienen texto extraído y ninguno está publicado al suscriptor. Un PDF falló por desconexión temporal. Los 42 borradores genéricos se corrigieron para no atribuir obligaciones ni vigencia a la edición.
+Estado observado el 8 de octubre de 2026: 42 PDF descubiertos desde la cadena oficial `Novedades y boletines → Novedades jurídicas en el portal DIAN → índice de publicaciones`; los 42 tienen texto extraído y ninguno está publicado al suscriptor. Los borradores genéricos se corrigieron para no atribuir obligaciones ni vigencia a la edición.
+
+El control automático de procedencia y de cambios del PDF está descrito en [BOLETINES_PROCEDENCIA.md](BOLETINES_PROCEDENCIA.md). Esa comprobación no sustituye el cotejo editorial de cada edición.
 
 ## Ficha útil para el suscriptor
 
