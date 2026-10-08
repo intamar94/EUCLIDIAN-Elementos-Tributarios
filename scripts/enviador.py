@@ -230,8 +230,8 @@ class Enviador:
                 checked = (self.db.table("inspector_resultados")
                            .select("documento_id,estado")
                            .eq("ejecucion_id", run["id"]).in_("documento_id", ids).execute().data or [])
-                if len(checked) != len(ids) or any(x["estado"] == "critico" for x in checked):
-                    log.error("  [x] Un documento del correo carece de control o conserva un hallazgo critico")
+                if len(checked) != len(ids) or any(x["estado"] != "correcto" for x in checked):
+                    log.error("  [x] Un documento del correo carece de control o conserva un hallazgo")
                     ok = False
             blocked = (self.db.table("control_interno_expedientes").select("documento_id")
                        .in_("documento_id", ids).in_("estado", ["abierto", "en_cuarentena"])

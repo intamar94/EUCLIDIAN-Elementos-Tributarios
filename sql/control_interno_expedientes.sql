@@ -27,6 +27,12 @@ create index if not exists control_interno_expedientes_abiertos_idx
   where estado <> 'resuelto_verificado';
 create index if not exists control_interno_expedientes_documento_idx
   on public.control_interno_expedientes (documento_id, estado);
+create index if not exists control_interno_expedientes_origen_idx
+  on public.control_interno_expedientes (inspeccion_origen);
+create index if not exists control_interno_expedientes_ultima_idx
+  on public.control_interno_expedientes (inspeccion_ultima);
+create index if not exists control_interno_expedientes_verificacion_idx
+  on public.control_interno_expedientes (verificacion_id);
 alter table public.control_interno_expedientes enable row level security;
 revoke all on public.control_interno_expedientes from public, anon, authenticated;
 grant select, insert, update on public.control_interno_expedientes to service_role;
