@@ -10,6 +10,10 @@ on:
       - 'scripts/scraper.py'
       - 'scripts/sincronizador_dian.py'
       - 'scripts/boletines_dian.py'
+      - 'scripts/fuente_documental.py'
+      - 'scripts/validar_fuentes_dian.py'
+      - 'scripts/enriquecedor_fechas_v2.py'
+      - 'scripts/quarantine_future_dates.py'
   schedule:
     - cron: '15 */6 * * *'
 
