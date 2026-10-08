@@ -178,6 +178,7 @@ class Generador:
                 "anos_afectados,zonas_afectadas,temas,plazos_mencionados,"
                 "anotaciones_vigencia,modificado_por,modifica_a"
             ).eq("aprobado_para_email", True) \
+             .eq("publicado_cliente", True) \
              .gte("fecha_publicacion", self.desde.isoformat()) \
              .lte("fecha_publicacion", self.hasta.isoformat()) \
              .execute()
