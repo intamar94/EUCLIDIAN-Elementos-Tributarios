@@ -55,7 +55,7 @@ class EnriquecedorFechasV2:
 
     def _pendientes(self):
         campos="id,numero_resolucion,enlace_oficial,tipo_documento,contenido,temas,fecha_publicacion,fecha_es_real,texto_completo"
-        encontrados={}
+        encontrados={}; prioritarios={}
         try:
             # Una fecha no basta para sustentar una ficha. También abrimos los
             # documentos sin texto capturado, aunque el índice ya hubiera
@@ -68,10 +68,16 @@ class EnriquecedorFechasV2:
             for start in range(0,total,PAGE):
                 r=self.db.table("documentos_tributarios").select(campos).eq("fecha_es_real",True).gte("fecha_publicacion","1950-01-01").lte("fecha_publicacion",f"{datetime.now().year+1}-12-31").range(start,start+PAGE-1).execute()
                 for d in r.data or []:
-                    if str(d.get("fecha_publicacion") or "").endswith("-01-01"):encontrados[d["id"]]=d
+                    fecha=str(d.get("fecha_publicacion") or "")
+                    anio=re.search(r"-((?:19|20)\d{2})$",str(d.get("numero_resolucion") or ""))
+                    if anio and fecha and fecha[:4]!=anio.group(1):prioritarios[d["id"]]=d
+                    elif fecha.endswith("-01-01"):encontrados[d["id"]]=d
         except Exception as e:
             log.error("No se pudo leer la cola: %s",str(e)[:250]); raise
-        return list(encontrados.values())[:self.limite]
+        # Una fecha que contradice el número del acto tiene prioridad sobre
+        # las fichas aún sin texto: se muestra mal al suscriptor y altera el orden.
+        prioritarios.update({k:v for k,v in encontrados.items() if k not in prioritarios})
+        return list(prioritarios.values())[:self.limite]
 
     def _procesar(self,doc,i,total):
         url=doc.get("enlace_oficial") or ""; p=urlparse(url)
@@ -92,13 +98,21 @@ class EnriquecedorFechasV2:
         soup=BeautifulSoup(r.text,"html.parser")
         for x in soup(["script","style","nav","footer"]):x.decompose()
         texto=re.sub(r"\n{3,}","\n\n",re.sub(r"[ \t]+"," ",soup.get_text("\n"))).strip()
-        fecha_documento=self._fecha_documento(texto,doc.get("numero_resolucion"))
+        identificador=re.search(r"-((?:19|20)\d{2})$",str(numero or ""))
+        anio_identificador=int(identificador.group(1)) if identificador else None
+        fecha_documento=self._fecha_documento(texto,numero)
         fecha_web=self._fecha_publicacion(texto)
         campos={"texto_completo":texto[:60000],"enriquecido_en":datetime.now(timezone.utc).isoformat()}
-        if fecha_documento:
-            campos.update(fecha_publicacion=fecha_documento.isoformat(),fecha_es_real=True);self.stats["fecha_documento_verificada"]+=1
+        if fecha_documento and (not anio_identificador or fecha_documento.year==anio_identificador):
+            campos.update(fecha_publicacion=fecha_documento.isoformat(),fecha_es_real=True)
+            if anio_identificador:campos["anio_publicacion"]=anio_identificador
+            self.stats["fecha_documento_verificada"]+=1
         else:
             self.stats["fecha_documento_no_verificada"]+=1
+            fecha_anterior=str(doc.get("fecha_publicacion") or "")
+            if anio_identificador and fecha_anterior and fecha_anterior[:4]!=str(anio_identificador):
+                campos.update(fecha_publicacion=None,fecha_es_real=False,anio_publicacion=anio_identificador)
+                self.stats["fecha_incoherente_retirada"]+=1
             if re.search(r"Diario Oficial|publicad[ao]|publicaci[oó]n",texto[:25000],re.I): self.stats["fecha_patron_sin_fecha_valida"]+=1
             else: self.stats["fecha_sin_evidencia_en_pagina"]+=1
         if fecha_web:
@@ -128,17 +142,34 @@ class EnriquecedorFechasV2:
 
     def _fecha_documento(self,texto,numero):
         """Lee la fecha propia del acto del encabezado, separada de su publicación web."""
-        # Conservar el siglo del identificador. Extraer solo sus dos últimos
-        # dígitos convierte, por ejemplo, 1995 en 2095 y crea una fecha
-        # imposible que puede terminar expuesta como metadato documental.
         anio=re.search(r"-((?:19|20)\d{2})$",str(numero or ""))
         year=anio.group(1) if anio else None
+        cab=texto[:2500]
+        encabezado=re.search(r"(?im)^\s*(?:CONCEPTO(?:\s+TRIBUTARIO)?|OFICIO|RESOLUCI[OÓ]N|DECRETO)\s*(?:N[oO]\.?)?\s*\d{1,7}\s*(?:DE\s+(?:19|20)\d{2})?",cab)
+        if not encabezado:return None
+        fragmento=cab[encabezado.end():encabezado.end()+180]
         if not year:
-            m=re.search(r"\b(?:19|20)\d{2}\b",texto[:1200])
+            m=re.search(r"\b(?:19|20)\d{2}\b",cab[encabezado.start():encabezado.end()])
             year=m.group(0) if m else None
-        m=re.search(r"\(\s*([A-Za-záéíóúÁÉÍÓÚ]+)\s+(\d{1,2})\s*\)",texto[:2200])
-        if not (m and year): return None
-        return a_fecha(m.group(2),m.group(1),year)
+        if not year:return None
+        mes=r"([A-Za-záéíóúÁÉÍÓÚ]+)"
+        patrones=[
+            (rf"\(\s*{mes}\s+(\d{{1,2}})(?:\s+de\s+((?:19|20)\d{{2}}))?\s*\)","mes_dia"),
+            (rf"\(\s*(\d{{1,2}})\s+(?:de\s+)?{mes}(?:\s+de\s+((?:19|20)\d{{2}}))?\s*\)","dia_mes"),
+            (rf"\b(\d{{1,2}})\s+de\s+{mes}\s+de\s+((?:19|20)\d{{2}})\b","dia_mes"),
+            (rf"\bde\s+{mes}\s+(\d{{1,2}})\s+de\s+((?:19|20)\d{{2}})\b","mes_dia"),
+            (rf"\b{mes}\s+(\d{{1,2}})/(\d{{2}})\b","mes_dia_corto"),
+        ]
+        for patron,orden in patrones:
+            m=re.search(patron,fragmento,re.I)
+            if not m:continue
+            dia,mes_txt=(m.group(1),m.group(2)) if orden=="dia_mes" else (m.group(2),m.group(1))
+            fuente_anio=m.group(3) if m.lastindex and m.lastindex>=3 else None
+            if orden=="mes_dia_corto":fuente_anio=year[:2]+fuente_anio
+            if fuente_anio and fuente_anio!=year:continue
+            fecha=a_fecha(dia,mes_txt,year)
+            if fecha:return fecha
+        return None
 
     def _fecha_publicacion(self,texto):
         patrones=[r"Diario Oficial[^\n]{0,160}?de\s+(\d{1,2})\s+de\s+([A-Za-záéíóúÁÉÍÓÚ]+)\s+de\s+((?:19|20)\d{2})",r"Diario Oficial[^\n]{0,160}?del\s+(\d{1,2})\s+de\s+([A-Za-záéíóúÁÉÍÓÚ]+)\s+de\s+((?:19|20)\d{2})",r"publicad[ao][^\n]{0,180}?(\d{1,2})\s+de\s+([A-Za-záéíóúÁÉÍÓÚ]+)\s+de\s+((?:19|20)\d{2})",r"publicaci[oó]n[^\n]{0,180}?(\d{1,2})\s+de\s+([A-Za-záéíóúÁÉÍÓÚ]+)\s+de\s+((?:19|20)\d{2})"]

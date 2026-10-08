@@ -16,7 +16,8 @@ const FUENTES = {
 };
 const DIAS_NOVEDAD = 14;
 function fechaCorteNovedades(){const f=new Date();f.setUTCDate(f.getUTCDate()-DIAS_NOVEDAD);return f.toISOString().slice(0,10);}
-function esNovedadOficial(d){const corte=fechaCorteNovedades();return [d.fecha_publicacion_web,d.fecha_publicacion].some(f=>typeof f==='string'&&f.slice(0,10)>=corte);}
+function fechaDocumentoCoherente(d){const anio=String(d.numero_resolucion||'').match(/-((?:19|20)\d{2})$/)?.[1];return d.fecha_es_real===true&&typeof d.fecha_publicacion==='string'&&(!anio||d.fecha_publicacion.slice(0,4)===anio);}
+function esNovedadOficial(d){const corte=fechaCorteNovedades();return (typeof d.fecha_publicacion_web==='string'&&d.fecha_publicacion_web.slice(0,10)>=corte)||(fechaDocumentoCoherente(d)&&d.fecha_publicacion.slice(0,10)>=corte);}
 export default async function handler(req,res){
   const started=Date.now();
   // Fail closed: Supabase server configuration is mandatory. The old shared key
@@ -46,7 +47,7 @@ export default async function handler(req,res){
   filtro+='&publicado_cliente=is.true';
   if(!doc&&estado==='nuevos'){const corte=fechaCorteNovedades();filtro+=`&or=(fecha_publicacion.gte.${corte},fecha_publicacion_web.gte.${corte})`;}
   if(!doc&&tema)filtro+=`&temas=cs.{${encodeURIComponent(tema)}}`;
-  if(!doc&&q){const termino=q.replace(/[(),]/g,' ').replace(/[*]/g,' ').trim();if(termino)filtro+=`&or=${encodeURIComponent(`(numero_resolucion.ilike.*${termino}*,titulo.ilike.*${termino}*,contenido.ilike.*${termino}*,descripcion_limpia.ilike.*${termino}*)`)}`;}
+  if(!doc&&q){const termino=q.replace(/[(),]/g,' ').replace(/[*]/g,' ').trim();if(termino){const sigla=/^[A-ZÁÉÍÓÚÜÑ]{2,8}$/u.test(termino);const busqueda=sigla?`(contenido.plfts(spanish).${termino},descripcion_limpia.plfts(spanish).${termino})`:`(numero_resolucion.ilike.*${termino}*,titulo.ilike.*${termino}*,contenido.ilike.*${termino}*,descripcion_limpia.ilike.*${termino}*)`;filtro+=`&or=${encodeURIComponent(busqueda)}`;}}
   const primera=doc?0:(pagina-1)*POR_PAGINA;
   try{
     const rDocs=await fetch(`${SUPABASE_URL}/rest/v1/v_bandeja?select=${CAMPOS}&${filtro}&order=${orden}`,{headers:{...cabeceras,Prefer:'count=exact',Range:`${primera}-${primera+POR_PAGINA-1}`}});
@@ -62,7 +63,7 @@ export default async function handler(req,res){
       // Una publicación reciente solo aparece como novedad cuando conserva
       // fecha exacta, texto fuente y enlace DIAN. Así la urgencia no rebaja
       // el estándar de evidencia de la biblioteca.
-      if(!doc&&estado==='nuevos'){documentos=documentos.filter(d=>d.fecha_es_real===true&&String(d.texto_completo||'').trim().length>=200&&String(d.enlace_oficial||'').startsWith('https://normograma.dian.gov.co/dian/compilacion/'));total=documentos.length;}
+      if(!doc&&estado==='nuevos'){documentos=documentos.filter(d=>(fechaDocumentoCoherente(d)||d.fecha_publicacion_web)&&String(d.texto_completo||'').trim().length>=200&&String(d.enlace_oficial||'').startsWith('https://normograma.dian.gov.co/dian/compilacion/'));total=documentos.length;}
     }
     const rResumen=await fetch(`${SUPABASE_URL}/rest/v1/rpc/conteos_bandeja_api`,{method:'POST',headers:{...cabeceras,'Content-Type':'application/json'},body:JSON.stringify({p_periodo:periodo,p_tema:tema||null,p_estado:estado,p_prioridad:null,p_naturaleza:null})});
     let resumen={}; try{if(rResumen.ok)resumen=(await rResumen.json())||{};}catch(e){}
