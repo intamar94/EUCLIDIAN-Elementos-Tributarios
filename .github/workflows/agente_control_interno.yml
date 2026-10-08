@@ -1,15 +1,6 @@
 name: EUCLIDIAN — Agente de integridad documental
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'scripts/agente_control_interno.py'
-      - 'sql/agente_control_interno.sql'
-      - 'api/inspector.js'
-      - 'inspector.html'
-      - 'inspector.js'
-      - '.github/workflows/agente_control_interno.yml'
   workflow_run:
     workflows: ["Inspector documental EUCLIDIAN"]
     types: [completed]
@@ -31,6 +22,7 @@ concurrency:
 
 jobs:
   gestionar:
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
