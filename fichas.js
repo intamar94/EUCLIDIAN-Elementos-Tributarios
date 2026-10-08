@@ -55,9 +55,9 @@ function fechaFicha(d){
     return `<span class="fecha">${fechaCorta(d.fecha_publicacion)}</span>`;
   if (d.fecha_publicacion_web)
     return `<span class="fecha">${fechaCorta(d.fecha_publicacion_web)}</span>`;
-  const anio = d.anio_publicacion || d.anio || String(d.fecha_publicacion || '').slice(0,4);
+  const anio = anioIdentificador(d) || d.anio_publicacion || d.anio;
   if (!anio) return '';
-  return `<span class="fecha aproximada" title="La DIAN no publicó el día exacto">${anio}</span>`;
+  return `<span class="fecha aproximada" title="Año del identificador DIAN; fecha exacta no verificada">${anio}</span>`;
 }
 
 function fechaDocumentoConfiable(d){
@@ -84,7 +84,7 @@ function fechaPrincipal(d){
   if (d.fecha_publicacion_web)
     return `<span class="fecha-principal">Publicada por DIAN · ${fechaLarga(d.fecha_publicacion_web)}</span>`;
   const anio=anioIdentificador(d)||d.anio_publicacion||d.anio||String(d.fecha_publicacion||'').slice(0,4);
-  return anio?`<span class="fecha-principal aproximada" title="El índice DIAN solo permite identificar el año">Índice DIAN · ${esc(anio)}</span>`:'';
+  return anio?`<span class="fecha-principal aproximada" title="La fecha exacta del acto no está verificada">Año del documento · ${esc(anio)}</span>`:'';
 }
 
 function esc(s){

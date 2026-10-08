@@ -6,7 +6,13 @@ const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY;
 const CLAVE = process.env.EUCLIDIAN_CLAVE;
 const POR_PAGINA = 25;
 const ESTADOS = { nuevos:'nuevos', todos:'todos' };
-const PERIODOS = { '2026':'anio_publicacion=eq.2026', recientes:'anio_publicacion=gte.2024', decada:'anio_publicacion=gte.2016', todo:'' };
+const PERIODOS = { recientes:2024, decada:2016, todo:null };
+function filtroAnio(periodo){
+  if(periodo==='todo')return 'id=not.is.null';
+  const valor=/^\d{4}$/.test(periodo)?Number(periodo):PERIODOS[periodo];
+  const op=/^\d{4}$/.test(periodo)?'eq':'gte';
+  return `and=(or(anio_publicacion.${op}.${valor},and(anio_publicacion.is.null,anio.${op}.${valor})))`;
+}
 const ORDENES = { recientes:'fecha_publicacion.desc.nullslast,fecha_publicacion_web.desc.nullslast,numero_resolucion.desc', prioridad:'orden_prioridad.asc,fecha_publicacion.desc.nullslast,fecha_publicacion_web.desc.nullslast', antiguos:'fecha_publicacion.asc.nullslast,fecha_publicacion_web.asc.nullslast,numero_resolucion.asc' };
 // Solo columnas expuestas por v_bandeja. Los metadatos de verificación se derivan abajo.
 const CAMPOS = ['id','numero_resolucion','numero_interno','tipo_documento','contenido','descripcion_limpia','titulo','resumen_humano','resumen_borrador','enlace_oficial','materia','temas','fecha_publicacion','fecha_es_real','fecha_entrada_vigencia','fecha_publicacion_web','diario_oficial','entidad_emisora','estado_vigencia','motivo_cambio_estado','clasificacion_obligatoriedad','tiene_efectos_retroactivos','anos_afectados','zonas_afectadas','plazos_mencionados','anotaciones_vigencia','tesis_juridica','tesis_respuesta','problema_juridico','fuentes_formales','descriptores','doctrina_citada','jurisprudencia_citada','modifica_a','modificado_por','anio','anio_publicacion','es_nuevo'].join(',');
@@ -45,7 +51,7 @@ export default async function handler(req,res){
   if(doc&&!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(doc))return res.status(400).json({error:'documento_invalido'});
   const orden=ORDENES[req.query.orden]||ORDENES.recientes; const pagina=Math.max(1,parseInt(req.query.pagina,10)||1);
   const cabeceras={apikey:SUPABASE_KEY,Authorization:`Bearer ${SUPABASE_KEY}`};
-  let filtro=doc?`id=eq.${doc}`:/^\d{4}$/.test(periodo)?`anio_publicacion=eq.${periodo}`:(PERIODOS[periodo]!==undefined?PERIODOS[periodo]:'id=not.is.null');
+  let filtro=doc?`id=eq.${doc}`:filtroAnio(periodo);
   filtro+='&publicado_cliente=is.true';
   if(!doc&&estado==='nuevos'){const corte=fechaCorteNovedades();filtro+=`&or=(fecha_publicacion.gte.${corte},fecha_publicacion_web.gte.${corte})`;}
   if(!doc&&tema)filtro+=`&temas=cs.{${encodeURIComponent(tema)}}`;
@@ -100,11 +106,12 @@ export default async function handler(req,res){
       // el estándar de evidencia de la biblioteca.
       if(novedades){const elegibles=documentos.filter(d=>d.es_nuevo&&String(d.texto_completo||'').trim().length>=200&&String(d.enlace_oficial||'').startsWith('https://normograma.dian.gov.co/dian/compilacion/'));elegibles.sort((a,b)=>fechaNovedad(b).localeCompare(fechaNovedad(a))||String(b.numero_resolucion||'').localeCompare(String(a.numero_resolucion||'')));total=elegibles.length;documentos.splice(0,documentos.length,...elegibles.slice(primera,primera+POR_PAGINA));}
     }
-    const rResumen=await fetch(`${SUPABASE_URL}/rest/v1/rpc/conteos_bandeja_api`,{method:'POST',headers:{...cabeceras,'Content-Type':'application/json'},body:JSON.stringify({p_periodo:periodo,p_tema:tema||null,p_estado:estado,p_prioridad:null,p_naturaleza:null})});
-    let resumen={}; try{if(rResumen.ok)resumen=(await rResumen.json())||{};}catch(e){}
+    const rMeta=await fetch(`${SUPABASE_URL}/rest/v1/rpc/metadatos_catalogo_cliente`,{method:'POST',headers:{...cabeceras,'Content-Type':'application/json'},body:JSON.stringify({p_periodo:doc?'todo':periodo})});
+    if(!rMeta.ok)return res.status(502).json({error:'metadatos_no_disponibles'});
+    const meta=await rMeta.json();
     if(acceso.modo==='usuario'&&acceso.user?.id){
       await registrarUsoConsulta(acceso.user.id,{latencia_ms:Date.now()-started,resultados:total,estado:total?'ok':'sin_resultados'});
     }
-    res.setHeader('Cache-Control','no-store'); return res.status(200).json({documentos,total,pagina:doc?1:pagina,porPagina:POR_PAGINA,paginas:Math.max(1,Math.ceil(total/POR_PAGINA)),temas:resumen.temas||[],periodo,periodos:resumen.periodos||{},actualizado:resumen.actualizado||null});
+    res.setHeader('Cache-Control','no-store'); return res.status(200).json({documentos,total,pagina:doc?1:pagina,porPagina:POR_PAGINA,paginas:Math.max(1,Math.ceil(total/POR_PAGINA)),temas:meta.temas||[],periodo,anios:Array.isArray(meta.anios)?meta.anios:[],actualizado:meta.actualizado||null});
   }catch(e){return res.status(500).json({error:'fallo_lectura',detalle:String(e).slice(0,200)});}
 }

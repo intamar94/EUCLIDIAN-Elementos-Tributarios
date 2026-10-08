@@ -155,7 +155,7 @@ async function cargar(autenticar=false){
     document.getElementById('puerta').hidden=true;if(mal)mal.textContent='';
     document.getElementById('cab').hidden=false;document.getElementById('hoy').hidden=false;document.getElementById('controles').hidden=false;document.getElementById('barra').hidden=false;
     document.getElementById('cuentaPanel').hidden=true;
-    marcarActivos();poblarTemas(data.temas||[]);renderPanelHoy(data);renderExplorar(data);describirConsulta(data);
+    marcarActivos();poblarTemas(data.temas||[]);poblarAnios(data.anios||[]);renderPanelHoy(data);renderExplorar(data);describirConsulta(data);
     if(!data.documentos.length){lista.innerHTML=vistaVacia();return data;}
     lista.innerHTML=data.documentos.map(ficha).join('');paginacion(data);window.scrollTo({top:0,behavior:'smooth'});return data;
   }catch(e){
@@ -166,6 +166,7 @@ async function cargar(autenticar=false){
   }finally{clearTimeout(timer);estadoCarga(false);if(btn)btn.disabled=false;}
 }
 function poblarTemas(temas){const sel=document.getElementById('selTema');if(!sel)return;const actual=sel.value;const orden=[...temas].sort((a,b)=>nombreTema(a).localeCompare(nombreTema(b),'es'));sel.innerHTML='<option value="">Todos los temas</option>'+orden.map(t=>`<option value="${t}">${nombreTema(t)}</option>`).join('');sel.value=actual;}
+function poblarAnios(anios){const sel=document.getElementById('selAnio');if(!sel)return;const actual=/^\d{4}$/.test(F.periodo)?F.periodo:'';sel.innerHTML='<option value="">Todos los años</option>'+anios.filter(x=>Number.isInteger(x.anio)&&x.anio>=1950&&x.anio<=new Date().getFullYear()+1).map(x=>`<option value="${x.anio}">${x.anio} · ${Number(x.total||0).toLocaleString('es-CO')}</option>`).join('');sel.value=actual;}
 function seleccionarAnio(anio){F.periodo=anio||'todo';F.pagina=1;marcarActivos();cargar();}
 function paginacion(data){const cont=document.getElementById('paginas'),{pagina,paginas,total,porPagina}=data;if(total===0){cont.innerHTML='';return;}const primero=(pagina-1)*porPagina+1,ultimo=Math.min(pagina*porPagina,total),r=document.getElementById('rango');if(r)r.textContent=`${Number(total).toLocaleString('es-CO')} documentos disponibles · mostrando ${primero}–${ultimo}`;let html='';if(paginas>1){html+=`<button onclick="irA(${pagina-1})" ${pagina<=1?'disabled':''}>‹</button>`;const nums=new Set([1,paginas,pagina,pagina-1,pagina+1]),orden=[...nums].filter(n=>n>=1&&n<=paginas).sort((a,b)=>a-b);let previo=0;orden.forEach(n=>{if(n-previo>1)html+='<span style="color:var(--tenue)">…</span>';html+=`<button onclick="irA(${n})" aria-current="${n===pagina}">${n}</button>`;previo=n;});html+=`<button onclick="irA(${pagina+1})" ${pagina>=paginas?'disabled':''}>›</button>`;}cont.innerHTML=html;}
 function irA(n){F.pagina=n;cargar();}

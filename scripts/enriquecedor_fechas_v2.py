@@ -54,7 +54,7 @@ class EnriquecedorFechasV2:
         if total: log.info("RESUMEN_EUCLIDIAN %s",dict(sorted(self.stats.items())))
 
     def _pendientes(self):
-        campos="id,numero_resolucion,enlace_oficial,tipo_documento,contenido,temas,fecha_publicacion,fecha_es_real,texto_completo"
+        campos="id,numero_resolucion,enlace_oficial,tipo_documento,contenido,temas,fecha_publicacion,fecha_es_real,texto_completo,notas_verificacion"
         encontrados={}; prioritarios={}
         try:
             # La cuarentena documentó la fecha descartada; reabrir esos
@@ -142,6 +142,13 @@ class EnriquecedorFechasV2:
             if anio_identificador and fecha_anterior and fecha_anterior[:4]!=str(anio_identificador):
                 campos.update(fecha_publicacion=None,fecha_es_real=False,anio_publicacion=anio_identificador)
                 self.stats["fecha_incoherente_retirada"]+=1
+            elif doc.get("fecha_es_real") is not True and fecha_anterior.endswith("-01-01"):
+                nota=f"fecha_marcador_retirada: {fecha_anterior}; año conservado desde identificador DIAN"
+                anterior=str(doc.get("notas_verificacion") or "").strip()
+                campos.update(fecha_publicacion=None,fecha_es_real=False,
+                              anio_publicacion=anio_identificador or int(fecha_anterior[:4]),
+                              notas_verificacion=(anterior+" | " if anterior else "")+nota)
+                self.stats["fecha_marcador_retirada"]+=1
             if re.search(r"Diario Oficial|publicad[ao]|publicaci[oó]n",texto[:25000],re.I): self.stats["fecha_patron_sin_fecha_valida"]+=1
             else: self.stats["fecha_sin_evidencia_en_pagina"]+=1
         if fecha_web:
