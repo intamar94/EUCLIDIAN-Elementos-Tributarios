@@ -151,6 +151,21 @@ def check_link(doc):
         return doc, str(exc)[:120]
 
 
+def quarantine_published(db, rows, ids):
+    """Retira hallazgos bloqueantes antes de que termine la inspección."""
+    published = {row["id"] for row in rows if row.get("publicado_cliente")}
+    targets = sorted(set(ids) & published)
+    for start in range(0, len(targets), PAGE):
+        db.table("documentos_tributarios").update({
+            "publicado_cliente": False,
+            "aprobado_para_email": False,
+            "revisado_fiscal_en": None,
+        }).in_("id", targets[start:start + PAGE]).execute()
+    if targets:
+        LOG.warning("Cuarentena inmediata: %s fichas publicadas con hallazgo bloqueante", len(targets))
+    return len(targets)
+
+
 def source_dates(text):
     normal = norm(text[:1800])
     result = {}
@@ -270,7 +285,18 @@ def run(link_sample=500, persist=True):
         for start in range(0, len(results), PAGE):
             if persist:
                 db.table("inspector_resultados").upsert(results[start:start + PAGE], on_conflict="ejecucion_id,documento_id").execute()
+        quarantined = set()
+        critical = {row["id"] for row, result in zip(all_rows, results)
+                    if row.get("publicado_cliente") and result["estado"] == "critico"}
+        if persist and critical:
+            quarantine_published(db, all_rows, critical)
+            quarantined.update(critical)
         cases = [inspect_case(session, *definition, all_rows) for definition in CASES]
+        sentinel_failures = {case["documento_id"] for case in cases
+                             if case.get("estado") == "fallo" and case.get("documento_id")}
+        if persist and sentinel_failures:
+            quarantine_published(db, all_rows, sentinel_failures - quarantined)
+            quarantined.update(sentinel_failures)
         # La red se muestrea por rotación; nunca se presenta como validación HTTP total.
         candidates = [d for d in all_rows if trusted_source(d)]
         candidates.sort(key=lambda d: d["id"])
@@ -295,6 +321,9 @@ def run(link_sample=500, persist=True):
                 if len(network["muestra"]) < 30:
                     network["muestra"].append(failure)
             network["revisados"] += 1
+        broken_ids = {item["id"] for item in network["fallidos"]}
+        if persist and broken_ids:
+            quarantine_published(db, all_rows, broken_ids - quarantined)
         status = "alerta" if count["critico"] or any(c["estado"] == "fallo" for c in cases) or network["rotos"] else "correcto"
         payload = {"estado": status, "finalizado_en": datetime.now(timezone.utc).isoformat(), "total": expected,
                    "revisados": len(all_rows), "criticos": count["critico"], "avisos": count["aviso"],
