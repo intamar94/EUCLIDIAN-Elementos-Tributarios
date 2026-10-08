@@ -36,7 +36,7 @@ export default async function handler(req, res) {
       read('control_interno_expedientes?select=id&estado=eq.resuelto_verificado&limit=1')
     ]);
     const caseIds = queue.data.map(x => x.documento_id).filter(x => /^[0-9a-f-]{36}$/i.test(x));
-    const caseDocuments = caseIds.length ? (await read(`documentos_tributarios?select=id,numero_resolucion,titulo,enlace_oficial,publicado_cliente&id=in.(${caseIds.join(',')})`)).data : [];
+    const caseDocuments = caseIds.length ? (await read(`documentos_tributarios?select=id,numero_resolucion,titulo,enlace_oficial,publicado_cliente,resumen_humano,resumen_borrador,descripcion_limpia,fecha_publicacion,fecha_publicacion_web,fecha_es_real&id=in.(${caseIds.join(',')})`)).data : [];
     const caseById = new Map(caseDocuments.map(x => [x.id,x]));
     const state = ['critico', 'aviso', 'correcto'].includes(req.query.estado) ? req.query.estado : 'critico';
     const page = Math.max(1, Math.min(1000, Number.parseInt(req.query.pagina, 10) || 1));

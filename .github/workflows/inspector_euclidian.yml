@@ -2,6 +2,7 @@ name: Inspector documental EUCLIDIAN
 
 on:
   push:
+    branches: [main]
     paths:
       - 'scripts/inspector_euclidian.py'
       - '.github/workflows/inspector_euclidian.yml'
