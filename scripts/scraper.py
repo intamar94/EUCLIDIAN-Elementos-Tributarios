@@ -522,9 +522,18 @@ class Scraper:
                         registro["aprobado_para_email"] = False
                         self.stats["documentos_cambiados_dian"] += 1
 
-                self.db.table("documentos_tributarios").upsert(
-                    trozo, on_conflict="numero_resolucion"
-                ).execute()
+                for intento in range(3):
+                    try:
+                        self.db.table("documentos_tributarios").upsert(
+                            trozo, on_conflict="numero_resolucion"
+                        ).execute()
+                        break
+                    except Exception as exc:
+                        transient = any(marker in str(exc).lower() for marker in
+                                        ("40p01", "40001", "deadlock detected"))
+                        if not transient or intento == 2:
+                            raise
+                        time.sleep(1.5 * (intento + 1))
                 guardados += len(trozo)
                 log.info("  %d/%d", guardados, len(registros))
             except Exception as e:
