@@ -18,7 +18,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: euclidian-agente-integridad
+  group: euclidian-ciclo-documental
   cancel-in-progress: false
 
 jobs:
