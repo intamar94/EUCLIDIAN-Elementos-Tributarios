@@ -24,10 +24,20 @@ export default async function handler(req, res) {
     if (!run) return res.status(200).json({ ejecucion: null, resultados: [], total: 0 });
     const latestManagement = await read('control_interno_ejecuciones?select=*&order=iniciado_en.desc&limit=1');
     const management = latestManagement.data[0] || null;
-    let managementCases = [];
-    if (management) {
-      managementCases = (await read(`control_interno_casos?select=estado,prioridad,codigo,detalle,evidencia,documento_id,actualizado_en&ejecucion_id=eq.${management.id}&order=prioridad.asc,actualizado_en.desc&limit=25`)).data;
-    }
+    const caseState = ['en_cuarentena','correccion_verificada','resuelto_verificado'].includes(req.query.caso_estado) ? req.query.caso_estado : 'abiertos';
+    const casePage = Math.max(1, Math.min(1000, Number.parseInt(req.query.caso_pagina, 10) || 1));
+    const caseFirst = (casePage - 1) * PAGE;
+    const caseFilter = caseState === 'abiertos' ? 'estado=neq.resuelto_verificado' : `estado=eq.${caseState}`;
+    const [queue, open, quarantined, corrected, resolved] = await Promise.all([
+      read(`control_interno_expedientes?select=id,documento_id,codigo,prioridad,estado,primera_deteccion,ultima_deteccion,ultimo_control_en,inspeccion_ultima,verificacion_id,intentos,detalle,accion_requerida,fuente_url,evidencia&${caseFilter}&order=prioridad.asc,primera_deteccion.asc&offset=${caseFirst}&limit=${PAGE}`),
+      read('control_interno_expedientes?select=id&estado=neq.resuelto_verificado&limit=1'),
+      read('control_interno_expedientes?select=id&estado=eq.en_cuarentena&limit=1'),
+      read('control_interno_expedientes?select=id&estado=eq.correccion_verificada&limit=1'),
+      read('control_interno_expedientes?select=id&estado=eq.resuelto_verificado&limit=1')
+    ]);
+    const caseIds = queue.data.map(x => x.documento_id).filter(x => /^[0-9a-f-]{36}$/i.test(x));
+    const caseDocuments = caseIds.length ? (await read(`documentos_tributarios?select=id,numero_resolucion,titulo,enlace_oficial,publicado_cliente&id=in.(${caseIds.join(',')})`)).data : [];
+    const caseById = new Map(caseDocuments.map(x => [x.id,x]));
     const state = ['critico', 'aviso', 'correcto'].includes(req.query.estado) ? req.query.estado : 'critico';
     const page = Math.max(1, Math.min(1000, Number.parseInt(req.query.pagina, 10) || 1));
     const first = (page - 1) * PAGE;
@@ -38,7 +48,11 @@ export default async function handler(req, res) {
       documents = (await read(`documentos_tributarios?select=id,numero_resolucion,titulo,enlace_oficial&id=in.(${ids.join(',')})`)).data;
     }
     const byId = new Map(documents.map(x => [x.id, x]));
-    return res.status(200).json({ ejecucion: run, gestion: { ejecucion: management, casos: managementCases }, estado: state, pagina: page, porPagina: PAGE,
+    return res.status(200).json({ ejecucion: run, gestion: { ejecucion: management,
+      expedientes: queue.data.map(x => ({...x, documento: caseById.get(x.documento_id) || null})),
+      total: queue.total, pagina: casePage, estado: caseState,
+      conteos: {en_cuarentena:quarantined.total,correccion_verificada:corrected.total,
+        resuelto_verificado:resolved.total,abiertos:open.total} }, estado: state, pagina: page, porPagina: PAGE,
       total: results.total, resultados: results.data.map(x => ({ ...x, documento: byId.get(x.documento_id) || null })) });
   } catch (error) {
     return res.status(502).json({ error: 'inspector_no_disponible' });

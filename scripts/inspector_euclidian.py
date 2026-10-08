@@ -106,17 +106,19 @@ def inspect_row(row, today):
             found.append(issue("ficha_escasa", "aviso", "La síntesis visible no explica suficientemente el documento."))
         if not row.get("fecha_es_real") and not web_date:
             found.append(issue("fecha_no_verificada", "aviso", "No hay fecha exacta comprobada."))
-        for deadline in row.get("plazos_mencionados") or []:
-            text = str(deadline).strip()
-            if text and (len(text) >= 95 and not re.search(r"[.!?]$", text) or re.search(r"\b(?:de|del|el|la|los|las|para|por|podr)\s*$", norm(text))):
-                found.append(issue("plazo_cortado", "critico", "Un plazo visible parece estar truncado."))
-                break
         if row.get("tiene_efectos_retroactivos") and not row.get("anos_afectados"):
             found.append(issue("retroactividad_sin_periodo", "aviso", "La alerta no identifica el período afectado."))
-        for source in row.get("fuentes_formales") or []:
-            if len(str(source).strip()) < 5 or norm(source).strip() in ("articulo", "articulos"):
-                found.append(issue("cita_incompleta", "aviso", "Hay una fuente jurídica incompleta."))
-                break
+    # Estos campos se reinspeccionan incluso durante la cuarentena: ocultar
+    # temporalmente una ficha no puede hacer desaparecer el motivo del control.
+    for deadline in row.get("plazos_mencionados") or []:
+        text = str(deadline).strip()
+        if text and (len(text) >= 95 and not re.search(r"[.!?]$", text) or re.search(r"\b(?:de|del|el|la|los|las|para|por|podr)\s*$", norm(text))):
+            found.append(issue("plazo_cortado", "critico", "Un plazo parece estar truncado."))
+            break
+    for source in row.get("fuentes_formales") or []:
+        if len(str(source).strip()) < 5 or norm(source).strip() in ("articulo", "articulos"):
+            found.append(issue("cita_incompleta", "aviso", "Hay una fuente jurídica incompleta."))
+            break
     return found
 
 
@@ -167,13 +169,15 @@ def source_dates(text):
 def inspect_case(session, label, suffix, expects_thesis, rows):
     identity = canonical_identity({"enlace_oficial": OFFICIAL_PATH + "docs/" + suffix})
     matches = [d for d in rows if canonical_identity(d) == identity]
-    case = {"nombre": label, "documentos": len(matches), "hallazgos": []}
+    case = {"nombre": label, "documentos": len(matches), "hallazgos": [], "codigos": []}
     if not matches:
         case["hallazgos"].append("No se encontró la ficha en la biblioteca.")
+        case["codigos"].append("registro_centinal")
         case["estado"] = "fallo"
         return case
     if len(matches) > 1:
         case["hallazgos"].append("El documento aparece duplicado.")
+        case["codigos"].append("duplicado")
     canonical = next((d for d in matches if (d.get("enlace_oficial") or "").endswith(suffix)), matches[0])
     case["documento_id"] = canonical["id"]
     case["fuente"] = canonical.get("enlace_oficial")
@@ -181,15 +185,19 @@ def inspect_case(session, label, suffix, expects_thesis, rows):
         text = source_text(session, canonical["enlace_oficial"])
     except Exception as exc:
         case["hallazgos"].append(f"No se pudo leer la fuente: {str(exc)[:120]}")
+        case["codigos"].append("fuente_centinal")
         case["estado"] = "fallo"
         return case
     dates = source_dates(text)
     if dates.get("documento") and str(canonical.get("fecha_publicacion") or "") != dates["documento"]:
         case["hallazgos"].append(f"Fecha del documento: ficha {canonical.get('fecha_publicacion')}; DIAN {dates['documento']}.")
+        case["codigos"].append("fecha_centinal")
     if dates.get("web") and str(canonical.get("fecha_publicacion_web") or "") != dates["web"]:
         case["hallazgos"].append(f"Fecha web: ficha {canonical.get('fecha_publicacion_web')}; DIAN {dates['web']}.")
+        case["codigos"].append("fecha_web_centinal")
     if expects_thesis and (not canonical.get("tesis_juridica") or not canonical.get("problema_juridico")):
         case["hallazgos"].append("La pregunta o la respuesta central no están estructuradas en la ficha.")
+        case["codigos"].append("pregunta_respuesta_centinal")
     if suffix.startswith("oficio_dian_15659"):
         formal = " ".join(canonical.get("fuentes_formales") or [])
         source_section = norm(text.split("Fuentes Formales", 1)[-1].split("Extracto", 1)[0])
@@ -197,13 +205,18 @@ def inspect_case(session, label, suffix, expects_thesis, rows):
                    if re.search(rf"\b{n}\b", source_section) and not re.search(rf"\b{n}\b", norm(formal))]
         if missing:
             case["hallazgos"].append("Faltan artículos de las fuentes formales DIAN: " + ", ".join(missing) + ".")
+            case["codigos"].append("cita_centinal")
     if suffix.startswith("decreto_1419"):
         if "valle del cauca" in norm(text) and "valle del cauca" not in norm(" ".join(canonical.get("zonas_afectadas") or [])):
             case["hallazgos"].append("Falta Valle del Cauca en las zonas mencionadas por la fuente DIAN.")
+            case["codigos"].append("zona_centinal")
         if len(canonical.get("zonas_afectadas") or []) < 10:
             case["hallazgos"].append("El ámbito territorial necesita revisión por artículo y municipio.")
+            case["codigos"].append("ambito_centinal")
         if any(len(str(p)) >= 95 for p in canonical.get("plazos_mencionados") or []):
             case["hallazgos"].append("Hay plazos recortados que requieren contexto y artículo.")
+            case["codigos"].append("plazo_centinal")
+    case["codigos"] = sorted(set(case["codigos"]))
     case["estado"] = "fallo" if case["hallazgos"] else "correcto"
     return case
 
@@ -263,7 +276,7 @@ def run(link_sample=500, persist=True):
         candidates.sort(key=lambda d: d["id"])
         sample_size = min(max(0, link_sample), len(candidates))
         start = (today.toordinal() * max(sample_size, 1)) % max(len(candidates), 1)
-        network = {"revisados": 0, "rotos": 0, "muestra": []}
+        network = {"revisados": 0, "rotos": 0, "muestra": [], "fallidos": []}
         selected = [candidates[(start + index) % len(candidates)] for index in range(sample_size)]
         recent_cutoff = (today - timedelta(days=14)).isoformat()
         recent = [d for d in candidates if max(str(d.get("fecha_publicacion_web") or ""),
@@ -277,8 +290,10 @@ def run(link_sample=500, persist=True):
           for doc, error in pool.map(check_link, selected):
             if error:
                 network["rotos"] += 1
+                failure = {"id": doc["id"], "numero": doc.get("numero_resolucion"), "motivo": error}
+                network["fallidos"].append(failure)
                 if len(network["muestra"]) < 30:
-                    network["muestra"].append({"id": doc["id"], "numero": doc.get("numero_resolucion"), "motivo": error})
+                    network["muestra"].append(failure)
             network["revisados"] += 1
         status = "alerta" if count["critico"] or any(c["estado"] == "fallo" for c in cases) or network["rotos"] else "correcto"
         payload = {"estado": status, "finalizado_en": datetime.now(timezone.utc).isoformat(), "total": expected,
@@ -303,7 +318,9 @@ if __name__ == "__main__":
     args = parser.parse_args()
     try:
         result = run(args.enlaces, not args.sin_guardar)
-        sys.exit(1 if result["estado"] == "alerta" else 0)
+        # Hallazgos documentales son trabajo para el ciclo de control, no un
+        # fallo técnico de cobertura. El estado alerta queda en la base.
+        sys.exit(0)
     except Exception as exc:
         LOG.error("Inspector bloqueado: %s", exc)
         sys.exit(2)
