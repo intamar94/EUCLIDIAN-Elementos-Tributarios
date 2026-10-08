@@ -21,7 +21,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: euclidian-actualizacion-dian
+  group: euclidian-ciclo-documental
   cancel-in-progress: false
 
 jobs:
