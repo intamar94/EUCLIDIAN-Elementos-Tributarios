@@ -26,6 +26,21 @@ PUBLICACIONES = {
 }
 
 
+def indice_publicacion(url):
+    p = urlsplit(url)
+    return (p.scheme == "https" and p.hostname == "www.dian.gov.co"
+            and p.path.lower().startswith("/normatividad/publicaciones-juridicas/paginas/")
+            and p.path.rsplit("/", 1)[-1].lower() in PUBLICACIONES
+            and not p.query)
+
+
+def pdf_publicacion(url):
+    p = urlsplit(url)
+    return (p.scheme == "https" and p.hostname == "www.dian.gov.co"
+            and p.path.lower().startswith("/normatividad/publicaciones-juridicas/")
+            and p.path.lower().endswith(".pdf") and not p.query)
+
+
 def enlaces(html, base):
     soup = BeautifulSoup(html, "html.parser")
     seen = set()
@@ -42,13 +57,14 @@ def descubrir_publicaciones(session, raiz_html=None, historico=False):
     if raiz_html is None:
         raiz_html, _, _ = descargar(session, RAIZ)
     portal = next((url for url, _ in enlaces(raiz_html, RAIZ)
-                   if urlsplit(url).path.endswith("/" + PORTAL)), None)
+                   if urlsplit(url).hostname == "normograma.dian.gov.co"
+                   and urlsplit(url).path == "/dian/compilacion/" + PORTAL
+                   and not urlsplit(url).query), None)
     if not portal:
         raise ValueError("La raíz no enlaza Novedades jurídicas en el portal DIAN")
     portal_html, portal, _ = descargar(session, portal)
     queue = [(url, PUBLICACIONES[urlsplit(url).path.rsplit("/", 1)[-1].lower()])
-             for url, _ in enlaces(portal_html, portal)
-             if urlsplit(url).path.rsplit("/", 1)[-1].lower() in PUBLICACIONES]
+             for url, _ in enlaces(portal_html, portal) if indice_publicacion(url)]
     if {kind for _, kind in queue} < {"doctriflash", "boletin_actualidad_juridica"}:
         raise ValueError("No se localizaron ambos índices Doctriflash y Actualidad Jurídica")
     seen, documents, uncovered = set(), {}, []
@@ -58,16 +74,18 @@ def descubrir_publicaciones(session, raiz_html=None, historico=False):
             continue
         seen.add(page)
         html, final, _ = descargar(session, page)
+        if not indice_publicacion(final):
+            raise ValueError(f"Índice redirigido fuera de publicaciones DIAN: {page}")
         count = 0
         for url, title in enlaces(html, final):
             path = urlsplit(url).path.lower()
-            if path.endswith(".pdf") and "/normatividad/" in path:
+            if pdf_publicacion(url):
                 count += 1
                 if url not in documents:
                     documents[url] = {"url": url, "titulo": title or urlsplit(url).path.rsplit("/", 1)[-1],
                                       "fuente_indice": final, "subtipo": kind}
             filename = path.rsplit("/", 1)[-1]
-            if historico and filename in PUBLICACIONES and url not in seen:
+            if historico and indice_publicacion(url) and filename in PUBLICACIONES and url not in seen:
                 queue.append((url, PUBLICACIONES[filename]))
         if not count:
             # SharePoint puede mostrar sus archivos mediante una lista dinámica.
@@ -104,6 +122,11 @@ def registro_publicacion(item, capture=None):
                        "enriquecido_en": now,
                        "notas_verificacion": record["notas_verificacion"] +
                        f" | captura: {capture.estado}; paginas: {capture.paginas or 0}; URL verificada: {capture.url}"})
+        if (capture.estado == "completo" and capture.paginas and len(capture.texto.strip()) >= 200
+                and pdf_publicacion(capture.url) and canonica(capture.url) == canonica(url)
+                and indice_publicacion(item["fuente_indice"])):
+            record.update({"estado_fuente_verificacion": "pdf_oficial_con_texto",
+                           "fuente_verificada_en": now, "fuente_verificacion_url": capture.url})
     return record
 
 
@@ -117,7 +140,7 @@ def recolectar(session, historico=False, anio_corte=None):
         try:
             capture = capturar(session, item["url"])
             record = registro_publicacion(item, capture)
-            if capture.estado != "completo":
+            if record.get("estado_fuente_verificacion") != "pdf_oficial_con_texto":
                 errors.append({"url": item["url"], "error": f"PDF con extracción {capture.estado}; consultar original"})
         except Exception as exc:
             # Conservar registro y URL incluso si no hay texto; no borrar una
@@ -156,9 +179,9 @@ def main():
     fallidas = {item['url'] for item in errors}
     numeros = [record['numero_resolucion'] for record in records]
     existentes = (db.table('documentos_tributarios')
-                  .select('id,numero_resolucion')
+                  .select('id,numero_resolucion,hash_contenido,publicado_cliente')
                   .in_('numero_resolucion', numeros).execute().data or []) if numeros else []
-    por_numero = {row['numero_resolucion']: row['id'] for row in existentes}
+    por_numero = {row['numero_resolucion']: row for row in existentes}
     for record in records:
         numero = record['numero_resolucion']
         if record['enlace_oficial'] in fallidas and numero in por_numero:
@@ -166,7 +189,13 @@ def main():
             # que ya se habían capturado correctamente.
             continue
         if numero in por_numero:
-            db.table('documentos_tributarios').update(record).eq('id', por_numero[numero]).execute()
+            anterior = por_numero[numero]
+            if (anterior.get('publicado_cliente') and anterior.get('hash_contenido')
+                    and anterior['hash_contenido'] != record['hash_contenido']):
+                # La edición cambió: la síntesis anterior requiere nuevo cotejo.
+                record.update({'publicado_cliente': False, 'aprobado_para_email': False,
+                               'borrador_confianza': 'no_aprobado'})
+            db.table('documentos_tributarios').update(record).eq('id', anterior['id']).execute()
         else:
             nuevo = {**record, 'publicado_cliente': False,
                      'aprobado_para_email': False}
