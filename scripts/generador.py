@@ -192,7 +192,7 @@ class Generador:
         try:
             r = self.db.table("alertas_urgentes").select(
                 "documento_id,nivel_urgencia,tipo_alerta,descripcion"
-            ).in_("documento_id", ids).execute()
+            ).in_("documento_id", ids).eq("aprobada_por_humano", True).execute()
         except Exception:
             return {}
         salida = {}
