@@ -2,6 +2,7 @@
 import re
 from patrones_dian import a_fecha
 from plazos_dian import complete_deadlines
+from retroactividad_dian import explicit_retroactivity
 
 MESES={"enero":1,"febrero":2,"marzo":3,"abril":4,"mayo":5,"junio":6,"julio":7,"agosto":8,"septiembre":9,"setiembre":9,"octubre":10,"noviembre":11,"diciembre":12}
 DEPARTAMENTOS=["Amazonas","Antioquia","Arauca","Atlántico","Bolívar","Boyacá","Caldas","Caquetá","Casanare","Cauca","Cesar","Chocó","Córdoba","Cundinamarca","Guainía","Guaviare","Huila","La Guajira","Magdalena","Meta","Nariño","Norte de Santander","Putumayo","Quindío","Risaralda","San Andrés","Santander","Sucre","Tolima","Valle del Cauca","Vaupés","Vichada","Bogotá"]
@@ -68,12 +69,7 @@ class LectorDocumento:
         return None,None
 
     def _retroactividad(self,texto):
-        anios=set()
-        for p in [r"a[ñn]o\s+gravable\s+((?:19|20)\d{2})",r"aplicable[^.\n]{0,100}?((?:19|20)\d{2})",r"retroactiv\w*[^.\n]{0,100}?((?:19|20)\d{2})",r"per[ií]odos?\s+gravables?\s+((?:19|20)\d{2})"]:
-            anios.update(int(x) for x in re.findall(p,texto,re.I))
-        m=re.search(r"\bDE\s+((?:19|20)\d{2})\b",texto[:1000],re.I); doc=int(m.group(1)) if m else None
-        anteriores=sorted(x for x in anios if doc and x<doc)
-        return bool(anteriores or re.search(r"retroactiv|efectos?\s+hacia\s+atr[aá]s",texto,re.I)),anteriores[:8]
+        return explicit_retroactivity(texto)
 
     def _zonas(self,texto):
         encontrados=[d for d in DEPARTAMENTOS if re.search(rf"\b{re.escape(d)}\b",texto[:15000])]
