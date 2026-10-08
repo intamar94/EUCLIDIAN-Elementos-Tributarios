@@ -76,7 +76,10 @@ def canonical_identity(row):
     name = p.path.rsplit("/", 1)[-1].lower()
     m = re.fullmatch(r"([a-z_]+)_(\d+)_(\d{4})\.htm", name)
     if m:
-        return (m.group(1), int(m.group(2)), int(m.group(3)))
+        # El Normograma usa el número textual como parte de la identidad.
+        # 012666 y 12666 pueden apuntar a URLs diferentes; normalizar con
+        # int() los convertía en un falso duplicado documental.
+        return (m.group(1), m.group(2), int(m.group(3)))
     return None
 
 
