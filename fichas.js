@@ -117,8 +117,6 @@ function señal(d){
   const dias = f ? diasHasta(f) : null;
   if (dias !== null && dias >= 0 && dias <= 30)
     return {rotulo:'Vence pronto', tono:'alerta'};
-  if (d.tiene_efectos_retroactivos)
-    return {rotulo:'Puede tocar años pasados', tono:'alerta'};
 
   if ((d.modificado_por||[]).length)
     return {rotulo:'Hay norma posterior', tono:'orienta'};

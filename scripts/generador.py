@@ -199,6 +199,8 @@ class Generador:
         salida = {}
         orden = {"critica": 0, "alta": 1, "media": 2, "baja": 3}
         for a in (r.data or []):
+            if a.get("tipo_alerta") == "efecto_retroactivo":
+                continue  # La marca heredada aún no tiene evidencia documental individual.
             actual = salida.get(a["documento_id"])
             if not actual or orden.get(a["nivel_urgencia"], 9) < orden.get(
                     actual["nivel_urgencia"], 9):
@@ -210,8 +212,6 @@ class Generador:
             p = 0
             if d["estado_vigencia"] in ("suspendido", "inexequible", "revocado"):
                 p += 100
-            if d.get("tiene_efectos_retroactivos"):
-                p += 60
             if d["clasificacion_obligatoriedad"] == "obligatorio_dian_y_contribuyentes":
                 p += 40
             if d.get("plazos_mencionados"):
@@ -258,10 +258,6 @@ class Generador:
                      if d["estado_vigencia"] in ("suspendido", "inexequible", "revocado"))
         if graves:
             return f"{n} {cambio} DIAN — {graves} con norma caída"
-        retro = sum(1 for d in docs if d.get("tiene_efectos_retroactivos"))
-        if retro:
-            plural = "afecta" if retro == 1 else "afectan"
-            return f"{n} {cambio} DIAN — {retro} {plural} años anteriores"
         return f"{n} {cambio} DIAN {periodo}"
 
     def _glifo(self, d):
@@ -385,10 +381,6 @@ class Generador:
             resto = f" y {len(despues) - 3} más" if len(despues) > 3 else ""
             extras.append(f"Una norma posterior la tocó: {nums}{resto}. "
                           f"Verifica el alcance antes de aplicarla.")
-        if d.get("tiene_efectos_retroactivos") and d.get("anos_afectados"):
-            anios = ", ".join(str(a) for a in d["anos_afectados"][:5])
-            extras.append(f"Menciona años anteriores ({anios}). "
-                          f"Revisa si afecta declaraciones ya presentadas.")
         if d.get("zonas_afectadas"):
             extras.append("Aplica a: " + ", ".join(d["zonas_afectadas"][:8]))
         if d.get("plazos_mencionados"):
@@ -459,9 +451,6 @@ class Generador:
 
             L.append(f"   {cuerpo[:400]}")
 
-            if d.get("tiene_efectos_retroactivos") and d.get("anos_afectados"):
-                anios = ", ".join(str(x) for x in d["anos_afectados"][:5])
-                L.append(f"   Menciona años anteriores ({anios}).")
             if d.get("zonas_afectadas"):
                 L.append(f"   Aplica a: {', '.join(d['zonas_afectadas'][:8])}")
             if d.get("plazos_mencionados"):
