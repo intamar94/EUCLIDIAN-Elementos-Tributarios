@@ -17,6 +17,7 @@ from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 from bs4 import BeautifulSoup
 from supabase import create_client
+from plazos_dian import complete_deadlines
 
 OFFICIAL_HOST="normograma.dian.gov.co"; OFFICIAL_PREFIX="/dian/compilacion/"; TIMEOUT=30; PAUSA=0.15; PAGE=1000
 MESES={"enero":1,"febrero":2,"marzo":3,"abril":4,"mayo":5,"junio":6,"julio":7,"agosto":8,"septiembre":9,"setiembre":9,"octubre":10,"noviembre":11,"diciembre":12}
@@ -234,11 +235,9 @@ class EnriquecedorFechasV2:
     def _zonas(self,texto):
         ventana=texto[:15000];halladas=[d for d in DEPARTAMENTOS if re.search(rf"\b{re.escape(d)}\b",ventana,re.I)];return halladas[:15] if len(halladas)>=2 and re.search(r"emergencia|calamidad|desastre|afectad|damnificad|zona",ventana,re.I) else []
     def _plazos(self,texto):
-        out=[]
-        for m in re.finditer(r"([^\.\n]{0,120}?(?:vencimiento|plazo|hasta el|a m[aá]s tardar|pago)[^\.\n]{0,120}?\d{1,2}\s+de\s+[A-Za-záéíóúÁÉÍÓÚ]+\s+de\s+(?:19|20)\d{2}[^\.\n]{0,40})",texto,re.I):
-            s=re.sub(r"\s+"," ",m.group(1)).strip()
-            if 25<len(s)<300 and s not in out:out.append(s)
-        return out
+        # La misma regla conservadora que usa el agente al reparar: nunca
+        # reintroducir un fragmento que luego marque el inspector.
+        return complete_deadlines(texto)
     def _alertas(self,doc,campos,retro,zonas):
         alertas=[];estado=campos.get("estado_vigencia")
         if estado in ("suspendido","inexequible"):alertas.append(("critica","doctrina_revocada",campos.get("motivo_cambio_estado",estado)))

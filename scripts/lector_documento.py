@@ -1,6 +1,7 @@
 """EUCLIDIAN — Lectura robusta del documento oficial DIAN."""
 import re
 from patrones_dian import a_fecha
+from plazos_dian import complete_deadlines
 
 MESES={"enero":1,"febrero":2,"marzo":3,"abril":4,"mayo":5,"junio":6,"julio":7,"agosto":8,"septiembre":9,"setiembre":9,"octubre":10,"noviembre":11,"diciembre":12}
 DEPARTAMENTOS=["Amazonas","Antioquia","Arauca","Atlántico","Bolívar","Boyacá","Caldas","Caquetá","Casanare","Cauca","Cesar","Chocó","Córdoba","Cundinamarca","Guainía","Guaviare","Huila","La Guajira","Magdalena","Meta","Nariño","Norte de Santander","Putumayo","Quindío","Risaralda","San Andrés","Santander","Sucre","Tolima","Valle del Cauca","Vaupés","Vichada","Bogotá"]
@@ -80,18 +81,4 @@ class LectorDocumento:
         return []
 
     def _plazos(self,texto):
-        # Los considerandos suelen reproducir plazos de actos anteriores.
-        # Para orientar al contador interesan primero las órdenes vigentes del
-        # apartado resolutivo, no la cronología que explica el antecedente.
-        inicio=re.search(r"\bRESUELVE\b",texto,re.I)
-        fuente=texto[inicio.end():] if inicio else texto
-        out=[]
-        patrones=[
-            r"([^\.\n]{0,120}?(?:plazo|vencimiento|hasta el|a m[aá]s tardar|pagar[aá]n?|pago)[^\.\n]{0,140}?\d{1,2}\s+de\s+[a-zA-ZáéíóúÁÉÍÓÚ]+\s+de\s+(?:19|20)\d{2}[^\.\n]{0,40})",
-            r"([^\.\n]{0,120}?suspensi[oó]n\s+de\s+(?:los\s+)?t[eé]rminos[^\.\n]{0,180}?desde\s+el?\s*\d{1,2}\s+de\s+[a-zA-ZáéíóúÁÉÍÓÚ]+[^\.\n]{0,100}?hasta\s+el?\s*\d{1,2}\s+de\s+[a-zA-ZáéíóúÁÉÍÓÚ]+\s+de\s+(?:19|20)\d{2}[^\.\n]{0,40})"
-        ]
-        for patron in patrones:
-            for m in re.finditer(patron,fuente,re.I):
-                s=re.sub(r"\s+"," ",m.group(1)).strip()
-                if 25<len(s)<300 and s not in out:out.append(s)
-        return out
+        return complete_deadlines(texto)
