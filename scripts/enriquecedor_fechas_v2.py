@@ -57,6 +57,10 @@ class EnriquecedorFechasV2:
         campos="id,numero_resolucion,enlace_oficial,tipo_documento,contenido,temas,fecha_publicacion,fecha_es_real,texto_completo"
         encontrados={}; prioritarios={}
         try:
+            # La cuarentena documentó la fecha descartada; reabrir esos
+            # formatos históricos antes de la cola general de enriquecimiento.
+            r=self.db.table("documentos_tributarios").select(campos).ilike("notas_verificacion","%fecha_cuarentena_2026-10-08:%").eq("fecha_es_real",False).limit(self.limite).execute()
+            for d in r.data or []:prioritarios[d["id"]]=d
             # Una fecha no basta para sustentar una ficha. También abrimos los
             # documentos sin texto capturado, aunque el índice ya hubiera
             # identificado una fecha válida.

@@ -1,0 +1,7 @@
+# Corrección de fechas documentales — 8 de octubre de 2026
+
+La revisión del orden de la bandeja detectó 355 fichas publicadas cuya `fecha_publicacion` tenía un año distinto del año del identificador. El [Oficio 44201 de 2009](https://normograma.dian.gov.co/dian/compilacion/docs/oficio_dian_44201_2009.htm), por ejemplo, tenía como fecha del documento el 17 de julio de 2026: la DIAN identifica ese día como publicación web y fecha el oficio el 29 de mayo de 2009.
+
+Se retiró la fecha documental incompatible de las 355 fichas, se conservó en `notas_verificacion` para auditoría y se asignó el año del identificador a `anio_publicacion`. Se recuperó la fecha exacta de 319 fichas mediante el encabezado que ya estaba capturado en `texto_completo` y cuyo año coincidía con el identificador. Las 36 restantes conservan únicamente el año hasta que su formato de origen pueda contrastarse. Se retiró la aprobación para correo de las seis fichas afectadas que la tenían y se invalidó la fecha de revisión fiscal de las 355.
+
+El enriquecedor prioriza en adelante las contradicciones de año, distingue fecha del acto de fecha de publicación web y reconoce varias formas de fecha usadas en documentos históricos. El generador de correo solo incluye alertas marcadas como aprobadas en la tabla interna. La corrección no prueba vigencia jurídica ni establece plazos aplicables: esos datos requieren su propia evidencia en la fuente.
