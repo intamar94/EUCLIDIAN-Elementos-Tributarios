@@ -316,6 +316,37 @@ def reconcile_cases(db, session, cases, verification):
                 "ultimo_control_en": now, "verificacion_id": verification["id"],
                 "accion_requerida": "Sin acción: ficha publicada y motivo ausente en el control completo."
             }).eq("id", p["id"]).execute()
+    # Los expedientes antiguos pueden quedar bloqueados después de corregir
+    # una regla del inspector. Solo se liberan si el control actual ya no ve
+    # el motivo y el documento individual DIAN responde con texto verificable.
+    stale = read_all(db.table("control_interno_expedientes")
+                     .select("id,clave,documento_id,codigo,estado")
+                     .in_("estado", ["abierto", "en_cuarentena"]).order("id"))
+    stale = [p for p in stale if p["clave"] not in states and p.get("documento_id")]
+    stale_ids = sorted({p["documento_id"] for p in stale})
+    stale_rows = documents_by_id(db, stale_ids)
+    stale_codes = verified_codes(db, verification, stale_ids)
+    evidence_cache = {}
+    for p in stale:
+        row = stale_rows.get(p["documento_id"])
+        if not row or p["codigo"] in stale_codes.get(p["documento_id"], set()):
+            continue
+        if p["documento_id"] not in evidence_cache:
+            try:
+                _, evidence_cache[p["documento_id"]] = live_official_text(session, row)
+            except Exception:
+                evidence_cache[p["documento_id"]] = None
+        evidence = evidence_cache[p["documento_id"]]
+        if evidence:
+            state = "resuelto_verificado" if row.get("publicado_cliente") else "correccion_verificada"
+            db.table("control_interno_expedientes").update({
+                "estado": state, "ultimo_control_en": now,
+                "verificacion_id": verification["id"],
+                "resuelto_en": now if state == "resuelto_verificado" else None,
+                "detalle": "El motivo desapareció en el control completo y se comprobó la fuente individual DIAN.",
+                "accion_requerida": case_action(p["codigo"], state),
+                "fuente_url": evidence["fuente"], "evidencia": evidence,
+            }).eq("id", p["id"]).execute()
     return Counter(d["estado"] for d in dossiers), states
 
 
