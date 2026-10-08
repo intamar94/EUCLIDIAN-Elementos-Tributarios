@@ -183,7 +183,7 @@ class Enviador:
         # 3. Los documentos siguen aprobados y su estado no cambio
         try:
             r = self.db.table("documentos_tributarios").select(
-                "numero_resolucion,estado_vigencia,aprobado_para_email,"
+                "id,numero_resolucion,estado_vigencia,aprobado_para_email,publicado_cliente,"
                 "enlace_oficial"
             ).in_("id", ids).execute()
             docs = r.data or []
@@ -198,8 +198,8 @@ class Enviador:
             ok = False
 
         for d in docs:
-            if not d["aprobado_para_email"]:
-                log.error("  [x] %s ya no esta aprobado", d["numero_resolucion"])
+            if not d["aprobado_para_email"] or not d["publicado_cliente"]:
+                log.error("  [x] %s ya no esta aprobado y publicado", d["numero_resolucion"])
                 ok = False
             if d["estado_vigencia"] not in ("vigente",):
                 # No es un error, pero debe estar advertido en el correo
@@ -212,6 +212,36 @@ class Enviador:
                     ok = False
         if ok:
             log.info("  [ok] Todos siguen aprobados y su estado esta advertido")
+
+        # El borrador puede haberse creado antes de un hallazgo nuevo. El
+        # control de salida consulta de nuevo la ultima inspeccion integral.
+        try:
+            runs = (self.db.table("inspector_ejecuciones")
+                    .select("id,estado,finalizado_en,total,revisados")
+                    .order("iniciado_en", desc=True).limit(1).execute().data or [])
+            run = runs[0] if runs else None
+            recent = run and run.get("finalizado_en") and (
+                datetime.now(timezone.utc) - datetime.fromisoformat(
+                    run["finalizado_en"].replace("Z", "+00:00"))).total_seconds() <= 36 * 3600
+            if not recent or run["estado"] not in ("correcto", "alerta") or not run["total"] or run["revisados"] != run["total"]:
+                log.error("  [x] No hay una inspeccion integral reciente y terminada")
+                ok = False
+            else:
+                checked = (self.db.table("inspector_resultados")
+                           .select("documento_id,estado")
+                           .eq("ejecucion_id", run["id"]).in_("documento_id", ids).execute().data or [])
+                if len(checked) != len(ids) or any(x["estado"] == "critico" for x in checked):
+                    log.error("  [x] Un documento del correo carece de control o conserva un hallazgo critico")
+                    ok = False
+            blocked = (self.db.table("control_interno_expedientes").select("documento_id")
+                       .in_("documento_id", ids).in_("estado", ["abierto", "en_cuarentena"])
+                       .eq("prioridad", "alta").limit(1).execute().data or [])
+            if blocked:
+                log.error("  [x] Un documento del correo tiene expediente bloqueante abierto")
+                ok = False
+        except Exception as exc:
+            log.error("  [x] No se pudo verificar el control documental: %s", str(exc)[:150])
+            ok = False
 
         # 4. Los enlaces apuntan a la fuente oficial
         enlaces = re.findall(r'href="(https?://[^"]+)"', html)
