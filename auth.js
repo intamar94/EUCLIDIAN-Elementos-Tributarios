@@ -80,7 +80,7 @@ function renderPlanesCuenta(payload,access){
     const price=document.createElement('strong');
     price.textContent=plan.pricing_publicado&&Number.isFinite(Number(plan.precio_mensual))
       ?new Intl.NumberFormat('es-CO',{style:'currency',currency:plan.moneda||'COP',maximumFractionDigits:0}).format(Number(plan.precio_mensual))+' / mes'
-      :'Precio pendiente de aprobación';
+      :'Condiciones de suscripción próximamente';
     meta.append(lim,price);art.append(top,meta);cont.append(art);
   }
 }
