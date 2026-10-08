@@ -266,12 +266,6 @@ class Composicion(Asunto):
                           + anot[0][:150] + ".")
             puntos += 1
 
-        if d.get("tiene_efectos_retroactivos") and d.get("anos_afectados"):
-            anios = ", ".join(str(a) for a in d["anos_afectados"][:4])
-            frases.append(f"Menciona años anteriores ({anios}): revisa si afecta "
-                          f"declaraciones ya presentadas.")
-            puntos += 2
-
         plazos = d.get("plazos_mencionados") or []
         if plazos:
             p = re.sub(r"\s+", " ", plazos[0]).strip()
