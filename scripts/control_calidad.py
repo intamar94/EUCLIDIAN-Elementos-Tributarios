@@ -11,6 +11,7 @@ from collections import Counter
 from datetime import date, datetime, timezone
 import requests
 from supabase import create_client
+from boletines_dian import pdf_publicacion
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)-7s %(message)s", datefmt="%H:%M:%S")
 log = logging.getLogger("euclidian")
@@ -41,7 +42,7 @@ class Control:
     def _visibles(self):
         try:
             r = (self.db.table("documentos_tributarios")
-                 .select("numero_resolucion,resumen_humano,resumen_borrador,contenido,enlace_oficial,notas_verificacion")
+                 .select("numero_resolucion,tipo_documento,resumen_humano,resumen_borrador,contenido,enlace_oficial,notas_verificacion,estado_fuente_verificacion,fuente_verificacion_url,fecha_es_real,aprobado_para_email")
                  .eq("publicado_cliente", True).execute().data or [])
         except Exception as e:
             self.graves.append(f"No se pudo revisar fichas visibles: {str(e)[:150]}"); return
@@ -49,7 +50,16 @@ class Control:
         for d in r:
             if len((d.get("resumen_humano") or d.get("resumen_borrador") or d.get("contenido") or "").strip()) < 30: self.graves.append(f"{d['numero_resolucion']} está visible sin información suficiente")
             u = d.get("enlace_oficial") or ""
-            if not u.startswith("https://" + DOMINIO + "/"): self.graves.append(f"{d['numero_resolucion']} no tiene fuente DIAN permitida")
+            if d.get("tipo_documento") == "boletin":
+                if not (pdf_publicacion(u) and d.get("estado_fuente_verificacion") == "pdf_oficial_con_texto"
+                        and d.get("fuente_verificacion_url") == u):
+                    self.graves.append(f"{d['numero_resolucion']} es boletín visible sin PDF DIAN verificado")
+                if len((d.get("resumen_humano") or "").strip()) < 120:
+                    self.graves.append(f"{d['numero_resolucion']} es boletín visible sin síntesis editorial suficiente")
+                if d.get("aprobado_para_email") and d.get("fecha_es_real") is not True:
+                    self.graves.append(f"{d['numero_resolucion']} permite correo sin fecha exacta comprobada")
+            elif not u.startswith("https://" + DOMINIO + "/"):
+                self.graves.append(f"{d['numero_resolucion']} no tiene fuente DIAN permitida")
 
     def _fechas(self):
         try:
