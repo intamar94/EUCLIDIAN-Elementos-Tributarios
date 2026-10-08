@@ -35,7 +35,7 @@ from plazos_dian import complete_deadlines
 LOG = logging.getLogger("agente_control_interno")
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 PAGE = 300
-FIELDS = "id,numero_resolucion,tipo_documento,titulo,enlace_oficial,fecha_publicacion,fecha_es_real,texto_completo,fuentes_formales,plazos_mencionados,publicado_cliente,notas_verificacion"
+FIELDS = "id,numero_resolucion,tipo_documento,titulo,enlace_oficial,fecha_publicacion,fecha_es_real,texto_completo,fuentes_formales,plazos_mencionados,tiene_efectos_retroactivos,anos_afectados,publicado_cliente,notas_verificacion"
 
 SAFE_DATE_CODES = {"fecha_imposible", "orden_fechas", "fecha_centinal"}
 ANALYSIS_CODES = {
@@ -387,6 +387,31 @@ def process_document(db, session, inspection_id, run_id, row, codes):
                     "No se modificó la fecha porque la fuente DIAN no estuvo disponible para corroborarla.",
                     {"fuente": row.get("enlace_oficial"), "error": str(exc)[:180]}))
             codes = codes - SAFE_DATE_CODES
+    # Años citados en antecedentes no son prueba de efecto retroactivo.
+    # Solo se retira una atribución anterior si el HTML DIAN carece incluso
+    # de lenguaje de retroactividad; cualquier mención exige análisis.
+    if "retroactividad_sin_periodo" in codes and official_url(row.get("enlace_oficial")):
+        try:
+            text, evidence = live_official_text(session, row)
+            explicit_term = re.search(r"retroactiv|efectos?\s+hacia\s+atr[aá]s", text, re.IGNORECASE)
+            if not explicit_term and row.get("tiene_efectos_retroactivos"):
+                before = {"tiene_efectos_retroactivos": True,
+                          "anos_afectados": row.get("anos_afectados") or []}
+                requeue_after_change(db, row, {
+                    "tiene_efectos_retroactivos": False, "anos_afectados": []})
+                cases.append(build_case(inspection_id, run_id, row, "retroactividad_sin_periodo",
+                    "corregido", "Se retiró la atribución retroactiva: no aparece en el documento DIAN.",
+                    {**evidence, "antes": before,
+                     "despues": {"tiene_efectos_retroactivos": False, "anos_afectados": []}}))
+            else:
+                cases.append(build_case(inspection_id, run_id, row, "retroactividad_sin_periodo",
+                    "requiere_analisis", "La fuente menciona retroactividad o no permite retirar el dato sin interpretación.",
+                    evidence))
+        except Exception as exc:
+            cases.append(build_case(inspection_id, run_id, row, "retroactividad_sin_periodo",
+                "pendiente_evidencia", "No se modificó el alcance: falta contraste con el texto DIAN actual.",
+                {"fuente": row.get("enlace_oficial"), "error": str(exc)[:180]}))
+        codes = codes - {"retroactividad_sin_periodo"}
     for code in sorted(codes):
         quarantined = bool(row.get("publicado_cliente") and code in QUARANTINE_CODES)
         cases.append(build_case(inspection_id, run_id, row, code,
