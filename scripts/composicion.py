@@ -23,6 +23,25 @@ class Composicion(Asunto):
     """Metodos de redaccion. RedactorReglas hereda de aqui."""
 
     def componer(self, d):
+        if d.get("tipo_documento") == "boletin":
+            # Un boletín reúne referencias a varios actos. Su edición no
+            # decide la vigencia ni la obligación de cada documento citado.
+            titulo = " ".join(str(d.get("titulo") or "Boletín DIAN").split())
+            subtipo = str(d.get("subtipo") or "")
+            alcance = (
+                "presenta una selección de doctrina jurídica de la DIAN"
+                if subtipo == "doctriflash" else
+                "reúne referencias normativas, doctrinales y jurisprudenciales"
+                if subtipo == "boletin_actualidad_juridica" else
+                "reúne información jurídica del periodo indicado"
+            )
+            resumen = (f"{titulo}: {alcance}. Consulta cada acto citado en su "
+                       "fuente original antes de aplicar un criterio a un caso. "
+                       "El periodo del boletín no acredita por sí mismo la "
+                       "fecha ni la vigencia de esos actos.")
+            return {"resumen": resumen[:900], "confianza": "baja",
+                    "advertencias": ["Ficha de boletín informativo; cada acto citado requiere su propia verificación"],
+                    "interno": False, "obligatoriedad": "orientativo"}
         desc = (d.get("descripcion_limpia") or d.get("contenido") or "").strip()
         desc = self._sin_tema_repetido(desc, d.get("banco_datos"))
         interno = bool(INTERNO.search(desc + " " + (d.get("titulo") or "")))
