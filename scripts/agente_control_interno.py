@@ -339,6 +339,10 @@ def reconcile_cases(db, session, cases, verification):
 
 def process_document(db, session, inspection_id, run_id, row, codes):
     cases = []
+    # La cuarentena precede a cualquier intento de corrección. Si la fuente
+    # falla, el código del motivo puede consumirse, pero la ficha ya salió.
+    if row.get("publicado_cliente") and codes & QUARANTINE_CODES:
+        requeue_after_change(db, row, {})
     live_text, live_evidence, live_error = None, None, None
     if codes & {"plazo_cortado", "cita_incompleta"}:
         try:
@@ -407,8 +411,6 @@ def process_document(db, session, inspection_id, run_id, row, codes):
                     "No se modificó la fecha porque la fuente DIAN no estuvo disponible para corroborarla.",
                     {"fuente": row.get("enlace_oficial"), "error": str(exc)[:180]}))
             codes = codes - SAFE_DATE_CODES
-    if row.get("publicado_cliente") and codes & QUARANTINE_CODES:
-        requeue_after_change(db, row, {})
     for code in sorted(codes):
         quarantined = bool(row.get("publicado_cliente") and code in QUARANTINE_CODES)
         cases.append(build_case(inspection_id, run_id, row, code,
