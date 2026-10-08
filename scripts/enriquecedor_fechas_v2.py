@@ -210,13 +210,10 @@ class EnriquecedorFechasV2:
         return None
 
     def _fecha_publicacion(self,texto):
-        patrones=[r"Diario Oficial[^\n]{0,160}?de\s+(\d{1,2})\s+de\s+([A-Za-záéíóúÁÉÍÓÚ]+)\s+de\s+((?:19|20)\d{2})",r"Diario Oficial[^\n]{0,160}?del\s+(\d{1,2})\s+de\s+([A-Za-záéíóúÁÉÍÓÚ]+)\s+de\s+((?:19|20)\d{2})",r"publicad[ao][^\n]{0,180}?(\d{1,2})\s+de\s+([A-Za-záéíóúÁÉÍÓÚ]+)\s+de\s+((?:19|20)\d{2})",r"publicaci[oó]n[^\n]{0,180}?(\d{1,2})\s+de\s+([A-Za-záéíóúÁÉÍÓÚ]+)\s+de\s+((?:19|20)\d{2})"]
-        for patron in patrones:
-            m=re.search(patron,texto[:25000],re.I)
-            if m:
-                f=a_fecha(m.group(1),m.group(2),m.group(3))
-                if f:return f
-        return None
+        # La fecha del Diario Oficial o de una cita del cuerpo no es la fecha
+        # en que la DIAN publicó esta ficha en su página web.
+        m=re.search(r"Publicado\s+en\s+la\s+p[aá]gina\s+web\s+de\s+la\s+DIAN\s*:\s*(\d{1,2})\s+de\s+([A-Za-záéíóúÁÉÍÓÚ]+)\s+de\s+((?:19|20)\d{2})",texto[:7000],re.I)
+        return a_fecha(m.group(1),m.group(2),m.group(3)) if m else None
     def _diario(self,texto):
         m=re.search(r"Diario Oficial\s*(?:No\.?|N[uú]mero)?\s*([\d.]+)[^\n]{0,100}?((?:19|20)\d{2})",texto[:4000],re.I);return f"No. {m.group(1)} de {m.group(2)}" if m else None
     def _entidad(self,texto):
