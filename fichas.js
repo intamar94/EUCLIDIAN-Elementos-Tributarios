@@ -106,6 +106,8 @@ function esc(s){
    El orden de las reglas es el desempate: lo que exige accion se
    evalua primero, porque la accion manda sobre la clasificacion. */
 function señal(d){
+  if (d.tipo_documento === 'boletin')
+    return {rotulo:'Boletín DIAN · consulta informativa', tono:'neutro'};
   if (d.estado_vigencia && d.estado_vigencia !== 'vigente' && d.estado_vigencia !== 'desconocido')
     return {rotulo:'Revisa su vigencia', tono:'alerta'};
   if (!d.estado_vigencia || d.estado_vigencia === 'desconocido')
@@ -147,6 +149,7 @@ function glifo(d){
 }
 
 function leyenda(d){
+  if (d.tipo_documento === 'boletin') return 'Publicación informativa DIAN';
   if (d.estado_vigencia && d.estado_vigencia !== 'vigente' && d.estado_vigencia !== 'desconocido') return d.estado_vigencia;
   if (!d.estado_vigencia || d.estado_vigencia === 'desconocido') return 'vigencia por confirmar';
   const o = d.clasificacion_obligatoriedad;
