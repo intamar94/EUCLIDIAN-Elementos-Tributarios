@@ -35,7 +35,7 @@ from plazos_dian import complete_deadlines
 LOG = logging.getLogger("agente_control_interno")
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 PAGE = 300
-FIELDS = "id,numero_resolucion,tipo_documento,titulo,enlace_oficial,fecha_publicacion,fecha_es_real,texto_completo,fuentes_formales,plazos_mencionados,tiene_efectos_retroactivos,anos_afectados,publicado_cliente,notas_verificacion"
+FIELDS = "id,numero_resolucion,tipo_documento,titulo,enlace_oficial,fecha_publicacion,fecha_publicacion_web,fecha_es_real,texto_completo,fuentes_formales,plazos_mencionados,tiene_efectos_retroactivos,anos_afectados,publicado_cliente,notas_verificacion"
 
 SAFE_DATE_CODES = {"fecha_imposible", "orden_fechas", "fecha_centinal"}
 ANALYSIS_CODES = {
@@ -90,22 +90,28 @@ def priority(codes):
 
 
 def date_correction(row, official_text):
-    """Return a safe date update only if DIAN exposes exactly one document date."""
+    """Corrige solo las fechas expresas del encabezado DIAN."""
     dates = source_dates(official_text)
-    candidate = dates.get("documento")
-    current = str(row.get("fecha_publicacion") or "")
-    if candidate:
+    changes = {}
+    evidence_fields = {}
+    for key, column in (("documento", "fecha_publicacion"), ("web", "fecha_publicacion_web")):
+        candidate = dates.get(key)
+        current = str(row.get(column) or "")
+        if not candidate:
+            continue
+        evidence_fields[column] = {"antes": current or None, "despues": candidate}
+        if candidate != current:
+            changes[column] = candidate
+            if key == "documento":
+                changes["fecha_es_real"] = True
+    if evidence_fields:
         evidence = {
-            "campo": "fecha_publicacion", "antes": current or None, "despues": candidate,
+            "campos": evidence_fields,
             "fuente": row.get("enlace_oficial"),
             "texto_sha256": hashlib.sha256(official_text.encode("utf-8")).hexdigest(),
             "consultada_en": datetime.now(timezone.utc).isoformat(),
         }
-        if candidate != current:
-            return {"fecha_publicacion": candidate, "fecha_es_real": True}, evidence
-        # La corrección de una ejecución anterior continúa siendo evidencia
-        # positiva: no se reescribe, pero se conserva como verificada.
-        return {}, evidence
+        return changes, evidence
     return None, None
 
 
@@ -368,7 +374,7 @@ def process_document(db, session, inspection_id, run_id, row, codes):
                 requeue_after_change(db, row, changes)
                 for code in sorted(codes & SAFE_DATE_CODES):
                     cases.append(build_case(inspection_id, run_id, row, code, "corregido",
-                        "Se actualizó la fecha del documento con la fecha expresada en la fuente DIAN.", evidence))
+                        "Se ajustaron las fechas expresas del encabezado DIAN.", evidence))
                 codes = codes - SAFE_DATE_CODES
             elif evidence:
                 for code in sorted(codes & SAFE_DATE_CODES):
