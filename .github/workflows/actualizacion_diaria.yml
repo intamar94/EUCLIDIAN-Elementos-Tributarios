@@ -56,6 +56,10 @@ jobs:
         run: python scripts/sincronizador_dian.py
 
       - name: Sincronizar boletines oficiales DIAN
+        id: boletines
+        # Una descarga externa puede fallar después de procesar otros boletines.
+        # Conservamos el fallo, pero no saltamos el enriquecimiento ni la auditoría.
+        continue-on-error: true
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
@@ -91,15 +95,21 @@ jobs:
             descubrimiento_fuentes.json
 
       - name: Registrar éxito
-        if: success()
+        if: success() && steps.boletines.outcome == 'success'
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
         run: python scripts/registrar_actualizacion.py --estado exitoso --run-id "${{ github.run_id }}"
 
       - name: Registrar fallo
-        if: failure()
+        if: failure() || steps.boletines.outcome == 'failure'
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
-        run: python scripts/registrar_actualizacion.py --estado error --run-id "${{ github.run_id }}" --mensaje "La actualización automática DIAN falló. Revisar GitHub Actions."
+        run: python scripts/registrar_actualizacion.py --estado error --run-id "${{ github.run_id }}" --mensaje "La actualización DIAN quedó incompleta. Revisar GitHub Actions y los boletines fallidos."
+
+      - name: Señalar captura parcial de boletines
+        if: success() && steps.boletines.outcome == 'failure'
+        run: |
+          echo "La captura de boletines fue parcial; el resto del ciclo terminó y requiere revisión."
+          exit 1
