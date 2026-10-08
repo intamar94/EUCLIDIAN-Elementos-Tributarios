@@ -166,6 +166,21 @@ def quarantine_published(db, rows, ids):
     return len(targets)
 
 
+def open_high_priority_ids(db):
+    """Incluye expedientes previos aunque el hallazgo cambie de severidad."""
+    ids = set()
+    offset = 0
+    while True:
+        rows = (db.table("control_interno_expedientes")
+                .select("documento_id").eq("estado", "abierto")
+                .eq("prioridad", "alta").order("id")
+                .range(offset, offset + PAGE - 1).execute().data or [])
+        ids.update(row["documento_id"] for row in rows if row.get("documento_id"))
+        if len(rows) < PAGE:
+            return ids
+        offset += len(rows)
+
+
 def source_dates(text):
     normal = norm(text[:1800])
     result = {}
@@ -288,9 +303,10 @@ def run(link_sample=500, persist=True):
         quarantined = set()
         critical = {row["id"] for row, result in zip(all_rows, results)
                     if row.get("publicado_cliente") and result["estado"] == "critico"}
-        if persist and critical:
-            quarantine_published(db, all_rows, critical)
-            quarantined.update(critical)
+        if persist:
+            blocking = critical | open_high_priority_ids(db)
+            quarantine_published(db, all_rows, blocking)
+            quarantined.update(blocking)
         cases = [inspect_case(session, *definition, all_rows) for definition in CASES]
         sentinel_failures = {case["documento_id"] for case in cases
                              if case.get("estado") == "fallo" and case.get("documento_id")}
