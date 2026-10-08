@@ -153,9 +153,24 @@ def main():
         raise SystemExit('Missing SUPABASE_URL or SUPABASE_SERVICE_KEY')
     from supabase import create_client
     db = create_client(url, key)
-    for start in range(0, len(records), 50):
-        db.table('documentos_tributarios').upsert(
-            records[start:start + 50], on_conflict='numero_resolucion').execute()
+    fallidas = {item['url'] for item in errors}
+    numeros = [record['numero_resolucion'] for record in records]
+    existentes = (db.table('documentos_tributarios')
+                  .select('id,numero_resolucion')
+                  .in_('numero_resolucion', numeros).execute().data or []) if numeros else []
+    por_numero = {row['numero_resolucion']: row['id'] for row in existentes}
+    for record in records:
+        numero = record['numero_resolucion']
+        if record['enlace_oficial'] in fallidas and numero in por_numero:
+            # Una caída temporal del PDF no puede borrar texto ni metadatos
+            # que ya se habían capturado correctamente.
+            continue
+        if numero in por_numero:
+            db.table('documentos_tributarios').update(record).eq('id', por_numero[numero]).execute()
+        else:
+            nuevo = {**record, 'publicado_cliente': False,
+                     'aprobado_para_email': False}
+            db.table('documentos_tributarios').insert(nuevo).execute()
     if errors or uncovered:
         raise SystemExit('La captura de boletines fue parcial; revisar antes de afirmar cobertura completa.')
     return 0
