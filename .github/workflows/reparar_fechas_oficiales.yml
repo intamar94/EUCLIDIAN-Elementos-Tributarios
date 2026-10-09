@@ -1,0 +1,46 @@
+name: Cotejar fechas del acto DIAN
+
+on:
+  schedule:
+    - cron: '5 14 * * *'
+  workflow_dispatch:
+    inputs:
+      modo:
+        description: 'Vista previa o aplicación de correcciones cotejadas'
+        required: true
+        default: 'dry-run'
+        type: choice
+        options: ['dry-run', 'aplicar']
+      limite:
+        description: 'Máximo de documentos por ejecución (1-1000)'
+        required: false
+        default: '250'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: euclidian-fechas-actos-dian
+  cancel-in-progress: false
+
+jobs:
+  cotejar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Instalar dependencias
+        run: pip install -r scripts/requirements.txt
+      - name: Cotejar fechas con la cabecera del acto DIAN
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: |
+          ARGS="--limite ${{ inputs.limite || '250' }}"
+          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ] && [ "${{ inputs.modo }}" != "aplicar" ]; then
+            ARGS="$ARGS --dry-run"
+          fi
+          python scripts/reparar_fechas_oficiales.py $ARGS

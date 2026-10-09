@@ -80,6 +80,7 @@ def iter_rows(db):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--limite", type=int, default=250)
+    ap.add_argument("--dry-run", action="store_true")
     args = ap.parse_args()
     if not 1 <= args.limite <= 1000:
         raise SystemExit("--limite debe estar entre 1 y 1000")
@@ -95,7 +96,7 @@ def main():
     # Rotación diaria: los enlaces difíciles no impiden llegar al resto.
     start = date.today().toordinal() * args.limite % len(rows) if rows else 0
     work = (rows[start:] + rows[:start])[:args.limite]
-    reparados = sin_cabecera = 0
+    reparados = sin_cabecera = cotejados = 0
     for row in work:
         current = str(row.get("fecha_publicacion") or "")
         try:
@@ -108,6 +109,10 @@ def main():
                 continue
             new_date = found[0]
             if new_date == current and row.get("fecha_es_real") is True:
+                continue
+            cotejados += 1
+            if args.dry_run:
+                log.info("CANDIDATO %s: %s -> %s", row["numero_resolucion"], current, new_date)
                 continue
             note = (f"Fecha del acto cotejada en encabezado DIAN: {current or 'sin fecha'}"
                     f" -> {new_date}; {row['enlace_oficial']} | "
@@ -128,8 +133,9 @@ def main():
                 log.info("REPARADO %s: %s -> %s", row["numero_resolucion"], current, new_date)
         except Exception as exc:
             log.warning("NO_REPARADO %s: %s", row.get("numero_resolucion"), str(exc)[:140])
-    log.info("RESUMEN universo_sospechoso=%d examinados=%d reparados=%d sin_cabecera_unica=%d",
-             len(rows), len(work), reparados, sin_cabecera)
+    log.info("RESUMEN universo_sospechoso=%d examinados=%d cotejados=%d reparados=%d sin_cabecera_unica=%d modo=%s",
+             len(rows), len(work), cotejados, reparados, sin_cabecera,
+             "lectura" if args.dry_run else "aplicar")
     return 0
 
 
