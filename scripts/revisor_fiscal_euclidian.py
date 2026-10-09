@@ -27,7 +27,7 @@ for _p in (str(ROOT), str(SCRIPTS)):
 from scripts.composicion import Composicion
 from scripts.verificador_aprobacion import verify
 
-RULES_VERSION = "4.0"
+RULES_VERSION = "4.1"
 DEFAULT_LIMIT = 20000
 MAX_LIMIT = 20000
 WORKERS = 16
@@ -86,6 +86,9 @@ def evaluate(d: dict, source_verified: bool = False):
     matter = (bool(_texto(d.get("materia") or d.get("area_derecho") or d.get("banco_datos")))
               or len(_texto(d.get("descripcion_limpia"))) >= 40)
     summary = bool(_texto(d.get("resumen_humano")))
+    formula = " ".join(_texto(d.get("resumen_humano") or d.get("resumen_borrador")).lower().split())
+    specific = not ("doctrina dian: orienta, no obliga" in formula or
+                    "te toca si trabajas con" in formula)
     audience = classification
 
     rule("OFICIAL", official, "Falta enlace oficial DIAN.")
@@ -95,11 +98,12 @@ def evaluate(d: dict, source_verified: bool = False):
     rule("CLASIFICACION", classification, "No está determinada la naturaleza/obligatoriedad del documento.")
     rule("MATERIA", matter, "No hay materia ni descripción documental suficiente.")
     rule("RESUMEN", summary, "La ficha no tiene resumen para el contador.")
+    rule("SINTESIS_ESPECIFICA", specific, "La síntesis usa una plantilla temática y no explica el criterio particular de la fuente.")
     rule("A_QUIEN", audience, "No está determinada la naturaleza que permite explicar a quién afecta.")
     rule("EVIDENCIA", source_verified, "La información crítica de la ficha no pudo corroborarse íntegramente contra la fuente oficial accesible.")
 
     result = "APPROVE" if not failed else "REVIEW"
-    score = max(0, round(len(passed) / 9 * 100))
+    score = max(0, round(len(passed) / 10 * 100))
     return result, score, passed, failed, reasons
 
 

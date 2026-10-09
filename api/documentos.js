@@ -15,6 +15,9 @@ const FUENTES = {
 };
 const DIAS_NOVEDAD = 14;
 const CABECERA_FECHA_WEB = /(?:publicad[oa]\s+en\s+la\s+p[aá]gina\s+(?:web\s+)?(?:oficial\s+)?de\s+la\s+DIAN|publicaci[oó]n\s+en\s+la\s+DIAN)\s*:/i;
+// Estas frases son plantillas antiguas sobre el tipo de acto y las etiquetas
+// temáticas. No describen el criterio jurídico de un documento individual.
+const SINTESIS_PLANTILLA = /Doctrina DIAN:\s*orienta, no obliga|te toca si trabajas con/i;
 function fechaCorteNovedades(){const f=new Date();f.setUTCDate(f.getUTCDate()-DIAS_NOVEDAD);return f.toISOString().slice(0,10);}
 function esNovedadOficial(d){const corte=fechaCorteNovedades();return [d.fecha_publicacion_web,d.fecha_publicacion].some(f=>typeof f==='string'&&f.slice(0,10)>=corte);}
 export default async function handler(req,res){
@@ -55,6 +58,11 @@ export default async function handler(req,res){
         // Las fechas heredadas sin el encabezado explícito no se muestran como tal.
         if(d.fecha_publicacion_web&&!CABECERA_FECHA_WEB.test(String(d.texto_completo||'')))d.fecha_publicacion_web=null;
         d.evaluacion_resultado=evaluaciones.get(d.id)||'REVIEW';
+        if(SINTESIS_PLANTILLA.test(String(d.resumen_humano||d.resumen_borrador||''))){
+          // En una ficha contrastada conservamos pregunta/tesis y metadatos,
+          // pero preferimos la descripción DIAN a una síntesis formularia.
+          d.resumen_humano=null;d.resumen_borrador=null;
+        }
         if(d.evaluacion_resultado!=='APPROVE'){
           // El catálogo sigue localizable; las conclusiones que no superaron
           // el contraste individual no se entregan como criterio profesional.

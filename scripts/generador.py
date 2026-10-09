@@ -189,7 +189,11 @@ class Generador:
                        .select("documento_id,resultado")
                        .in_("documento_id", [d["id"] for d in docs]).execute().data or [])
             approved = {v["documento_id"] for v in reviews if v.get("resultado") == "APPROVE"}
-            return [d for d in docs if d["id"] in approved]
+            # Una fórmula sobre la naturaleza del acto no sirve como resumen
+            # de novedades; el correo debe explicar el criterio particular.
+            formula = ("doctrina dian: orienta, no obliga", "te toca si trabajas con")
+            return [d for d in docs if d["id"] in approved and
+                    not any(x in (d.get("resumen_humano") or "").lower() for x in formula)]
         except Exception as e:
             log.error("No se pudo leer: %s", str(e)[:200])
             sys.exit(1)
