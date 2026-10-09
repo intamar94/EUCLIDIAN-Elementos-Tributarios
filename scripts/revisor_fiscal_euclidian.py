@@ -81,7 +81,10 @@ def evaluate(d: dict, source_verified: bool = False):
     date_ok = bool(web_date) or bool(doc_date)
     validity = _texto(d.get("estado_vigencia")) not in ("", "desconocido")
     classification = bool(_texto(d.get("clasificacion_obligatoriedad")))
-    matter = bool(_texto(d.get("materia") or d.get("area_derecho") or d.get("banco_datos")))
+    # En normas del índice DIAN, la descripción oficial puede explicar el
+    # asunto con más precisión que una etiqueta de materia todavía vacía.
+    matter = (bool(_texto(d.get("materia") or d.get("area_derecho") or d.get("banco_datos")))
+              or len(_texto(d.get("descripcion_limpia"))) >= 40)
     summary = bool(_texto(d.get("resumen_humano")))
     audience = classification
 
@@ -90,7 +93,7 @@ def evaluate(d: dict, source_verified: bool = False):
     rule("CONTENIDO", content, "La ficha no contiene información documental suficiente.")
     rule("VIGENCIA", validity, "Estado de vigencia no determinado.")
     rule("CLASIFICACION", classification, "No está determinada la naturaleza/obligatoriedad del documento.")
-    rule("MATERIA", matter, "No hay materia o área profesional identificable.")
+    rule("MATERIA", matter, "No hay materia ni descripción documental suficiente.")
     rule("RESUMEN", summary, "La ficha no tiene resumen para el contador.")
     rule("A_QUIEN", audience, "No está determinada la naturaleza que permite explicar a quién afecta.")
     rule("EVIDENCIA", source_verified, "La información crítica de la ficha no pudo corroborarse íntegramente contra la fuente oficial accesible.")
