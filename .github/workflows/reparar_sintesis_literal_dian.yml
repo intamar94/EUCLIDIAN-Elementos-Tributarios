@@ -1,0 +1,46 @@
+name: Reparar síntesis con respuesta DIAN
+
+on:
+  schedule:
+    - cron: '20 14 * * *'
+  workflow_dispatch:
+    inputs:
+      aplicar:
+        description: 'Guardar únicamente las respuestas contrastadas'
+        required: false
+        default: false
+        type: boolean
+      limite:
+        description: 'Máximo de documentos (1-100)'
+        required: false
+        default: '25'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: euclidian-reparar-sintesis
+  cancel-in-progress: false
+
+jobs:
+  reparar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Instalar dependencias
+        run: pip install -r scripts/requirements.txt
+      - name: Cotejar y reparar respuestas literales
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: |
+          cd scripts
+          ARGS="--limite ${{ inputs.limite || '25' }}"
+          if [ "$GITHUB_EVENT_NAME" = "schedule" ] || [ "${{ inputs.aplicar }}" = "true" ]; then
+            ARGS="$ARGS --aplicar"
+          fi
+          python reparar_sintesis_literal_dian.py $ARGS
