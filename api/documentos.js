@@ -14,6 +14,7 @@ const FUENTES = {
   novedades: 'https://normograma.dian.gov.co/dian/compilacion/novedades_boletines.html'
 };
 const DIAS_NOVEDAD = 14;
+const CABECERA_FECHA_WEB = /publicad[oa]\s+en\s+la\s+p[aá]gina\s+web\s+de\s+la\s+DIAN\s*:/i;
 function fechaCorteNovedades(){const f=new Date();f.setUTCDate(f.getUTCDate()-DIAS_NOVEDAD);return f.toISOString().slice(0,10);}
 function esNovedadOficial(d){const corte=fechaCorteNovedades();return [d.fecha_publicacion_web,d.fecha_publicacion].some(f=>typeof f==='string'&&f.slice(0,10)>=corte);}
 export default async function handler(req,res){
@@ -43,7 +44,13 @@ export default async function handler(req,res){
       // estar expuestos por la vista de lectura; pedirlos aparte evita romperla.
       const rTexto=await fetch(`${SUPABASE_URL}/rest/v1/documentos_tributarios?select=id,texto_completo,notas_verificacion&id=${encodeURIComponent(inFilter)}`,{headers:cabeceras});
       if(rTexto.ok){const textos=await rTexto.json();const porTexto=new Map(textos.map(x=>[x.id,x]));for(const d of documentos){const x=porTexto.get(d.id)||{};const nota=String(x.notas_verificacion||'');const raiz=nota.match(/raiz:\s*(https:\/\/[^\s|]+)/i);const indice=nota.match(/indice:\s*(https:\/\/[^\s|]+)/i);d.texto_completo=x.texto_completo||null;d.fuente_raiz=(raiz&&raiz[1])||((d.temas||[]).includes('boletin_mensual')||d.tipo_documento==='boletin'?FUENTES.novedades:FUENTES.tributario);d.fuente_indice=(indice&&indice[1])||null;}}
-      for(const d of documentos){d.es_nuevo=esNovedadOficial(d);if(!d.fuente_raiz)d.fuente_raiz=(d.temas||[]).includes('boletin_mensual')||d.tipo_documento==='boletin'?FUENTES.novedades:FUENTES.tributario;}
+      for(const d of documentos){
+        // Una fecha de Diario Oficial u otra cita no acredita publicación web DIAN.
+        // Las fechas heredadas sin el encabezado explícito no se muestran como tal.
+        if(d.fecha_publicacion_web&&!CABECERA_FECHA_WEB.test(String(d.texto_completo||'')))d.fecha_publicacion_web=null;
+        d.es_nuevo=esNovedadOficial(d);
+        if(!d.fuente_raiz)d.fuente_raiz=(d.temas||[]).includes('boletin_mensual')||d.tipo_documento==='boletin'?FUENTES.novedades:FUENTES.tributario;
+      }
       // Una publicación reciente solo aparece como novedad cuando conserva
       // fecha exacta, texto fuente y enlace DIAN. Así la urgencia no rebaja
       // el estándar de evidencia de la biblioteca.
