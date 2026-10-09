@@ -248,6 +248,13 @@ def case_action(code, state):
     return actions.get(code, "Contrastar el campo señalado con el documento DIAN y reinspeccionar.")
 
 
+def action_for_case(case, state):
+    if case["codigo"] == "orden_fechas" and (case.get("evidencia") or {}).get("fuente_incoherente"):
+        return ("Conservar ambas fechas literales, mantener la ficha aislada y solicitar "
+                "aclaración de la discrepancia a la DIAN antes de publicarla.")
+    return case_action(case["codigo"], state)
+
+
 def reconcile_cases(db, session, cases, verification):
     """Un cambio escrito no es cierre: exige ausencia del motivo y fuente cotejada."""
     ids = sorted({c["documento_id"] for c in cases if c.get("documento_id")})
@@ -292,7 +299,7 @@ def reconcile_cases(db, session, cases, verification):
             "intentos": int(before.get("intentos") or 0) + 1,
             "detalle": ("La reinspección conserva el hallazgo después del ajuste. " + case["detalle"])
                        if applied and persists else case["detalle"],
-            "accion_requerida": case_action(code, state),
+            "accion_requerida": action_for_case(case, state),
             "fuente_url": source or (row or {}).get("enlace_oficial"),
             "evidencia": case["evidencia"],
         })
@@ -409,8 +416,14 @@ def process_document(db, session, inspection_id, run_id, row, codes):
                 codes = codes - SAFE_DATE_CODES
             elif evidence:
                 for code in sorted(codes & SAFE_DATE_CODES):
+                    own = (evidence.get("campos") or {}).get("fecha_publicacion", {}).get("despues")
+                    web = (evidence.get("campos") or {}).get("fecha_publicacion_web", {}).get("despues")
+                    inconsistent = code == "orden_fechas" and bool(own and web and web < own)
                     cases.append(build_case(inspection_id, run_id, row, code, "requiere_analisis",
-                        "La fecha coincide, pero el motivo original exige una comprobación adicional.", evidence))
+                        ("El encabezado DIAN sitúa la publicación web antes de la fecha del propio documento; "
+                         "no se alteran fechas oficiales por inferencia." if inconsistent else
+                         "La fecha coincide, pero el motivo original exige una comprobación adicional."),
+                        {**evidence, "fuente_incoherente": True} if inconsistent else evidence))
                 codes = codes - SAFE_DATE_CODES
             else:
                 for code in sorted(codes & SAFE_DATE_CODES):
