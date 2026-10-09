@@ -182,7 +182,14 @@ class Generador:
              .gte("fecha_publicacion", self.desde.isoformat()) \
              .lte("fecha_publicacion", self.hasta.isoformat()) \
              .execute()
-            return r.data or []
+            docs = r.data or []
+            if not docs:
+                return []
+            reviews = (self.db.table("revisor_fiscal_euclidian_evaluaciones")
+                       .select("documento_id,resultado")
+                       .in_("documento_id", [d["id"] for d in docs]).execute().data or [])
+            approved = {v["documento_id"] for v in reviews if v.get("resultado") == "APPROVE"}
+            return [d for d in docs if d["id"] in approved]
         except Exception as e:
             log.error("No se pudo leer: %s", str(e)[:200])
             sys.exit(1)

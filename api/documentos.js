@@ -48,10 +48,24 @@ export default async function handler(req,res){
       // estar expuestos por la vista de lectura; pedirlos aparte evita romperla.
       const rTexto=await fetch(`${SUPABASE_URL}/rest/v1/documentos_tributarios?select=id,texto_completo,notas_verificacion&id=${encodeURIComponent(inFilter)}`,{headers:cabeceras});
       if(rTexto.ok){const textos=await rTexto.json();const porTexto=new Map(textos.map(x=>[x.id,x]));for(const d of documentos){const x=porTexto.get(d.id)||{};const nota=String(x.notas_verificacion||'');const raiz=nota.match(/raiz:\s*(https:\/\/[^\s|]+)/i);const indice=nota.match(/indice:\s*(https:\/\/[^\s|]+)/i);d.texto_completo=x.texto_completo||null;d.fuente_raiz=(raiz&&raiz[1])||((d.temas||[]).includes('boletin_mensual')||d.tipo_documento==='boletin'?FUENTES.novedades:FUENTES.tributario);d.fuente_indice=(indice&&indice[1])||null;}}
+      const rEvaluaciones=await fetch(`${SUPABASE_URL}/rest/v1/revisor_fiscal_euclidian_evaluaciones?select=documento_id,resultado&documento_id=${encodeURIComponent(inFilter)}`,{headers:cabeceras});
+      const evaluaciones=rEvaluaciones.ok?new Map((await rEvaluaciones.json()).map(x=>[x.documento_id,x.resultado])):new Map();
       for(const d of documentos){
         // Una fecha de Diario Oficial u otra cita no acredita publicación web DIAN.
         // Las fechas heredadas sin el encabezado explícito no se muestran como tal.
         if(d.fecha_publicacion_web&&!CABECERA_FECHA_WEB.test(String(d.texto_completo||'')))d.fecha_publicacion_web=null;
+        d.evaluacion_resultado=evaluaciones.get(d.id)||'REVIEW';
+        if(d.evaluacion_resultado!=='APPROVE'){
+          // El catálogo sigue localizable; las conclusiones que no superaron
+          // el contraste individual no se entregan como criterio profesional.
+          d.consulta_documental=true;
+          d.resumen_humano=null;d.resumen_borrador=null;
+          d.problema_juridico=null;d.tesis_juridica=null;d.tesis_respuesta=null;
+          d.plazos_mencionados=[];d.fuentes_formales=[];d.doctrina_citada=[];d.jurisprudencia_citada=[];
+          d.fecha_es_real=false;d.estado_vigencia='desconocido';d.clasificacion_obligatoriedad=null;
+          d.fecha_entrada_vigencia=null;d.motivo_cambio_estado=null;d.anotaciones_vigencia=[];
+          d.zonas_afectadas=[];d.modifica_a=[];d.modificado_por=[];
+        }
         d.es_nuevo=esNovedadOficial(d);
         if(!d.fuente_raiz)d.fuente_raiz=(d.temas||[]).includes('boletin_mensual')||d.tipo_documento==='boletin'?FUENTES.novedades:FUENTES.tributario;
       }
