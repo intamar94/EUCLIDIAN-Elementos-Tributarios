@@ -33,6 +33,12 @@ async function load() {
     [number(run.avisos), 'Con avisos'],
     [number(run.enlaces?.revisados), `Enlaces DIAN comprobados en esta ejecución · ${number(run.enlaces?.rotos)} fallaron`]
   ].map(([value,label]) => `<div class="metrica"><strong>${escapeHtml(value)}</strong><span>${escapeHtml(label)}</span></div>`).join('');
+  const editorial = data.editorial || {};
+  $('editorial').innerHTML = [
+    [number(editorial.formulas_publicadas), 'Fichas publicadas con síntesis antigua por cotejar'],
+    [number(editorial.sintesis_cotejadas), 'Síntesis contrastadas con la fuente y archivadas']
+  ].map(([value,label]) => `<div class="metrica"><strong>${escapeHtml(value)}</strong><span>${escapeHtml(label)}</span></div>`).join('');
+  $('editorialFecha').textContent = editorial.ultima_correccion ? `Última corrección registrada: ${when(editorial.ultima_correccion)}` : 'Todavía no hay correcciones de síntesis registradas.';
   const gestion = data.gestion || {};
   const gestionRun = gestion.ejecucion;
   const sameCycle = gestionRun && (gestionRun.verificacion_id === run.id || gestionRun.inspeccion_id === run.id);
