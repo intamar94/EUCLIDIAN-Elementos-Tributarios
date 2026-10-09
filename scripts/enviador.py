@@ -184,7 +184,7 @@ class Enviador:
         try:
             r = self.db.table("documentos_tributarios").select(
                 "id,numero_resolucion,estado_vigencia,aprobado_para_email,publicado_cliente,"
-                "enlace_oficial"
+                "enlace_oficial,resumen_humano"
             ).in_("id", ids).execute()
             docs = r.data or []
         except Exception as e:
@@ -210,6 +210,10 @@ class Enviador:
             ok = False
 
         for d in docs:
+            summary = (d.get("resumen_humano") or "").lower()
+            if "doctrina dian: orienta, no obliga" in summary or "te toca si trabajas con" in summary:
+                log.error("  [x] %s conserva una síntesis formularia; requiere un criterio individual", d["numero_resolucion"])
+                ok = False
             if not d["aprobado_para_email"] or not d["publicado_cliente"]:
                 log.error("  [x] %s ya no esta aprobado y publicado", d["numero_resolucion"])
                 ok = False

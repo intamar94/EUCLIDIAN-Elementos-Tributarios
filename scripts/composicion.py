@@ -87,11 +87,9 @@ class Composicion(Asunto):
             advertencias.append("La descripción de la DIAN solo dice a qué norma "
                                 "remite, no qué cambia")
 
-        # ---- 2. A QUIEN ----
-        quien = self._a_quien(d)
-        if quien:
-            frases.append(quien)
-            puntos += 1
+        # Los temas y la clase del acto se muestran por separado en la ficha.
+        # Convertirlos en «te toca si...» aparenta un alcance jurídico que no
+        # se puede deducir de una etiqueta del índice DIAN.
 
         # ---- 3. QUE HACER ----
         hacer, mas_puntos, mas_avisos = self._que_hacer(d)
