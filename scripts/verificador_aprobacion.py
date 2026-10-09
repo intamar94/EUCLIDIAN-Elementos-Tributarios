@@ -35,6 +35,17 @@ def evidence(source_text,value):
         compact=re.sub(r"[^a-z0-9/]","",c)
         if len(compact)>=6 and compact in compact_src:return True
     return False
+def web_date_evidence(source_text,value):
+    """La fecha web debe figurar en el encabezado DIAN, no en una cita o Diario Oficial."""
+    src=norm(source_text)[:3000]
+    pattern=(r"(?:publicad[oa] en la pagina (?:web )?(?:oficial )?de la dian|"
+             r"publicacion en la dian)\s*:?\s*(\d{1,2}) de "
+             r"([a-z]+) de ((?:19|20)\d{2})")
+    for match in re.finditer(pattern,src):
+        month=MESES.get(match.group(2))
+        if month and f"{int(match.group(3)):04d}-{month:02d}-{int(match.group(1)):02d}"==str(value):
+            return True
+    return False
 def load(session,url):
     r=session.get(url,timeout=TIMEOUT,allow_redirects=True);r.raise_for_status();soup=BeautifulSoup(r.text,"html.parser")
     for x in soup(["script","style","nav","footer"]):x.decompose()
@@ -128,7 +139,7 @@ def verify(session,doc):
     webdate=str(doc.get("fecha_publicacion_web") or "")
     docdate=str(doc.get("fecha_publicacion") or "")
     if webdate:
-        if not evidence(source,webdate):errors.append("La fecha de publicación web DIAN no aparece en formato demostrable.")
+        if not web_date_evidence(source,webdate):errors.append("La fecha de publicación web DIAN no coincide con el encabezado oficial.")
     elif docdate:
         if not evidence(source,docdate):errors.append("La fecha de publicación del documento no aparece en formato demostrable.")
     else:errors.append("No hay una fecha oficial verificable del documento.")
