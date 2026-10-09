@@ -14,7 +14,7 @@ const FUENTES = {
   novedades: 'https://normograma.dian.gov.co/dian/compilacion/novedades_boletines.html'
 };
 const DIAS_NOVEDAD = 14;
-const CABECERA_FECHA_WEB = /publicad[oa]\s+en\s+la\s+p[aá]gina\s+web\s+de\s+la\s+DIAN\s*:/i;
+const CABECERA_FECHA_WEB = /(?:publicad[oa]\s+en\s+la\s+p[aá]gina\s+(?:web\s+)?(?:oficial\s+)?de\s+la\s+DIAN|publicaci[oó]n\s+en\s+la\s+DIAN)\s*:/i;
 function fechaCorteNovedades(){const f=new Date();f.setUTCDate(f.getUTCDate()-DIAS_NOVEDAD);return f.toISOString().slice(0,10);}
 function esNovedadOficial(d){const corte=fechaCorteNovedades();return [d.fecha_publicacion_web,d.fecha_publicacion].some(f=>typeof f==='string'&&f.slice(0,10)>=corte);}
 export default async function handler(req,res){
