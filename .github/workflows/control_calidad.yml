@@ -79,16 +79,19 @@ jobs:
       - name: Verificar las dos fuentes oficiales DIAN
         run: python scripts/validar_fuentes_dian.py
       - name: Reparar dato oficial conocido
+        if: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.aplicar == true) }}
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
         run: python scripts/reparar_dato_oficial.py
       - name: Reparar fechas sospechosas con evidencia DIAN
+        if: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.aplicar == true) }}
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
         run: python scripts/reparar_fechas_oficiales.py
       - name: Poner en cuarentena fechas futuras
+        if: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.aplicar == true) }}
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
@@ -100,6 +103,7 @@ jobs:
         run: |
           cd scripts
           LIMIT='${{ inputs.limite || '1000' }}'
+          if [ "$GITHUB_EVENT_NAME" = "push" ]; then LIMIT=50; fi
           APPLY='${{ inputs.aplicar || 'false' }}'
           if [ "$APPLY" = "true" ]; then
             python verificador_aprobacion.py --apply --limite "$LIMIT"
