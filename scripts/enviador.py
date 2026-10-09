@@ -197,6 +197,18 @@ class Enviador:
                       len(ids), len(docs))
             ok = False
 
+        try:
+            evaluations = (self.db.table("revisor_fiscal_euclidian_evaluaciones")
+                           .select("documento_id,resultado").in_("documento_id", ids)
+                           .execute().data or [])
+            approved = {e["documento_id"] for e in evaluations if e.get("resultado") == "APPROVE"}
+            if any(document_id not in approved for document_id in ids):
+                log.error("  [x] El correo contiene una ficha sin contraste documental aprobado")
+                ok = False
+        except Exception as exc:
+            log.error("  [x] No se pudo comprobar la evaluación documental: %s", str(exc)[:150])
+            ok = False
+
         for d in docs:
             if not d["aprobado_para_email"] or not d["publicado_cliente"]:
                 log.error("  [x] %s ya no esta aprobado y publicado", d["numero_resolucion"])
