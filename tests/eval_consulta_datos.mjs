@@ -16,12 +16,13 @@ const cases=[
 
 function filterFor(q){
   const t=q.replace(/[(),*]/g,' ').trim();
-  return encodeURIComponent(`(numero_resolucion.ilike.*${t}*,titulo.ilike.*${t}*,contenido.ilike.*${t}*,descripcion_limpia.ilike.*${t}*)`);
+  if(/^DIAN-[A-Z_]+-\d+-(?:19|20)\d{2}$/i.test(t)) return `numero_resolucion=eq.${encodeURIComponent(t)}`;
+  return `or=${encodeURIComponent(`(numero_resolucion.ilike.*${t}*,titulo.ilike.*${t}*,contenido.ilike.*${t}*,descripcion_limpia.ilike.*${t}*)`)}`;
 }
 
 let passed=0;
 for(const tc of cases){
-  const endpoint=`${url}/rest/v1/v_bandeja?select=id,numero_resolucion,enlace_oficial,estado_vigencia,fecha_es_real,fecha_publicacion_web&publicado_cliente=is.true&or=${filterFor(tc.q)}&limit=10`;
+  const endpoint=`${url}/rest/v1/v_bandeja?select=id,numero_resolucion,enlace_oficial,estado_vigencia,fecha_es_real,fecha_publicacion_web&publicado_cliente=is.true&${filterFor(tc.q)}&limit=10`;
   const r=await fetch(endpoint,{headers});
   assert.equal(r.ok,true,`${tc.name}: HTTP ${r.status}`);
   const rows=await r.json();
