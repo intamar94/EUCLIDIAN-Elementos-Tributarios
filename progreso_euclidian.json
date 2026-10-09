@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-09T16:36:41.871779+00:00",
+  "generated_at": "2026-10-09T21:18:34.013736+00:00",
   "total_documentos": 17792,
   "enriquecidos": 17761,
   "pendientes_enriquecimiento": 31,
@@ -14,6 +14,6 @@
   "con_diario_oficial": 3049,
   "con_estado_vigencia": 17792,
   "retroactivos": 6165,
-  "con_zonas": 691,
-  "con_plazos": 383
+  "con_zonas": 693,
+  "con_plazos": 386
 }
