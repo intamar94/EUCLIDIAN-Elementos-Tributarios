@@ -28,12 +28,15 @@ export default async function handler(req, res) {
     const casePage = Math.max(1, Math.min(1000, Number.parseInt(req.query.caso_pagina, 10) || 1));
     const caseFirst = (casePage - 1) * PAGE;
     const caseFilter = caseState === 'abiertos' ? 'estado=neq.resuelto_verificado' : `estado=eq.${caseState}`;
-    const [queue, open, quarantined, corrected, resolved] = await Promise.all([
+    const formula = encodeURIComponent('*Doctrina DIAN: orienta, no obliga*');
+    const [queue, open, quarantined, corrected, resolved, oldSummaries, repairedSummaries] = await Promise.all([
       read(`control_interno_expedientes?select=id,documento_id,codigo,prioridad,estado,primera_deteccion,ultima_deteccion,ultimo_control_en,inspeccion_ultima,verificacion_id,intentos,detalle,accion_requerida,fuente_url,evidencia&${caseFilter}&order=prioridad.asc,primera_deteccion.asc&offset=${caseFirst}&limit=${PAGE}`),
       read('control_interno_expedientes?select=id&estado=neq.resuelto_verificado&limit=1'),
       read('control_interno_expedientes?select=id&estado=eq.en_cuarentena&limit=1'),
       read('control_interno_expedientes?select=id&estado=eq.correccion_verificada&limit=1'),
-      read('control_interno_expedientes?select=id&estado=eq.resuelto_verificado&limit=1')
+      read('control_interno_expedientes?select=id&estado=eq.resuelto_verificado&limit=1'),
+      read(`documentos_tributarios?select=id&publicado_cliente=eq.true&resumen_humano=ilike.${formula}&limit=1`),
+      read('auditoria_sintesis_literal_dian?select=registrado_en&order=registrado_en.desc&limit=1')
     ]);
     const caseIds = queue.data.map(x => x.documento_id).filter(x => /^[0-9a-f-]{36}$/i.test(x));
     const caseDocuments = caseIds.length ? (await read(`documentos_tributarios?select=id,numero_resolucion,titulo,enlace_oficial,publicado_cliente,resumen_humano,resumen_borrador,descripcion_limpia,fecha_publicacion,fecha_publicacion_web,fecha_es_real&id=in.(${caseIds.join(',')})`)).data : [];
@@ -48,7 +51,10 @@ export default async function handler(req, res) {
       documents = (await read(`documentos_tributarios?select=id,numero_resolucion,titulo,enlace_oficial&id=in.(${ids.join(',')})`)).data;
     }
     const byId = new Map(documents.map(x => [x.id, x]));
-    return res.status(200).json({ ejecucion: run, gestion: { ejecucion: management,
+    return res.status(200).json({ ejecucion: run,
+      editorial: { formulas_publicadas: oldSummaries.total, sintesis_cotejadas: repairedSummaries.total,
+        ultima_correccion: repairedSummaries.data[0]?.registrado_en || null },
+      gestion: { ejecucion: management,
       expedientes: queue.data.map(x => ({...x, documento: caseById.get(x.documento_id) || null})),
       total: queue.total, pagina: casePage, estado: caseState,
       conteos: {en_cuarentena:quarantined.total,correccion_verificada:corrected.total,
