@@ -55,9 +55,9 @@ function fechaFicha(d){
     return `<span class="fecha">${fechaCorta(d.fecha_publicacion)}</span>`;
   if (d.fecha_publicacion_web)
     return `<span class="fecha">${fechaCorta(d.fecha_publicacion_web)}</span>`;
-  const anio = d.anio_publicacion || d.anio || String(d.fecha_publicacion || '').slice(0,4);
+  const anio = anioIdentificador(d) || d.anio_publicacion || d.anio;
   if (!anio) return '';
-  return `<span class="fecha aproximada" title="La DIAN no publicó el día exacto">${anio}</span>`;
+  return `<span class="fecha aproximada" title="Año del identificador DIAN; fecha exacta no verificada">${anio}</span>`;
 }
 
 function fechaDocumentoConfiable(d){
@@ -84,7 +84,7 @@ function fechaPrincipal(d){
   if (d.fecha_publicacion_web)
     return `<span class="fecha-principal">Publicada por DIAN · ${fechaLarga(d.fecha_publicacion_web)}</span>`;
   const anio=anioIdentificador(d)||d.anio_publicacion||d.anio||String(d.fecha_publicacion||'').slice(0,4);
-  return anio?`<span class="fecha-principal aproximada" title="El índice DIAN solo permite identificar el año">Índice DIAN · ${esc(anio)}</span>`:'';
+  return anio?`<span class="fecha-principal aproximada" title="La fecha exacta del acto no está verificada">Año del documento · ${esc(anio)}</span>`:'';
 }
 
 function esc(s){
@@ -106,8 +106,10 @@ function esc(s){
    El orden de las reglas es el desempate: lo que exige accion se
    evalua primero, porque la accion manda sobre la clasificacion. */
 function señal(d){
+  if (d.tipo_documento === 'boletin')
+    return {rotulo:'Boletín DIAN · consulta informativa', tono:'neutro'};
   if (d.estado_vigencia && d.estado_vigencia !== 'vigente' && d.estado_vigencia !== 'desconocido')
-    return {rotulo:'No la apliques', tono:'alerta'};
+    return {rotulo:'Revisa su vigencia', tono:'alerta'};
   if (!d.estado_vigencia || d.estado_vigencia === 'desconocido')
     return {rotulo:'Vigencia por confirmar', tono:'orienta'};
   if (d.nivel_alerta === 'critica')
@@ -116,12 +118,12 @@ function señal(d){
   const f = fechaDePlazo((d.plazos_mencionados||[])[0]);
   const dias = f ? diasHasta(f) : null;
   if (dias !== null && dias >= 0 && dias <= 30)
-    return {rotulo:'Vence pronto', tono:'alerta'};
+    return {rotulo:'Fecha próxima mencionada', tono:'orienta'};
 
   if ((d.modificado_por||[]).length)
     return {rotulo:'Hay norma posterior', tono:'orienta'};
   if (dias !== null && dias >= 0)
-    return {rotulo:'Tiene plazo', tono:'obliga'};
+    return {rotulo:'Fecha o plazo mencionado', tono:'orienta'};
   if (d.clasificacion_obligatoriedad === 'obligatorio_dian_y_contribuyentes')
     return {rotulo:'Norma general · confirmar ámbito', tono:'orienta'};
 
@@ -147,6 +149,7 @@ function glifo(d){
 }
 
 function leyenda(d){
+  if (d.tipo_documento === 'boletin') return 'Publicación informativa DIAN';
   if (d.estado_vigencia && d.estado_vigencia !== 'vigente' && d.estado_vigencia !== 'desconocido') return d.estado_vigencia;
   if (!d.estado_vigencia || d.estado_vigencia === 'desconocido') return 'vigencia por confirmar';
   const o = d.clasificacion_obligatoriedad;

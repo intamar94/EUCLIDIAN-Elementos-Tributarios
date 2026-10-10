@@ -1,5 +1,9 @@
 name: Control de calidad
 
+concurrency:
+  group: control-calidad-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 on:
   push:
     paths:
@@ -7,7 +11,22 @@ on:
       - 'tests/**'
       - 'api/**'
       - 'index.html'
+      - 'app.html'
+      - 'landing.css'
       - 'bandeja.js'
+      - 'auth.js'
+      - 'lib/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'sql/**'
+      - 'bloques.js'
+      - 'fichas.js'
+      - 'temas.js'
+      - 'estilo.css'
+      - 'fichas.css'
+      - 'bloques.css'
+      - 'detalle.css'
+      - 'consulta.css'
       - '.github/workflows/control_calidad.yml'
   schedule:
     - cron: '0 14 * * *'
@@ -36,11 +55,38 @@ jobs:
         with:
           node-version: '22'
       - name: Instalar dependencias
-        run: pip install -r scripts/requirements.txt
+        run: |
+          pip install -r scripts/requirements.txt
+          npm ci
       - name: Verificar sintaxis de todos los scripts Python
         run: python -m compileall -q scripts
+      - name: Verificar sintaxis JavaScript de interfaz y Auth
+        run: |
+          node --check bandeja.js
+          node --check auth.js
+          node --check bloques.js
+          node --check api/auth.js
+          node --check api/session.js
+          node --check api/documentos.js
+          node --check lib/auth-server.js
       - name: Verificar contrato E2E de consulta trazable
         run: node tests/e2e_consulta_contract.mjs
+      - name: Contrato determinista de Auth y entitlement
+        run: |
+          node tests/auth_flow_contract.mjs
+          node tests/browser_session_contract.mjs
+      - name: Contrato de idempotencia de pagos
+        run: |
+          node tests/payment_events_contract.mjs
+          node tests/billing_flow_contract.mjs
+      - name: Regresiones Python de fuente y fechas
+        run: python -m unittest discover -s tests -p 'test_*.py'
+      - name: Regresión comercial y ownership
+        run: node tests/commercial_access_contract.mjs
+      - name: Contrato portada pública y SEO
+        run: node tests/public_landing_contract.mjs
+      - name: Contrato readiness y observabilidad
+        run: node tests/health_readiness_contract.mjs
       - name: Eval de consultas contra datos reales
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}

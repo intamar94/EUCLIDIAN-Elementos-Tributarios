@@ -4,79 +4,120 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#f3f0e8">
-<title>EUCLIDIAN · Consulta tributaria</title>
+<meta name="robots" content="index,follow">
+<title>EUCLIDIAN | Información tributaria DIAN clara, vigente y trazable</title>
+<meta name="description" content="EUCLIDIAN organiza información tributaria de la DIAN para mostrar qué importa, vigencia, contexto, relaciones y fuente oficial en una experiencia clara y trazable.">
+<link rel="canonical" href="https://euclidian-elementos-tributarios.vercel.app/">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="es_CO">
+<meta property="og:title" content="EUCLIDIAN | Información tributaria DIAN clara, vigente y trazable">
+<meta property="og:description" content="Consulta información tributaria DIAN organizada por vigencia, contexto, relaciones y fuente oficial.">
+<meta property="og:url" content="https://euclidian-elementos-tributarios.vercel.app/">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"EUCLIDIAN","applicationCategory":"BusinessApplication","operatingSystem":"Web","description":"Plataforma de consulta de información tributaria DIAN organizada con trazabilidad a fuentes oficiales.","inLanguage":"es-CO"}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/estilo.css">
-<link rel="stylesheet" href="/fichas.css">
-<link rel="stylesheet" href="/bloques.css">
-<link rel="stylesheet" href="/detalle.css" data-euclidian-detalle="1">
-<link rel="stylesheet" href="/consulta.css">
+<link rel="stylesheet" href="/landing.css">
+<script>
+if(location.search.includes('q=')||location.search.includes('doc=')||location.hash.includes('access_token=')||location.hash.includes('type=recovery')){
+  location.replace('/app.html'+location.search+location.hash);
+}
+</script>
 </head>
 <body>
-<a class="saltar-contenido" href="#lista">Ir a los documentos</a>
-<div id="puerta">
-  <form onsubmit="entrar(event)">
-    <img class="ilustracion" src="/euclides.png" alt="Euclides explica a sus discípulos" width="1400" height="770">
-    <div class="marca">EUCL<em>i</em>DIAN</div>
-    <div class="sub">Elementos Tributarios</div>
-    <p><label for="clave">Clave de acceso</label></p>
-    <input id="clave" type="password" autocomplete="current-password" required placeholder="Ingrese su contraseña">
-    <button type="submit">Entrar</button>
-    <div class="mal" id="mal" role="alert"></div>
-  </form>
-</div>
-
-<header hidden id="cab">
-  <div class="cab marco">
-    <div class="identidad"><a class="marca" href="/" aria-label="EUCLIDIAN inicio">EUCL<em>i</em>DIAN</a><span class="sub">Elementos Tributarios</span></div>
-    <p class="cab-descripcion">Consulta DIAN con fuentes, vigencia y contexto verificable</p>
-    <button type="button" class="recargar" id="btnRecargar" onclick="cargar()">Actualizar consulta</button>
+<a class="skip" href="#contenido">Ir al contenido</a>
+<header class="top">
+  <div class="wrap nav">
+    <a class="brand" href="/" aria-label="EUCLIDIAN inicio">EUCL<em>i</em>DIAN<span>Elementos Tributarios</span></a>
+    <nav aria-label="Principal">
+      <a href="#como-funciona">Cómo funciona</a>
+      <a href="#lectura">Cómo se lee</a>
+      <a class="login" href="/app.html">Entrar</a>
+    </nav>
   </div>
 </header>
 
-<section class="hoy marco" hidden id="hoy" aria-label="Atención prioritaria">
-  <div class="hoy-cabecera">
-    <div><span class="hoy-sobrelinea">PARA TU JORNADA</span><h1>Atención prioritaria</h1></div>
-    <p id="estadoFuente" class="estado-fuente" aria-live="polite"></p>
-  </div>
-  <p class="hoy-intro" id="hoyIntro"></p>
-  <div class="hoy-resumen" id="hoyResumen"></div>
-  <div class="hoy-lista" id="hoyLista"></div>
-  <div class="seguimiento" aria-label="Temas que sigues">
-    <div><strong>Temas que sigues</strong><span>Priorizan esta vista en este dispositivo.</span></div>
-    <div class="temas-seguidos" id="temasSeguidos"></div>
-  </div>
-</section>
+<main id="contenido">
+  <section class="hero wrap">
+    <div class="hero-copy">
+      <span class="eyebrow">INFORMACIÓN TRIBUTARIA · ORDENADA</span>
+      <h1>Lo difícil queda detrás.<br><em>Tú ves lo que importa.</em></h1>
+      <p class="lead">EUCLIDIAN organiza documentos tributarios de la DIAN para que encuentres su asunto, estado registrado, contexto y fuente oficial antes de aplicarlos a un caso.</p>
+      <div class="hero-actions">
+        <a class="primary" href="/app.html">Entrar a EUCLIDIAN <span aria-hidden="true">→</span></a>
+        <a class="secondary" href="#como-funciona">Ver cómo funciona</a>
+      </div>
+      <p class="micro">Conoce cómo organiza la información y consulta las fuentes oficiales antes de decidir si te sirve.</p>
+    </div>
+    <figure class="hero-visual">
+      <img src="/euclides.png" alt="Ilustración de Euclides explicando geometría a sus discípulos" width="1400" height="770">
+      <span class="geo geo-a" aria-hidden="true"></span>
+      <span class="geo geo-b" aria-hidden="true"></span>
+      <figcaption>La geometría organiza la interfaz; la evidencia organiza la información.</figcaption>
+    </figure>
+  </section>
 
-<section class="controles marco" hidden id="controles" aria-label="Buscar documentos DIAN">
-  <div class="titulo-consulta"><h2>Normas, doctrina y boletines</h2><p>Encuentra la fuente DIAN, entiende el alcance y documenta tu criterio.</p></div>
-  <form class="buscador" id="formBuscar" role="search">
-    <label class="solo-lectores" for="consulta">Buscar por número, título o contenido</label>
-    <input id="consulta" type="search" maxlength="160" placeholder="Busca por número, título o tema, p. ej. retención en la fuente" autocomplete="off">
-    <button type="submit">Buscar</button>
-  </form>
-  <div class="filtros-directos">
-    <label class="filtro" for="selAnio"><span>Año</span><select id="selAnio"><option value="">Todos los años</option></select></label>
-    <label class="filtro" for="selTema"><span>Tema</span><select id="selTema"><option value="">Todos los temas</option></select></label>
-    <label class="filtro" for="selEstado"><span>Vista</span><select id="selEstado"><option value="todos">Todos los documentos</option><option value="nuevos">Publicaciones DIAN recientes</option></select></label>
-    <button type="button" class="limpiar" id="btnLimpiar" hidden onclick="limpiar()">Quitar filtros</button>
+  <section class="principios wrap" aria-label="Principios de EUCLIDIAN">
+    <div><span class="shape circle" aria-hidden="true"></span><strong>Fuente oficial</strong><small>La lectura conserva el camino a DIAN.</small></div>
+    <div><span class="shape triangle" aria-hidden="true"></span><strong>Vigencia visible</strong><small>El estado aparece antes del texto completo.</small></div>
+    <div><span class="shape linkshape" aria-hidden="true"></span><strong>Contexto conectado</strong><small>Relaciones y cambios dejan de estar escondidos.</small></div>
+  </section>
+
+  <section class="demo wrap" id="como-funciona">
+    <div class="section-title">
+      <span class="section-index">01</span>
+      <div><span class="eyebrow">DE DOCUMENTO A LECTURA ÚTIL</span><h2>No necesitas empezar por un muro de texto.</h2><p>EUCLIDIAN presenta primero lo necesario para orientarte y mantiene la profundidad documental disponible debajo.</p></div>
+    </div>
+    <div class="compare">
+      <article class="before">
+        <div class="paper-head"><span>DOCUMENTO</span><span>FUENTE OFICIAL</span></div>
+        <div class="paper-lines" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        <p>El documento completo sigue siendo importante. La diferencia es que no tiene que ser tu punto de entrada.</p>
+      </article>
+      <div class="transform" aria-hidden="true"><span>→</span><small>EUCLIDIAN</small></div>
+      <article class="after">
+        <div class="status-row"><span class="status ok">○ Vigente</span><span class="status source">● Fuente contrastada</span></div>
+        <h3>En una mirada</h3>
+        <p>Una síntesis te orienta y deja a la vista el camino al documento oficial.</p>
+        <div class="mini-grid">
+          <div><small>NATURALEZA</small><strong>Norma o doctrina</strong></div>
+          <div><small>QUÉ REVISAR</small><strong>Condiciones del caso</strong></div>
+          <div><small>EVIDENCIA</small><strong>Fuente DIAN</strong></div>
+        </div>
+        <div class="timeline"><span></span><span class="active"></span><span></span><b>Historia normativa</b></div>
+      </article>
+    </div>
+  </section>
+
+  <section class="features wrap" id="lectura">
+    <div class="section-title">
+      <span class="section-index">02</span>
+      <div><span class="eyebrow">UNA PLATAFORMA, DISTINTAS PUERTAS</span><h2>Encuentra, entiende y sigue.</h2></div>
+    </div>
+    <div class="feature-grid">
+      <article><span class="feature-shape">◇</span><small>INICIO</small><h3>Señales de la consulta</h3><p>En los documentos visibles identifica publicaciones recientes, fechas mencionadas y estados de vigencia para decidir qué leer primero.</p></article>
+      <article><span class="feature-shape">⌕</span><small>CONSULTAR</small><h3>Busca con evidencia</h3><p>Consulta por número, tema o contenido y conserva fuente, vigencia y trazabilidad dentro de la misma lectura.</p></article>
+      <article><span class="feature-shape">◫</span><small>EXPLORAR</small><h3>Entra por tema</h3><p>No necesitas conocer el número del documento: los temas funcionan como puertas ordenadas al corpus.</p></article>
+      <article><span class="feature-shape">⌁</span><small>RELACIONES</small><h3>Ve la historia</h3><p>Una línea normativa ayuda a identificar qué modifica un documento y qué aparece después.</p></article>
+    </div>
+  </section>
+
+  <section class="closing">
+    <div class="wrap closing-inner">
+      <span class="orbit" aria-hidden="true"><i></i><i></i><i></i></span>
+      <div><span class="eyebrow">EUCLIDIAN</span><h2>La complejidad puede quedarse en el sistema.</h2><p>La experiencia del usuario debe ser todo lo contrario: clara, trazable y tranquila de recorrer.</p></div>
+      <a class="primary" href="/app.html">Entrar <span aria-hidden="true">→</span></a>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap footer-grid">
+    <div><strong>EUCL<em>i</em>DIAN</strong><p>Elementos Tributarios</p></div>
+    <p>EUCLIDIAN no es un sitio oficial de la DIAN. Organiza información y enlaza fuentes oficiales para facilitar su consulta. La aplicación a un caso concreto debe verificarse con la fuente correspondiente.</p>
+    <a href="/app.html">Acceso de suscriptores</a>
   </div>
-  <p class="estado-consulta" id="estadoConsulta" role="status" aria-live="polite"></p>
-</section>
-
-<div class="barra marco" hidden id="barra">
-  <span id="rango" aria-live="polite"></span>
-  <label>Ordenar <select id="selOrden"><option value="recientes">Lo más reciente</option><option value="prioridad">Relevancia práctica</option><option value="antiguos">Lo más antiguo</option></select></label>
-</div>
-<main class="marco" id="lista" tabindex="-1" aria-label="Resultados de la consulta" aria-busy="false"></main>
-<nav class="paginas marco" id="paginas" aria-label="Páginas de resultados"></nav>
-<footer class="marco pie-consulta" hidden id="pieConsulta"><p>EUCLIDIAN organiza normas, doctrina y boletines oficiales de la DIAN para facilitar su consulta.</p><a href="https://normograma.dian.gov.co/dian/compilacion/tributario.html" target="_blank" rel="noopener noreferrer">Normograma tributario</a><a href="https://normograma.dian.gov.co/dian/compilacion/novedades_boletines.html" target="_blank" rel="noopener noreferrer">Novedades y boletines DIAN</a></footer>
-
-<script src="/temas.js" defer></script>
-<script src="/fichas.js" defer></script>
-<script src="/bloques.js" defer></script>
-<script src="/bandeja.js" defer></script>
+</footer>
 </body>
 </html>
