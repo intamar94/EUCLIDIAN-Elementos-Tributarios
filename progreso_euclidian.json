@@ -1,11 +1,11 @@
 {
-  "generated_at": "2026-10-10T01:07:02.810707+00:00",
+  "generated_at": "2026-10-10T07:08:09.069752+00:00",
   "total_documentos": 17792,
   "enriquecidos": 17761,
   "pendientes_enriquecimiento": 31,
   "porcentaje_enriquecimiento": 99.83,
-  "fechas_verificadas": 17474,
-  "fechas_no_verificadas": 318,
+  "fechas_verificadas": 17464,
+  "fechas_no_verificadas": 328,
   "clasificados": 17594,
   "borradores": 1292,
   "estructura_extraida": 13766,
@@ -15,5 +15,5 @@
   "con_estado_vigencia": 17792,
   "retroactivos": 6165,
   "con_zonas": 693,
-  "con_plazos": 386
+  "con_plazos": 387
 }
