@@ -134,7 +134,7 @@ class Lectores:
         m = re.search(r"[AÁ]rea del Derecho\s*\n\s*([A-Za-zÁÉÍÓÚáéíóúñ ]{4,40})", t)
         return m.group(1).strip() if m else None
 
-    def _bloque(self, t, encabezado):
+    def _bloque(self, t, encabezado, conservar_puntuacion=False):
         """
         Devuelve las lineas de una seccion, SIN aplanarlas. Aplanar fue el
         primer error: los saltos de linea son lo que separa una fuente de
@@ -147,7 +147,7 @@ class Lectores:
                           t, re.DOTALL | re.IGNORECASE | re.MULTILINE)
         if not m:
             return []
-        return [re.sub(r"\s+", " ", l).strip(" .,;·-")
+        return [re.sub(r"\s+", " ", l).strip(" " if conservar_puntuacion else " .,;·-")
                 for l in m.group(1).split("\n") if l.strip()]
 
     def _descriptores(self, t):
@@ -180,8 +180,19 @@ class Lectores:
         Permite despues buscar "todo lo que toca el articulo 911".
         """
         salida = []
-        for linea in self._bloque(t, r"Fuentes Formales"):
-            if len(linea) < 6 or len(linea) > 160:
+        # Los enlaces HTML separan números, comas y nombres en líneas distintas.
+        # Reconstruir cada cita antes de filtrarla evita perder artículos (907,
+        # 599, etc.) que ocupan una línea por sí solos.
+        citas = []
+        for linea in self._bloque(t, r"Fuentes Formales", conservar_puntuacion=True):
+            if re.match(r"^(?:art[ií]culos?|ley|decreto|resoluci[oó]n|estatuto|constituci[oó]n|concepto|oficio|consejo|corte)\b", linea, re.I) or not citas:
+                citas.append(linea)
+            else:
+                citas[-1] += " " + linea
+        for linea in citas:
+            linea = re.sub(r"\s+([,;.)])", r"\1", linea)
+            linea = re.sub(r"\(\s+", "(", linea)
+            if len(linea) < 6 or len(linea) > 1200:
                 continue
             if not re.search(r"art[ií]culo|ley|decreto|resoluci[oó]n|"
                              r"estatuto|c[oó]digo|constituci[oó]n|sentencia",

@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="es-CO">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f3f0e8">
+<title>EUCLIDIAN · Plataforma de consulta tributaria</title>
+<meta name="robots" content="noindex,nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/estilo.css">
+<link rel="stylesheet" href="/fichas.css">
+<link rel="stylesheet" href="/bloques.css">
+<link rel="stylesheet" href="/detalle.css" data-euclidian-detalle="1">
+<link rel="stylesheet" href="/consulta.css">
+</head>
+<body>
+<a class="saltar-contenido" href="#lista">Ir a los documentos</a>
+<div id="puerta">
+  <div class="auth-caja">
+    <img class="ilustracion" src="/euclides.png" alt="Euclides explica a sus discípulos" width="1400" height="770">
+    <div class="auth-identidad"><div class="marca">EUCL<em>i</em>DIAN</div><div class="sub">Elementos Tributarios</div></div>
+
+    <div class="auth-tabs" role="tablist" aria-label="Acceso a EUCLIDIAN">
+      <button type="button" id="tabEntrar" role="tab" aria-selected="true" aria-controls="authLoginForm">Entrar</button>
+      <button type="button" id="tabCrear" role="tab" aria-selected="false" aria-controls="authRegisterForm">Crear cuenta</button>
+    </div>
+
+    <form id="authLoginForm" class="auth-form" aria-labelledby="tabEntrar">
+      <label for="authEmail">Correo</label>
+      <input id="authEmail" type="email" autocomplete="email" required placeholder="tu@correo.com">
+      <label for="authPassword">Contraseña</label>
+      <input id="authPassword" type="password" autocomplete="current-password" required minlength="8" placeholder="Tu contraseña">
+      <button type="submit" class="auth-principal">Entrar a EUCLIDIAN</button>
+      <button type="button" class="auth-link" id="authRecover">Olvidé mi contraseña</button>
+    </form>
+
+    <form id="authRegisterForm" class="auth-form" hidden aria-labelledby="tabCrear">
+      <p class="auth-intro">Crea tu cuenta personal. La consulta completa se habilita cuando tengas una suscripción activa; crear la cuenta todavía no da acceso a los documentos.</p>
+      <label for="authRegisterEmail">Correo</label>
+      <input id="authRegisterEmail" type="email" autocomplete="email" required placeholder="tu@correo.com">
+      <label for="authRegisterPassword">Contraseña</label>
+      <input id="authRegisterPassword" type="password" autocomplete="new-password" required minlength="8" placeholder="Mínimo 8 caracteres">
+      <button type="submit" class="auth-principal">Crear mi cuenta</button>
+    </form>
+
+    <form id="authResetForm" class="auth-form" hidden aria-label="Definir nueva contraseña">
+      <p class="auth-intro">Define una nueva contraseña para recuperar tu cuenta.</p>
+      <label for="authResetPassword">Nueva contraseña</label>
+      <input id="authResetPassword" type="password" autocomplete="new-password" required minlength="8">
+      <button type="submit" class="auth-principal">Guardar nueva contraseña</button>
+    </form>
+
+    <div class="mal" id="mal" role="status" aria-live="polite"></div>
+
+    <details class="acceso-interno">
+      <summary>Acceso interno</summary>
+      <form id="authInternoForm">
+        <label class="solo-lectores" for="clave">Clave interna</label>
+        <input id="clave" type="password" autocomplete="current-password" required placeholder="Clave interna">
+        <button type="submit">Entrar</button>
+      </form>
+    </details>
+  </div>
+</div>
+
+<header hidden id="cab">
+  <div class="cab marco">
+    <div class="identidad"><a class="marca" href="/" aria-label="EUCLIDIAN inicio">EUCL<em>i</em>DIAN</a><span class="sub">Elementos Tributarios</span></div>
+    <nav class="nav-principal" aria-label="Navegación principal">
+      <a href="#hoy" class="nav-item activo" aria-current="page"><span class="nav-glyph" aria-hidden="true">◇</span>Inicio</a>
+      <a href="#controles" class="nav-item"><span class="nav-glyph" aria-hidden="true">⌕</span>Consultar</a>
+      <a href="#hoyLista" class="nav-item"><span class="nav-glyph" aria-hidden="true">△</span>Novedades</a>
+      <button type="button" class="nav-item nav-accion" id="navExplorar"><span class="nav-glyph" aria-hidden="true">◫</span>Explorar</button>
+      <button type="button" class="nav-item nav-accion" id="navSeguir"><span class="nav-glyph" aria-hidden="true">◎</span>Seguimientos</button>
+      <button type="button" class="nav-item nav-accion" id="navCuenta"><span class="nav-glyph" aria-hidden="true">○</span>Cuenta</button>
+    </nav>
+    <button type="button" class="recargar accion-secundaria" id="btnRecargar" onclick="cargar()"><span aria-hidden="true">↻</span><span>Actualizar</span></button>
+  </div>
+</header>
+
+<div class="carga-geometrica" id="cargaGeometrica" hidden role="status" aria-live="polite">
+  <span class="geo-orbita" aria-hidden="true"><i></i><i></i><i></i></span><span>Ordenando la información…</span>
+</div>
+
+<section class="hoy marco" hidden id="hoy" aria-label="Atención prioritaria">
+  <div class="hoy-cabecera">
+    <div><span class="hoy-sobrelinea">RADAR DE ESTA CONSULTA</span><h1>Lo importante en esta página</h1><p class="hoy-promesa">Señales de los documentos visibles, con acceso a su fuente DIAN.</p></div>
+    <p id="estadoFuente" class="estado-fuente" aria-live="polite"></p>
+  </div>
+  <p class="hoy-intro" id="hoyIntro"></p>
+  <div class="hoy-resumen" id="hoyResumen"></div>
+  <div class="hoy-lista" id="hoyLista"></div>
+  <div class="seguimiento" aria-label="Temas que sigues">
+    <div><strong>Temas que sigues</strong><span>Priorizan esta vista en este dispositivo.</span></div>
+    <div class="temas-seguidos" id="temasSeguidos"></div>
+  </div>
+</section>
+
+<section class="explorar marco" hidden id="explorar" aria-labelledby="explorarTitulo">
+  <div class="explorar-cabecera">
+    <div class="titulo-consulta"><span class="seccion-numero" aria-hidden="true">01</span><div><span class="seccion-kicker">EXPLORAR</span><h2 id="explorarTitulo">Entra por tema, no por archivo</h2><p>Los temas funcionan como puertas al corpus. Elige uno y EUCLIDIAN conserva la trazabilidad hasta la fuente.</p></div></div>
+    <button type="button" class="accion-textual" id="cerrarExplorar" aria-label="Cerrar exploración">Cerrar</button>
+  </div>
+  <div class="explorar-temas" id="explorarTemas" aria-label="Temas disponibles"></div>
+</section>
+
+<section class="cuenta-panel marco" hidden id="cuentaPanel" aria-labelledby="cuentaTitulo">
+  <div class="cuenta-cabecera">
+    <div class="titulo-consulta"><span class="seccion-numero" aria-hidden="true">03</span><div><span class="seccion-kicker">CUENTA</span><h2 id="cuentaTitulo">Tu acceso a EUCLIDIAN</h2><p>Identidad, estado de suscripción y acceso, sin mezclarlo con la lectura jurídica.</p></div></div>
+    <button type="button" class="accion-textual" id="cerrarCuenta">Cerrar</button>
+  </div>
+  <div class="cuenta-grid">
+    <div class="cuenta-dato"><small>Correo</small><strong id="cuentaEmail">—</strong></div>
+    <div class="cuenta-dato"><small>Acceso</small><strong id="cuentaEstado">—</strong></div>
+    <div class="cuenta-dato"><small>Plan</small><strong id="cuentaPlan">—</strong></div>
+    <div class="cuenta-dato"><small>Periodo</small><strong id="cuentaPeriodo">—</strong></div>
+    <div class="cuenta-dato"><small>Uso este mes</small><strong id="cuentaUso">—</strong></div>
+  </div>
+  <section class="suscripcion-oferta" id="suscripcionOferta" hidden aria-labelledby="suscripcionOfertaTitulo">
+    <div class="suscripcion-oferta-cab"><span class="estado-figura" aria-hidden="true">△</span><div><small>SUSCRIPCIÓN</small><h3 id="suscripcionOfertaTitulo">Tu acceso a EUCLIDIAN</h3></div></div>
+    <div id="planesDisponibles" class="planes-disponibles"></div>
+    <p class="suscripcion-nota" id="suscripcionNota">La contratación en línea aún no está disponible. Te mostraremos las condiciones completas antes de que puedas suscribirte.</p>
+  </section>
+
+  <form class="perfil-form" id="perfilForm">
+    <div><label for="perfilNombre">Nombre</label><input id="perfilNombre" name="nombre" maxlength="120" autocomplete="name" placeholder="Cómo quieres que te llamemos"></div>
+    <div><label for="perfilCiudad">Ciudad</label><input id="perfilCiudad" name="ciudad" maxlength="120" autocomplete="address-level2" placeholder="Tu ciudad"></div>
+    <button type="submit">Guardar perfil</button>
+    <span id="perfilEstado" role="status" aria-live="polite"></span>
+  </form>
+  <div class="cuenta-acciones">
+    <button type="button" id="cuentaActualizar">Actualizar acceso</button>
+    <button type="button" id="cuentaGestionarPago" hidden>Gestionar suscripción</button>
+    <button type="button" id="cuentaRecuperar">Cambiar contraseña</button>
+    <button type="button" id="cuentaSalir" class="secundaria">Cerrar sesión</button>
+  </div>
+</section>
+
+<section class="controles marco" hidden id="controles" aria-label="Buscar documentos DIAN">
+  <div class="titulo-consulta"><span class="seccion-numero" aria-hidden="true">02</span><div><span class="seccion-kicker">CONSULTAR</span><h2>Pregunta al corpus, conserva la evidencia</h2><p>Busca una idea, número o tema. EUCLIDIAN separa la lectura rápida de la fuente que la respalda.</p></div></div>
+  <form class="buscador" id="formBuscar" role="search">
+    <label class="solo-lectores" for="consulta">Buscar por número, título o contenido</label>
+    <input id="consulta" type="search" maxlength="160" placeholder="Busca por número, título o tema, p. ej. retención en la fuente" autocomplete="off">
+    <button type="submit">Buscar</button>
+  </form>
+  <div class="filtros-directos">
+    <label class="filtro" for="selAnio"><span>Año de referencia</span><select id="selAnio" title="Año de publicación; si no consta, año del documento"><option value="">Todos los años</option></select></label>
+    <label class="filtro" for="selTema"><span>Tema</span><select id="selTema"><option value="">Todos los temas</option></select></label>
+    <label class="filtro" for="selEstado"><span>Vista</span><select id="selEstado"><option value="todos">Todos los documentos</option><option value="nuevos">Publicaciones DIAN recientes</option></select></label>
+    <button type="button" class="limpiar" id="btnLimpiar" hidden onclick="limpiar()">Quitar filtros</button>
+  </div>
+  <p class="estado-consulta" id="estadoConsulta" role="status" aria-live="polite"></p>
+</section>
+
+<div class="barra marco" hidden id="barra">
+  <span id="rango" aria-live="polite"></span>
+  <label>Ordenar <select id="selOrden"><option value="recientes">Lo más reciente</option><option value="prioridad">Relevancia práctica</option><option value="antiguos">Lo más antiguo</option></select></label>
+</div>
+<main class="marco" id="lista" tabindex="-1" aria-label="Resultados de la consulta" aria-busy="false"></main>
+<nav class="paginas marco" id="paginas" aria-label="Páginas de resultados"></nav>
+<footer class="marco pie-consulta" hidden id="pieConsulta"><p>EUCLIDIAN organiza normas, doctrina y boletines oficiales de la DIAN para facilitar su consulta.</p><a href="https://normograma.dian.gov.co/dian/compilacion/tributario.html" target="_blank" rel="noopener noreferrer">Normograma tributario</a><a href="https://normograma.dian.gov.co/dian/compilacion/novedades_boletines.html" target="_blank" rel="noopener noreferrer">Novedades y boletines DIAN</a></footer>
+
+<script src="/temas.js" defer></script>
+<script src="/fichas.js" defer></script>
+<script src="/bloques.js" defer></script>
+<script src="/auth.js" defer></script>
+<script src="/bandeja.js" defer></script>
+</body>
+</html>

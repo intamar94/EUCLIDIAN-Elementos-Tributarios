@@ -72,8 +72,9 @@ class LectorDocumento:
         return explicit_retroactivity(texto)
 
     def _zonas(self,texto):
-        encontrados=[d for d in DEPARTAMENTOS if re.search(rf"\b{re.escape(d)}\b",texto[:15000])]
-        if len(encontrados)>=1 and re.search(r"emergencia|calamidad|desastre|afectad|damnificad|zona",texto[:15000],re.I):return encontrados[:15]
+        texto=re.split(r'^Dado en\b|^Publíquese y cúmplase',texto,flags=re.I|re.M)[0]
+        encontrados=[d for d in DEPARTAMENTOS if re.search(rf"\b{re.escape(d)}\b",texto,re.I)]
+        if len(encontrados)>=1 and re.search(r"emergencia|calamidad|desastre|afectad|damnificad|zona",texto,re.I):return encontrados
         return []
 
     def _plazos(self,texto):

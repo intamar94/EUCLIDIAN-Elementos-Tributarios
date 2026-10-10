@@ -2,5 +2,8 @@
   "name": "euclidian-bandeja",
   "version": "1.0.0",
   "private": true,
-  "type": "module"
+  "type": "module",
+  "dependencies": {
+    "stripe": "^23.0.0"
+  }
 }

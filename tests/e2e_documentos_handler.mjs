@@ -23,9 +23,9 @@ async function call({key='ci-euclidian-local',query={}}={}){
 
 {
   const res=await call({key:'incorrecta'});
-  assert.equal(res.code,401,'La API debe fallar cerrada con clave incorrecta');
-  assert.equal(res.body?.error,'clave_incorrecta');
-  console.log('OK - acceso incorrecto bloqueado');
+  assert.equal(res.code,401,'La API debe fallar cerrada cuando no existe una autorización válida');
+  assert.ok(['sesion_requerida','acceso_denegado'].includes(res.body?.error),'La API debe responder con un estado de autenticación neutro');
+  console.log('OK - acceso no autorizado bloqueado');
 }
 
 {
