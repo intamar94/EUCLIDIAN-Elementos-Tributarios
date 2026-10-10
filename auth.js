@@ -7,7 +7,8 @@ const AUTH_KEYS={
 
 function authGet(k){try{return localStorage.getItem(k)||'';}catch(_){return '';}}
 function authSet(k,v){try{if(v)localStorage.setItem(k,String(v));else localStorage.removeItem(k);}catch(_){}}
-function authClear(){Object.values(AUTH_KEYS).forEach(k=>authSet(k,''));}
+let authGeneracion=0,authRefreshPendiente=null;
+function authClear(){authGeneracion++;Object.values(AUTH_KEYS).forEach(k=>authSet(k,''));}
 function authStatus(msg,tipo=''){const el=document.getElementById('mal');if(el){el.textContent=msg||'';el.dataset.tipo=tipo;}}
 function authGuardar(data){
   if(!data?.access_token)return false;
@@ -28,15 +29,23 @@ async function authToken(){
   const expires=Number(authGet(AUTH_KEYS.expires)||0);
   if(access&&expires>Date.now()/1000+90)return access;
   if(!refresh)return access;
-  const {r,data}=await authPost({action:'refresh',refresh_token:refresh});
-  if(!r.ok||!authGuardar(data)){authClear();return '';}
-  return authGet(AUTH_KEYS.access);
+  if(authRefreshPendiente)return authRefreshPendiente;
+  const generacion=authGeneracion;
+  authRefreshPendiente=(async()=>{
+    const {r,data}=await authPost({action:'refresh',refresh_token:refresh});
+    if(generacion!==authGeneracion)return '';
+    if(!r.ok||!authGuardar(data)){authClear();return '';}
+    return authGet(AUTH_KEYS.access);
+  })();
+  try{return await authRefreshPendiente;}finally{authRefreshPendiente=null;}
 }
 function authMostrarPuerta(){
   const puerta=document.getElementById('puerta');if(puerta)puerta.hidden=false;
   ['cab','hoy','controles','barra','cuentaPanel'].forEach(id=>{const el=document.getElementById(id);if(el)el.hidden=true;});
   ['lista','paginas','hoyLista','hoyResumen'].forEach(id=>document.getElementById(id)?.replaceChildren());
   const explorar=document.getElementById('explorar');if(explorar)explorar.hidden=true;
+  ['cuentaEmail','cuentaEstado','cuentaPlan','cuentaPeriodo','cuentaUso'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent='—';});
+  ['perfilNombre','perfilCiudad'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   window.euclidianCerrarInterno?.();
 }
 function authOcultarPuerta(){const p=document.getElementById('puerta');if(p)p.hidden=true;}
@@ -108,6 +117,7 @@ async function authCobro(body,boton){
   finally{if(boton)boton.disabled=false;}
 }
 async function authCuenta(){
+  const generacion=authGeneracion;
   const token=await authToken();if(!token){authMostrarPuerta();return null;}
   const headers={Authorization:`Bearer ${token}`};
   const [sessionRes,profileRes,usageRes,plansRes]=await Promise.all([
@@ -117,11 +127,13 @@ async function authCuenta(){
     fetch('/api/plans',{headers,cache:'no-store'})
   ]);
   const data=await sessionRes.json().catch(()=>({}));
+  if(generacion!==authGeneracion)return null;
   if(sessionRes.status===401){authClear();authMostrarPuerta();return null;}
   if(!sessionRes.ok)return null;
   const perfil=profileRes.ok?await profileRes.json().catch(()=>({})): {};
   const uso=usageRes.ok?await usageRes.json().catch(()=>({})): {};
   const planes=plansRes.ok?await plansRes.json().catch(()=>({planes:[]})):{planes:[]};
+  if(generacion!==authGeneracion)return null;
   const gestionar=document.getElementById('cuentaGestionarPago');if(gestionar)gestionar.hidden=!(planes.billing_enabled&&data.access?.plan_codigo);
   const panel=document.getElementById('cuentaPanel');
   document.getElementById('cuentaEmail').textContent=data.user?.email||'—';
@@ -140,6 +152,9 @@ async function authCuenta(){
 }
 window.euclidianAuthToken=authToken;
 window.euclidianTieneSesion=()=>!!(authGet(AUTH_KEYS.access)||authGet(AUTH_KEYS.refresh));
+window.addEventListener('storage',e=>{
+  if((e.key===null||Object.values(AUTH_KEYS).includes(e.key))&&!window.euclidianTieneSesion()){authClear();authMostrarPuerta();authStatus('Sesión cerrada.','ok');}
+});
 window.euclidianAuthExpirada=()=>{authClear();authMostrarPuerta();authStatus('Tu sesión terminó. Vuelve a entrar.','aviso');};
 window.euclidianMostrarCuenta=authCuenta;
 window.euclidianAuthSinSuscripcion=async info=>{
