@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-11T13:24:05.553197+00:00",
+  "generated_at": "2026-10-11T18:18:49.276799+00:00",
   "total_documentos": 17850,
   "enriquecidos": 17819,
   "pendientes_enriquecimiento": 31,
@@ -8,7 +8,7 @@
   "fechas_no_verificadas": 383,
   "clasificados": 17594,
   "borradores": 1292,
-  "estructura_extraida": 13766,
+  "estructura_extraida": 13823,
   "revisados_humanos": 857,
   "aprobados_para_email": 28,
   "con_diario_oficial": 3050,
