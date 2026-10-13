@@ -5,11 +5,14 @@ on:
     branches: [main]
     paths:
       - 'scripts/agente_control_interno.py'
+      - 'scripts/gestor_mesa_excepciones.py'
       - '.github/workflows/agente_control_interno.yml'
   workflow_run:
     workflows: ["Inspector documental EUCLIDIAN"]
     types: [completed]
     branches: [main]
+  schedule:
+    - cron: '25 */6 * * *'
   workflow_dispatch:
     inputs:
       modo:
@@ -49,3 +52,9 @@ jobs:
           else
             python scripts/agente_control_interno.py
           fi
+      - name: Resolver y reconciliar mesa de excepciones
+        if: ${{ (inputs.modo || 'aplicar') != 'simular' }}
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python scripts/gestor_mesa_excepciones.py --limite 500
