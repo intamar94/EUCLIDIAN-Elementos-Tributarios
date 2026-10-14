@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import argparse
 import os
+import re
 import sys
 import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -31,7 +32,7 @@ from scripts.extractor_estructura import ExtractorEstructura
 from scripts.inspector_euclidian import inspect_row
 from bs4 import BeautifulSoup
 
-RULES_VERSION = "4.2"
+RULES_VERSION = "4.3"
 DEFAULT_LIMIT = 1000
 MAX_LIMIT = 20000
 WORKERS = 16
@@ -40,6 +41,16 @@ _thread_local = threading.local()
 
 def _texto(v):
     return str(v or "").strip()
+
+
+def identidad_desde_titulo(titulo_fuente, numero):
+    """El archivo oficio_*.htm puede contener un CONCEPTO: manda la fuente."""
+    match = re.search(r"(?:^| - )(Concepto|Oficio|Resolución|Circular|Comunicado)\s+0*(\d+)\s+de\s+(\d{4})\b", titulo_fuente, re.I)
+    ident = re.search(r"-(\d+)-(\d{4})$", numero)
+    if not match or not ident or (int(match[2]),match[3]) != (int(ident[1]),ident[2]):
+        return {}
+    tipo = match[1].lower().replace('ó','o')
+    return {"tipo_documento": tipo, "titulo": titulo_fuente[match.start():].removeprefix(' - ').strip()}
 
 
 def _session():
@@ -133,6 +144,9 @@ def _verify_one(row):
             if final.scheme != "https" or final.netloc != p.netloc or not final.path.startswith("/dian/compilacion/docs/"):
                 raise ValueError("Redirección fuera de la fuente documental")
             soup = BeautifulSoup(response.content, "html.parser")
+            if soup.title:
+                identidad = identidad_desde_titulo(soup.title.get_text(' ', strip=True), _texto(d.get('numero_resolucion')))
+                cambios.update({k:v for k,v in identidad.items() if v != d.get(k)})
             for tag in soup(["script", "style", "nav", "footer"]):
                 tag.decompose()
             texto = soup.get_text("\n", strip=True)[:60000]
@@ -224,6 +238,7 @@ def _guardar_cambios(sb, d, cambios):
         if result.data:
             return result.data[0]["updated_at"]
         print(f"TURBO_CONFLICTO id={d.get('id')} ficha cambió durante el contraste", flush=True)
+        return "CONFLICTO"
     except Exception as exc:
         print(f"TURBO_ESCRITURA_ERROR id={d.get('id')} error={str(exc)[:220]}", flush=True)
     return None
@@ -274,6 +289,9 @@ def main():
                 continue
 
             version = _guardar_cambios(sb, d, cambios)
+            if version == "CONFLICTO":
+                counts["CONFLICTOS"] += 1
+                continue
             if not version:
                 counts["ERROR"] += 1
                 continue
