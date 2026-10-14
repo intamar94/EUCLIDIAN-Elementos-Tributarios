@@ -93,8 +93,7 @@ returns setof public.documentos_tributarios language sql security invoker set se
  with candidatos as materialized (
  select d.id from public.documentos_tributarios d join public.adaptaciones_documentales a on a.documento_id=d.id
  where (a.estado='pendiente' or (a.estado in ('reintentar','cuarentena','validado','publicado') and a.proximo_intento<=now())
-  or (a.version is distinct from p_version and a.proximo_intento<=now())
-  or (d.updated_at>a.documento_actualizado_en and public.huella_ficha_documental(d) is distinct from a.huella_ficha))
+  or (a.version is distinct from p_version and a.proximo_intento<=now()))
  order by coalesce(d.fecha_publicacion_web,d.fecha_publicacion,make_date(coalesce(d.anio_publicacion,d.anio,1900),1,1)) desc,
  a.ultimo_intento asc nulls first,d.id limit greatest(1,least(p_limite,1000)))
  select d.* from candidatos c join public.documentos_tributarios d on d.id=c.id;
@@ -227,3 +226,20 @@ begin
 end; $$;
 revoke all on function public.reservar_rescate_documental() from public,anon,authenticated;
 grant execute on function public.reservar_rescate_documental() to service_role;
+
+-- Los cambios materiales reencolan al escribir; la selección del lote nunca
+-- calcula huellas de todos los textos del universo para encontrar 400 IDs.
+create or replace function public.encolar_documento_cambiado()
+returns trigger language plpgsql security invoker set search_path=public,pg_temp as $$
+begin
+ if public.huella_ficha_documental(old) is distinct from public.huella_ficha_documental(new) then
+  insert into public.adaptaciones_documentales(documento_id) values(new.id)
+  on conflict(documento_id) do update set estado='pendiente',proximo_intento=now(),accion='adaptar_version_modificada';
+ end if;
+ return new;
+end; $$;
+drop trigger if exists trg_encolar_documento_cambiado on public.documentos_tributarios;
+create trigger trg_encolar_documento_cambiado after update on public.documentos_tributarios
+for each row execute function public.encolar_documento_cambiado();
+revoke all on function public.encolar_documento_cambiado() from public,anon,authenticated;
+grant execute on function public.encolar_documento_cambiado() to service_role;

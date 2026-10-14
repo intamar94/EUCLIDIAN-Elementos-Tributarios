@@ -88,6 +88,14 @@ def adaptar(row,capture):
     soup=BeautifulSoup(capture.html,'html.parser')
     if soup.title:
         d.update(identidad_desde_titulo(soup.title.get_text(' ',strip=True),d['numero_resolucion']))
+    # El encabezado aporta tipo e identidad; ninguna categoría viene de un
+    # nombre de archivo heredado que pudiera estar mal clasificado.
+    header=re.search(r'\b(concepto|oficio|resolucion|circular|comunicado|decreto|ley|sentencia)\s+(?:numero\s+|no\.?\s+)?0*(\d+)\s+de\s+(\d{4})',norm(capture.texto)[:2000])
+    if header:d['tipo_documento']=header[1]
+    d['clasificacion_obligatoriedad']=(
+        'obligatorio_dian_y_contribuyentes' if d['tipo_documento'] in ('ley','decreto','resolucion')
+        else 'obligatorio_dian_solo' if d['tipo_documento'] in ('concepto','oficio')
+        else 'vinculante_jurisprudencia' if d['tipo_documento']=='sentencia' else 'orientativo')
     fields=ExtractorEstructura.extraer(Lectores(),capture.texto) or {}
     for name in ('problema_juridico','tesis_juridica','tesis_respuesta','fuentes_formales','descriptores','banco_datos','area_derecho','numero_interno','dependencia_emisora','doctrina_citada','jurisprudencia_citada'):
         d[name]=fields.get(name,[] if name in ('fuentes_formales','descriptores','doctrina_citada','jurisprudencia_citada') else None)
