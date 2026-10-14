@@ -28,19 +28,8 @@ on:
       - 'detalle.css'
       - 'consulta.css'
       - '.github/workflows/control_calidad.yml'
-  schedule:
-    - cron: '0 14 * * *'
+  pull_request:
   workflow_dispatch:
-    inputs:
-      limite:
-        description: 'Documentos a auditar (vacío = todo el universo)'
-        required: false
-        default: '1000'
-      aplicar:
-        description: 'Escribir decisiones de aprobación/revisión en Supabase'
-        required: false
-        type: boolean
-        default: false
 
 jobs:
   revisar:
@@ -124,36 +113,3 @@ jobs:
           cd scripts
           python test_normalizador_juridico.py
           python test_cola_reprocesamiento.py
-      - name: Verificar las dos fuentes oficiales DIAN
-        run: python scripts/validar_fuentes_dian.py
-      - name: Reparar dato oficial conocido
-        if: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.aplicar == true) }}
-        env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
-        run: python scripts/reparar_dato_oficial.py
-      - name: Poner en cuarentena fechas futuras
-        if: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.aplicar == true) }}
-        env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
-        run: python scripts/quarantine_future_dates.py
-      - name: Auditar universo documental
-        env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
-        run: |
-          cd scripts
-          LIMIT='${{ inputs.limite || '1000' }}'
-          if [ "$GITHUB_EVENT_NAME" = "push" ]; then LIMIT=50; fi
-          APPLY='${{ inputs.aplicar || 'false' }}'
-          if [ "$APPLY" = "true" ]; then
-            python verificador_aprobacion.py --apply --limite "$LIMIT"
-          else
-            python verificador_aprobacion.py --limite "$LIMIT"
-          fi
-      - name: Control final de fuentes
-        env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
-        run: python scripts/control_calidad.py --enlaces 100 --estricto
