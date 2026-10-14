@@ -1,9 +1,8 @@
 """EUCLIDIAN — Revisor Fiscal final, turbo y trazable.
 
-Procesa el corpus completo por lotes grandes, verifica cada documento contra
-el Normograma DIAN y mantiene todo documento visible en el catálogo.
-La revisión fiscal determina confianza y aprobación, pero nunca oculta
-información del catálogo por una incidencia de verificación.
+Reevalúa las fichas nuevas o modificadas contra el Normograma DIAN.
+Publica solamente versiones verificadas que superan la puerta documental.
+La aprobación automática nunca sustituye una revisión humana.
 """
 from __future__ import annotations
 
@@ -26,9 +25,13 @@ for _p in (str(ROOT), str(SCRIPTS)):
 
 from scripts.composicion import Composicion
 from scripts.verificador_aprobacion import verify
+from scripts.sintesis_literal import extraer_literal, literal_presente
+from scripts.lectores_dian import Lectores
+from scripts.extractor_estructura import ExtractorEstructura
+from bs4 import BeautifulSoup
 
-RULES_VERSION = "4.1"
-DEFAULT_LIMIT = 20000
+RULES_VERSION = "4.2"
+DEFAULT_LIMIT = 1000
 MAX_LIMIT = 20000
 WORKERS = 16
 _thread_local = threading.local()
@@ -85,7 +88,7 @@ def evaluate(d: dict, source_verified: bool = False):
     # asunto con más precisión que una etiqueta de materia todavía vacía.
     matter = (bool(_texto(d.get("materia") or d.get("area_derecho") or d.get("banco_datos")))
               or len(_texto(d.get("descripcion_limpia"))) >= 40)
-    summary = bool(_texto(d.get("resumen_humano")))
+    summary = bool(_texto(d.get("resumen_humano"))) or literal_presente(d.get("texto_completo"), d.get("resumen_borrador"))
     formula = " ".join(_texto(d.get("resumen_humano") or d.get("resumen_borrador")).lower().split())
     specific = not ("doctrina dian: orienta, no obliga" in formula or
                     "te toca si trabajas con" in formula)
@@ -109,8 +112,44 @@ def evaluate(d: dict, source_verified: bool = False):
 
 def _verify_one(row):
     d = dict(row)
-    cambios = preparar_ficha(d)
-    if cambios:
+    cambios = {}
+    # La lectura actual prepara datos literales antes del contraste independiente.
+    # Nunca completa resumen_humano ni revisado_por_humano.
+    try:
+        url = _texto(d.get("enlace_oficial"))
+        from urllib.parse import urlparse
+        p = urlparse(url)
+        if p.scheme == "https" and p.netloc == "normograma.dian.gov.co" and p.path.startswith("/dian/compilacion/docs/"):
+            response = _session().get(url, timeout=20, allow_redirects=True)
+            response.raise_for_status()
+            final = urlparse(response.url)
+            if final.scheme != "https" or final.netloc != p.netloc or not final.path.startswith("/dian/compilacion/docs/"):
+                raise ValueError("Redirección fuera de la fuente documental")
+            soup = BeautifulSoup(response.content, "html.parser")
+            for tag in soup(["script", "style", "nav", "footer"]):
+                tag.decompose()
+            texto = soup.get_text("\n", strip=True)[:60000]
+            if len(texto) >= 200:
+                extraidos = ExtractorEstructura.extraer(Lectores(), texto) or {}
+                cambios.update({k:v for k,v in extraidos.items() if v != d.get(k)})
+                if texto != d.get("texto_completo"):
+                    cambios["texto_completo"] = texto
+                    cambios["enriquecido_en"] = datetime.now(timezone.utc).isoformat()
+                cita = extraer_literal(response.content)
+                if cita and not d.get("resumen_humano") and literal_presente(texto, cita):
+                    cambios["resumen_borrador"] = cita
+                d.update(cambios)
+                if not d.get("materia") and d.get("banco_datos"):
+                    cambios["materia"] = _texto(d["banco_datos"])[:40]
+                # La descripción del índice ya es texto oficial, no una conclusión.
+                if not d.get("descripcion_limpia") and len(_texto(d.get("contenido"))) >= 40:
+                    cambios["descripcion_limpia"] = _texto(d["contenido"])[:4000]
+                d.update(cambios)
+    except Exception:
+        # verify conserva la decisión cerrada ante una fuente no accesible.
+        pass
+    if not d.get("resumen_borrador"):
+        cambios.update(preparar_ficha(d))
         d.update(cambios)
     try:
         source_ok, source_errors = verify(_session(), d)
@@ -123,39 +162,64 @@ def _verify_one(row):
     return d, cambios, source_ok, source_errors
 
 
+def necesita_revision(row):
+    reviewed = row.get("revisado_fiscal_en")
+    if not reviewed:
+        return True
+    def dt(v):
+        return datetime.fromisoformat(str(v).replace('Z', '+00:00')) if v else None
+    checked = dt(reviewed)
+    return any(dt(row.get(k)) and dt(row[k]) > checked for k in (
+        "enriquecido_en", "estructura_extraida_en", "clasificado_en", "borrador_generado_en"))
+
+
 def _load_pending(sb, limit):
-    """Carga pendientes con paginación por clave primaria para evitar OFFSET costoso."""
-    rows = []
-    page_size = 1000
-    last_id = None
-    while len(rows) < limit:
-        take = min(page_size, limit - len(rows))
-        q = (sb.table("documentos_tributarios")
-            .select("*")
-            .is_("revisado_fiscal_en", "null")
-            .order("id", desc=False)
-            .limit(take))
+    # También recupera fichas retenidas con reglas anteriores, aunque ningún
+    # extractor haya vuelto a tocarlas. Una REVIEW actual no se repite sin cambios.
+    actuales, last_reviewed = set(), None
+    while True:
+        q = (sb.table("revisor_fiscal_euclidian_evaluaciones")
+             .select("documento_id").eq("version_reglas", RULES_VERSION)
+             .order("documento_id").limit(1000))
+        if last_reviewed:
+            q = q.gt("documento_id", last_reviewed)
+        batch = q.execute().data or []
+        actuales.update(row["documento_id"] for row in batch)
+        if len(batch) < 1000:
+            break
+        last_reviewed = batch[-1]["documento_id"]
+    metadata, last_id = [], None
+    while True:
+        q = sb.table("documentos_tributarios").select(
+            "id,revisado_fiscal_en,enriquecido_en,estructura_extraida_en,clasificado_en,borrador_generado_en,fecha_publicacion_web,fecha_publicacion").order("id").limit(1000)
         if last_id:
             q = q.gt("id", last_id)
         batch = q.execute().data or []
-        if not batch:
+        metadata.extend(row for row in batch if row["id"] not in actuales or necesita_revision(row))
+        if len(batch) < 1000:
             break
-        rows.extend(batch)
-        last_id = batch[-1].get("id")
-        if len(batch) < take:
-            break
-    return rows
+        last_id = batch[-1]["id"]
+    metadata.sort(key=lambda d:(d.get("fecha_publicacion_web") or d.get("fecha_publicacion") or '',d["id"]), reverse=True)
+    ids = [d["id"] for d in metadata[:limit]]
+    rows = []
+    for i in range(0, len(ids), 50):
+        rows.extend(sb.table("documentos_tributarios").select("*").in_("id", ids[i:i+50]).execute().data or [])
+    order = {ident:i for i,ident in enumerate(ids)}
+    return sorted(rows, key=lambda d:order[d["id"]])
 
 
 def _guardar_cambios(sb, d, cambios):
     if not cambios:
-        return True
+        return d.get("updated_at")
     try:
-        sb.table("documentos_tributarios").update(cambios).eq("id", d["id"]).execute()
-        return True
+        result = (sb.table("documentos_tributarios").update(cambios)
+                  .eq("id", d["id"]).eq("updated_at", d["updated_at"]).execute())
+        if result.data:
+            return result.data[0]["updated_at"]
+        print(f"TURBO_CONFLICTO id={d.get('id')} ficha cambió durante el contraste", flush=True)
     except Exception as exc:
         print(f"TURBO_ESCRITURA_ERROR id={d.get('id')} error={str(exc)[:220]}", flush=True)
-        return False
+    return None
 
 
 def _limpiar_motivos(items):
@@ -189,7 +253,7 @@ def main():
     rows = _load_pending(sb, args.limit)
 
     print(f"TURBO_INICIO universo={len(rows)} workers={args.workers} reglas={RULES_VERSION}", flush=True)
-    counts = {"APPROVE": 0, "REVIEW": 0, "ERROR": 0}
+    counts = {"APPROVE": 0, "REVIEW": 0, "ERROR": 0, "PUBLICADOS": 0, "CONFLICTOS": 0}
 
     with ThreadPoolExecutor(max_workers=args.workers) as pool:
         futures = {pool.submit(_verify_one, row): row for row in rows}
@@ -202,7 +266,8 @@ def main():
                 print(f"TURBO_ERROR id={original.get('id')} error={str(exc)[:220]}", flush=True)
                 continue
 
-            if not _guardar_cambios(sb, d, cambios):
+            version = _guardar_cambios(sb, d, cambios)
+            if not version:
                 counts["ERROR"] += 1
                 continue
 
@@ -217,49 +282,22 @@ def main():
                     failed.append("FUENTE_OFICIAL")
 
             try:
-                now = datetime.now(timezone.utc).isoformat()
-                if result == "APPROVE":
-                    sb.table("revisor_fiscal_euclidian_evaluaciones").upsert({
-                        "documento_id": d["id"],
-                        "resultado": "APPROVE",
-                        "puntuacion": score,
-                        "reglas_pasadas": passed,
-                        "reglas_fallidas": [],
-                        "motivos": [],
-                        "version_reglas": RULES_VERSION,
-                    }, on_conflict="documento_id").execute()
-                    sb.table("documentos_tributarios").update({
-                        # Fecha del control automático. La bandera
-                        # revisado_por_humano permanece separada.
-                        "revisado_fiscal_en": now,
-                        # Un documento nuevo que supera todos los controles
-                        # técnicos queda disponible automáticamente en la
-                        # consulta. La revisión humana sigue siendo una capa
-                        # adicional y nunca se finge.
-                        "publicado_cliente": True,
-                        "observaciones_revisor": None,
-                        "borrador_confianza": "pendiente",
-                        "borrador_advertencias": ["Controles técnicos superados; falta revisión humana del contenido y su aplicación."],
-                    }).eq("id", d["id"]).execute()
-                else:
-                    motivos = _limpiar_motivos(reasons)
-                    sb.table("revisor_fiscal_euclidian_evaluaciones").upsert({
-                        "documento_id": d["id"],
-                        "resultado": "REVIEW",
-                        "puntuacion": score,
-                        "reglas_pasadas": passed,
-                        "reglas_fallidas": failed,
-                        "motivos": motivos,
-                        "version_reglas": RULES_VERSION,
-                    }, on_conflict="documento_id").execute()
-                    sb.table("documentos_tributarios").update({
-                        "revisado_fiscal_en": now,
-                        "aprobado_para_email": False,
-                        "observaciones_revisor": " | ".join(motivos)[:4000],
-                        "borrador_confianza": "no_aprobado",
-                        "borrador_advertencias": motivos,
-                    }).eq("id", d["id"]).execute()
+                motivos = _limpiar_motivos(reasons)
+                saved = sb.rpc("registrar_revision_documental", {
+                    "p_documento_id": d["id"], "p_actualizado_en": version,
+                    "p_evaluacion": {"resultado": result, "puntuacion": score,
+                        "reglas_pasadas": passed, "reglas_fallidas": failed,
+                        "motivos": motivos, "version_reglas": RULES_VERSION,
+                        "fuente_verificada": source_ok},
+                }).execute().data
+                if not saved or saved.get("conflicto"):
+                    counts["CONFLICTOS"] += 1
+                    print(f"TURBO_CONFLICTO_FINAL id={d['id']}", flush=True)
+                    continue
+                if result == "APPROVE" and not saved.get("publicado"):
+                    print(f"TURBO_PENDIENTE_INSPECCION id={d['id']}", flush=True)
                 counts[result] += 1
+                counts["PUBLICADOS"] += int(bool(saved.get("publicado")))
             except Exception as exc:
                 counts["ERROR"] += 1
                 print(f"TURBO_ESCRITURA_FINAL_ERROR id={d.get('id')} error={str(exc)[:220]}", flush=True)

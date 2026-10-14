@@ -101,6 +101,11 @@ def validate_sources(session):
         log.info("Fuente raíz OK: %s",name)
 def extract_claim_tokens(sentence):return words(sentence)
 def check_summary(source_text,summary):
+    from sintesis_literal import cuerpo_literal, literal_presente
+    if cuerpo_literal(summary):
+        body=norm(cuerpo_literal(summary))
+        ok=len(body)>=80 and body in norm(source_text)
+        return ok,[] if ok else ["El extracto literal no coincide íntegramente con la fuente DIAN actual."]
     sentences=[x.strip() for x in re.split(r"[.!?;]\s+",str(summary or "")) if len(x.strip())>=20]
     if not sentences:return False,["No hay afirmaciones verificables en el resumen."]
     src_words=words(source_text);src=norm(source_text);errors=[]

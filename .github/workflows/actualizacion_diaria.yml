@@ -82,6 +82,12 @@ jobs:
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
         run: python scripts/enriquecedor_fechas_v2.py --limite 500
 
+      - name: Extraer estructura del texto recién enriquecido
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: python scripts/extractor_estructura.py --limite 1000
+
       - name: Retirar fechas imposibles del catálogo
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}

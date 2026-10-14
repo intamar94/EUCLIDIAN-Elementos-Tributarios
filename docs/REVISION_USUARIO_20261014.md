@@ -1,5 +1,18 @@
 # Inicio guiado y correcciones de la revisión de usuario
 
+## Cierre del flujo documental — 14 de octubre de 2026
+
+- Se contrastaron de nuevo las 13 fichas con publicación web del 5 de octubre, directamente en sus páginas DIAN. Las 13 superaron las reglas 4.2 y quedaron publicadas, sin modificar sus fechas ni atribuir revisión humana. Ejemplo: DIAN-OFICIO-16681-2026.
+- La cola anterior solo encontraba revisado_fiscal_en vacío: omitía fichas enriquecidas o estructuradas después de una evaluación. Ahora detecta esas actualizaciones y las evaluaciones con reglas anteriores, prioriza publicaciones recientes y procesa lotes de 1000.
+- Los cambios sustantivos retiran temporalmente la ficha y reinician su revisión. La evaluación y publicación se cierran en una transacción, condicionada a updated_at para rechazar versiones obsoletas. La puerta de inspección y los expedientes bloqueantes siguen aplicando.
+- Se preparan párrafos completos y literales de la fuente, identificados como extractos DIAN. Se contrastan por coincidencia íntegra, conservando negaciones, cifras y excepciones. No se escribe resumen_humano ni revisado_por_humano.
+- El ciclo de captura incorpora extracción de estructura; la revisión se ejecuta también al terminar el agente de integridad. Los registros distinguen aprobaciones, publicaciones efectivas y conflictos de versión.
+- Portada alineada con las secciones actuales. Interfaz y estilo conservados; desplegable de temas y selección personal validados en cuatro anchuras.
+- Validación: 27 regresiones Python, contratos JS de autenticación/consulta/pagos y pruebas transaccionales en la base con rollback. Estas últimas comprobaron rechazo de versión obsoleta, reencolado por cambio real, marcas de tiempo sin reencolado y conservación de la cuarentena crítica.
+- Alcance de actualidad: el 5 de octubre es la fecha más reciente acreditada en las fuentes tributarias revisadas, no una certificación de toda publicación posible de la DIAN.
+- El histórico tenía 12.102 evaluaciones anteriores a alguna extracción. Su reevaluación queda en la cola automática; no se presenta ese histórico como revisado de nuevo en esta entrega.
+- Permanecen 3 contradicciones de fechas presentes en las propias fuentes oficiales, retenidas para análisis. Los cobros reales dependen de la configuración comercial del titular, todavía ausente; no se habilitan pagos ficticios.
+
 ## Selección personal de temas y tarjetas útiles
 
 - Explorar usa un desplegable nativo para añadir temas y muestra únicamente los elegidos, con «Ver documentos» y un control independiente para quitar cada uno. No hay lista completa ni temas sugeridos preseleccionados.

@@ -49,4 +49,24 @@ async function call({key='ci-euclidian-local',query={}}={}){
   console.log('OK - ausencia de evidencia devuelve 0 resultados');
 }
 
-console.log('E2E handler documentos: 3/3 escenarios OK');
+{
+  // Detecta una ficha presente en la base que se pierda al pasar por el handler.
+  const headers={apikey:process.env.SUPABASE_SERVICE_KEY,Authorization:`Bearer ${process.env.SUPABASE_SERVICE_KEY}`};
+  const raw=await fetch(`${process.env.SUPABASE_URL}/rest/v1/documentos_tributarios?select=id,numero_resolucion,fecha_publicacion_web&publicado_cliente=is.true&fecha_publicacion_web=not.is.null&order=fecha_publicacion_web.desc,numero_resolucion.desc&limit=1`,{headers});
+  assert.equal(raw.ok,true);
+  const [latest]=await raw.json();assert.ok(latest,'Catálogo sin publicaciones con fecha web');
+  const res=await call({query:{doc:latest.id}});
+  assert.equal(res.code,200);assert.equal(res.body.documentos[0]?.id,latest.id);
+  assert.equal(res.body.documentos[0].fecha_publicacion_web,latest.fecha_publicacion_web,'El handler descartó la fecha oficial más reciente');
+  const cutoff=new Date();cutoff.setUTCDate(cutoff.getUTCDate()-14);
+  if(latest.fecha_publicacion_web>=cutoff.toISOString().slice(0,10)){
+    const news=await call({query:{periodo:'todo',estado:'nuevos'}});
+    const summary=await call({query:{periodo:'todo',estado:'nuevos',resumen:'1'}});
+    assert.equal(news.code,200);assert.equal(summary.code,200);
+    assert.ok(news.body.documentos.some(d=>d.id===latest.id),'La publicación más reciente no aparece en Novedades');
+    assert.equal(summary.body.total,news.body.total,'Inicio y Novedades discrepan');
+  }
+  console.log(`OK - última publicación visible de extremo a extremo: ${latest.numero_resolucion}, web ${latest.fecha_publicacion_web}`);
+}
+
+console.log('E2E handler documentos: 4/4 escenarios OK');
