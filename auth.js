@@ -40,9 +40,10 @@ async function authToken(){
   try{return await authRefreshPendiente;}finally{authRefreshPendiente=null;}
 }
 function authMostrarPuerta(){
+  window.euclidianRestablecerVista?.();
   const puerta=document.getElementById('puerta');if(puerta)puerta.hidden=false;
-  ['cab','hoy','controles','barra','cuentaPanel','bienvenida','novedadesGlobales'].forEach(id=>{const el=document.getElementById(id);if(el)el.hidden=true;});
-  ['lista','paginas','hoyLista','hoyResumen'].forEach(id=>document.getElementById(id)?.replaceChildren());
+  ['cab','inicioPanel','novedadesCab','controles','barra','cuentaPanel','bienvenida','lista','paginas'].forEach(id=>{const el=document.getElementById(id);if(el)el.hidden=true;});
+  ['lista','paginas','inicioDocumentos','inicioNovedades','explorarTemas','temasSeguidos'].forEach(id=>document.getElementById(id)?.replaceChildren());
   const explorar=document.getElementById('explorar');if(explorar)explorar.hidden=true;
   ['cuentaEmail','cuentaEstado','cuentaPlan','cuentaPeriodo','cuentaUso'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent='—';});
   ['perfilNombre','perfilCiudad'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
@@ -147,7 +148,7 @@ async function authCuenta(){
   const nombre=document.getElementById('perfilNombre'),ciudad=document.getElementById('perfilCiudad'),form=document.getElementById('perfilForm');
   if(nombre)nombre.value=p.nombre||'';if(ciudad)ciudad.value=p.ciudad||'';if(form)form.hidden=false;
   renderPlanesCuenta(planes,data.access);
-  if(panel){panel.hidden=false;panel.scrollIntoView({behavior:'smooth',block:'start'});}
+  if(panel&&(!window.euclidianVistaActual||window.euclidianVistaActual==='cuenta')){panel.hidden=false;panel.scrollIntoView({behavior:'smooth',block:'start'});}
   return data;
 }
 window.euclidianAuthToken=authToken;
@@ -228,7 +229,7 @@ document.getElementById('cuentaRecuperar')?.addEventListener('click',()=>{
   if(email.includes('@'))document.getElementById('authEmail').value=email;
   authMostrarPuerta();authCambiarTab(false);authStatus('Usa “Olvidé mi contraseña” para recibir un enlace seguro.','aviso');
 });
-document.getElementById('cerrarCuenta')?.addEventListener('click',()=>{document.getElementById('cuentaPanel').hidden=true;});
+document.getElementById('cerrarCuenta')?.addEventListener('click',()=>{document.getElementById('cuentaPanel').hidden=true;window.euclidianCambiarVista?.('inicio');});
 document.getElementById('cuentaGestionarPago')?.addEventListener('click',e=>authCobro({action:'portal'},e.currentTarget));
 document.getElementById('cuentaActualizar')?.addEventListener('click',()=>window.cargar?.().catch(()=>{}));
 authRecuperacionDesdeHash();

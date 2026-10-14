@@ -40,7 +40,7 @@ const checks=[
  ['P3 historia normativa',blocks.includes('relaciones-vivas')&&blocks.includes('timeline-relaciones')],
  ['P3 estados recuperables',nav.includes('vistaVacia')&&nav.includes('vistaError')&&nav.includes('data-retry-load')],
  ['P3 contexto de consulta',nav.includes('describirConsulta(data)')],
- ['P3 radar visual',nav.includes('visualPrioridad')&&nav.includes('radar-metrica')&&nav.includes('hoy-senal')],
+ ['Vistas separadas con inicio compacto',nav.includes('function aplicarVista')&&html.includes('inicioPanel')&&html.includes('novedadesCab')&&!html.includes('hoyResumen')],
  ['P4 acceso personal visible',html.includes('authLoginForm')&&html.includes('authRegisterForm')&&html.includes('cuentaPanel')],
  ['P4 flujo auth cliente',auth.includes("action:'signin'")&&auth.includes("action:'signup'")&&auth.includes("action:'refresh'")&&auth.includes("action:'recover'")&&auth.includes("action:'logout'")],
  ['P4 consultas usan bearer',nav.includes('Authorization:')&&nav.includes('Bearer')&&api.includes('autorizarConsulta(req)')],

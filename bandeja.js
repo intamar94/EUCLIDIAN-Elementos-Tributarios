@@ -31,7 +31,7 @@ function marcarNavegacion(id){
 }
 function vistaVacia(){
   if(F.doc)return `<section class="estado-vacio" aria-labelledby="estadoVacioTitulo"><span class="estado-vacio-figura" aria-hidden="true">◇</span><div><span class="estado-vacio-kicker">ENLACE DEL CORREO</span><h2 id="estadoVacioTitulo">Esta ficha no está disponible</h2><p>El documento del enlace no está publicado en EUCLIDIAN en este momento. Puedes consultar la fuente DIAN enlazada en el correo.</p></div><div class="estado-vacio-acciones"><button type="button" data-empty-action="todo">Ver documentos disponibles</button></div></section>`;
-  if(F.estado==='nuevos'&&!F.q&&!F.tema)return `<section class="estado-vacio" aria-labelledby="estadoVacioTitulo"><span class="estado-vacio-figura" aria-hidden="true">◇</span><div><span class="estado-vacio-kicker">ÚLTIMOS 14 DÍAS</span><h2 id="estadoVacioTitulo">No hay fichas recientes listas para consulta</h2><p>EUCLIDIAN no tiene publicaciones con fecha reciente y fuente comprobable en esta vista. Esto no confirma que la DIAN no haya publicado novedades. Puedes revisar la biblioteca completa o consultar el índice oficial.</p></div><div class="estado-vacio-acciones"><button type="button" data-empty-action="todo">Ver biblioteca completa</button><a href="https://normograma.dian.gov.co/dian/compilacion/novedades_boletines.html" target="_blank" rel="noopener noreferrer">Ver novedades en la DIAN ↗</a></div></section>`;
+  if(F.estado==='nuevos'&&!F.q&&!F.tema)return `<section class="estado-vacio" aria-labelledby="estadoVacioTitulo"><span class="estado-vacio-figura" aria-hidden="true">◇</span><div><h2 id="estadoVacioTitulo">No hay publicaciones listas para mostrar</h2><p>Puedes consultar la biblioteca o comprobar las novedades en la DIAN.</p></div><div class="estado-vacio-acciones"><button type="button" data-empty-action="todo">Ver biblioteca completa</button><a href="https://normograma.dian.gov.co/dian/compilacion/novedades_boletines.html" target="_blank" rel="noopener noreferrer">Ver novedades en la DIAN ↗</a></div></section>`;
   return `<section class="estado-vacio" aria-labelledby="estadoVacioTitulo">
     <span class="estado-vacio-figura" aria-hidden="true">◇</span>
     <div><span class="estado-vacio-kicker">SIN COINCIDENCIAS</span><h2 id="estadoVacioTitulo">No encontramos algo fiable con estos filtros</h2>
@@ -59,57 +59,59 @@ function describirConsulta(data){
 function renderExplorar(data){
   const seccion=document.getElementById('explorar'), cont=document.getElementById('explorarTemas');
   if(!seccion||!cont)return;
-  const temas=(data.temas||[]).slice().sort((a,b)=>nombreTema(a).localeCompare(nombreTema(b),'es'));
+  const temas=(data.temas||[]).slice().sort((a,b)=>(temasSeguidos().includes(nombreTema(b))?1:0)-(temasSeguidos().includes(nombreTema(a))?1:0)||nombreTema(a).localeCompare(nombreTema(b),'es'));
   cont.innerHTML=temas.map((t,i)=>`<button type="button" class="tema-explora" data-explora-tema="${esc(t)}"><span class="tema-indice">${String(i+1).padStart(2,'0')}</span><strong>${esc(nombreTema(t))}</strong><span class="tema-flecha" aria-hidden="true">↗</span></button>`).join('');
-  cont.querySelectorAll('[data-explora-tema]').forEach(btn=>btn.addEventListener('click',()=>{dejarFicha();F.tema=btn.dataset.exploraTema;F.pagina=1;const sel=document.getElementById('selTema');if(sel)sel.value=F.tema;seccion.hidden=true;marcarNavegacion('navConsultar');cargar();}));
+  cont.querySelectorAll('[data-explora-tema]').forEach(btn=>btn.addEventListener('click',()=>{reiniciarFiltros();F.tema=btn.dataset.exploraTema;F.pagina=1;const sel=document.getElementById('selTema');if(sel)sel.value=F.tema;mostrarVista('consultar');cargar().catch(()=>{});}));
 }
+let vistaActual=(F.doc||F.q)?'consultar':'inicio';
+let ultimaRespuesta=null,accesoConsulta=false;
+const vistas={inicio:['inicioPanel'],consultar:['controles','barra','lista','paginas'],novedades:['novedadesCab','barra','lista','paginas'],explorar:['explorar'],cuenta:['cuentaPanel'],guia:['bienvenida']};
+function aplicarVista(){
+  const autorizado=document.getElementById('puerta')?.hidden===true;
+  if(autorizado&&!accesoConsulta&&!['cuenta','guia'].includes(vistaActual))vistaActual='cuenta';
+  const visibles=vistas[vistaActual]||[];
+  [...new Set(Object.values(vistas).flat())].forEach(id=>{const el=document.getElementById(id);if(el)el.hidden=!autorizado||!visibles.includes(id);});
+  if(vistaActual==='novedades'&&ultimaRespuesta?.total===0)document.getElementById('barra').hidden=true;
+  const nav={inicio:'navInicio',consultar:'navConsultar',novedades:'navNovedades',explorar:'navExplorar',cuenta:'navCuenta'};
+  marcarNavegacion(nav[vistaActual]||'');
+  window.euclidianVistaActual=vistaActual;
+}
+function mostrarVista(vista){
+  if(!vistas[vista])return;
+  vistaActual=vista;aplicarVista();
+  window.scrollTo({top:0,behavior:'instant'});
+}
+window.euclidianCambiarVista=mostrarVista;
+window.euclidianRestablecerVista=()=>{generacionCarga++;ultimaRespuesta=null;accesoConsulta=false;vistaActual='inicio';window.euclidianVistaActual='inicio';};
+function abrirNovedades(){reiniciarFiltros();F.estado='nuevos';document.getElementById('selEstado').value='nuevos';mostrarVista('novedades');return cargar().catch(()=>{});}
+function abrirConsulta(){dejarFicha();if(F.estado==='nuevos')reiniciarFiltros();mostrarVista('consultar');return cargar().catch(()=>{});}
 function configurarNavegacion(){
-  const inicio=document.querySelector('.nav-item[href="#hoy"]');
+  const inicio=document.querySelector('.nav-item[href="#inicioPanel"]');
   const consultar=document.querySelector('.nav-item[href="#controles"]');
-  const novedades=document.querySelector('.nav-item[href="#hoyLista"]');
-  if(inicio){inicio.id='navInicio';inicio.addEventListener('click',e=>{e.preventDefault();marcarNavegacion('navInicio');limpiar().then(()=>window.scrollTo({top:0,behavior:'smooth'})).catch(()=>{});});}
-  if(consultar){consultar.id='navConsultar';consultar.addEventListener('click',e=>{e.preventDefault();dejarFicha();marcarNavegacion('navConsultar');cargar().then(()=>document.getElementById('controles')?.scrollIntoView({behavior:'smooth',block:'start'})).catch(()=>{});});}
-  if(novedades){novedades.id='navNovedades';novedades.addEventListener('click',e=>{e.preventDefault();dejarFicha();reiniciarFiltros();F.estado='nuevos';document.getElementById('selEstado').value='nuevos';marcarNavegacion('navNovedades');cargar().then(()=>document.getElementById('lista')?.scrollIntoView({behavior:'smooth',block:'start'})).catch(()=>{});});}
-  document.getElementById('navExplorar')?.addEventListener('click',()=>{const seccion=document.getElementById('explorar');if(seccion){seccion.hidden=false;seccion.scrollIntoView({behavior:'smooth',block:'start'});}marcarNavegacion('navExplorar');});
-  document.getElementById('cerrarExplorar')?.addEventListener('click',()=>{const seccion=document.getElementById('explorar');if(seccion)seccion.hidden=true;marcarNavegacion('navInicio');document.getElementById('hoy')?.scrollIntoView({behavior:'smooth',block:'start'});});
-  document.getElementById('navSeguir')?.addEventListener('click',()=>{marcarNavegacion('navSeguir');document.querySelector('.seguimiento')?.scrollIntoView({behavior:'smooth',block:'center'});});
-  const cuenta=document.getElementById('navCuenta');
-  if(cuenta){cuenta.removeAttribute('aria-disabled');cuenta.removeAttribute('title');cuenta.addEventListener('click',async e=>{e.preventDefault();marcarNavegacion('navCuenta');if(window.euclidianTieneSesion?.()){await window.euclidianMostrarCuenta?.();return;}const panel=document.getElementById('cuentaPanel');if(panel){document.getElementById('cuentaEmail').textContent='Acceso interno';document.getElementById('cuentaEstado').textContent='Interno';document.getElementById('cuentaPlan').textContent='—';document.getElementById('cuentaPeriodo').textContent='—';document.getElementById('cuentaUso').textContent='—';const perfil=document.getElementById('perfilForm');if(perfil)perfil.hidden=true;panel.hidden=false;panel.scrollIntoView({behavior:'smooth',block:'start'});}});}
+  const novedades=document.querySelector('.nav-item[href="#novedadesCab"]');
+  if(inicio){inicio.id='navInicio';inicio.addEventListener('click',e=>{e.preventDefault();reiniciarFiltros();mostrarVista('inicio');cargar().catch(()=>{});});}
+  if(consultar){consultar.id='navConsultar';consultar.addEventListener('click',e=>{e.preventDefault();abrirConsulta();});}
+  if(novedades){novedades.id='navNovedades';novedades.addEventListener('click',e=>{e.preventDefault();abrirNovedades();});}
+  document.getElementById('navExplorar')?.addEventListener('click',()=>mostrarVista('explorar'));
+  document.getElementById('navSeguir')?.addEventListener('click',()=>{mostrarVista('explorar');document.querySelector('.seguimiento')?.scrollIntoView({block:'center'});});
+  document.getElementById('navCuenta')?.addEventListener('click',async()=>{
+    mostrarVista('cuenta');
+    if(window.euclidianTieneSesion?.()){await window.euclidianMostrarCuenta?.();return;}
+    document.getElementById('cuentaEmail').textContent='Acceso interno';document.getElementById('cuentaEstado').textContent='Interno';
+    ['cuentaPlan','cuentaPeriodo','cuentaUso'].forEach(id=>document.getElementById(id).textContent='—');document.getElementById('perfilForm').hidden=true;
+  });
+  document.getElementById('inicioDocumentos')?.addEventListener('click',e=>{const btn=e.target.closest('[data-inicio-doc]');if(!btn)return;reiniciarFiltros();F.doc=btn.dataset.inicioDoc;mostrarVista('consultar');cargar().catch(()=>{});});
+  document.getElementById('inicioNovedades')?.addEventListener('click',e=>{if(e.target.closest('button'))abrirNovedades();});
+}
+function renderInicio(data){
+  document.getElementById('inicioResumen').textContent='Consulta normas y doctrina con su fuente DIAN.';
+  const docs=(data.documentos||[]).slice(0,3);
+  document.getElementById('inicioDocumentos').innerHTML=docs.map(d=>`<button type="button" class="inicio-documento" data-inicio-doc="${esc(d.id)}"><span class="inicio-documento-tipo">${esc(d.tipo_documento||'Documento DIAN')}</span><strong>${esc(tituloFicha(d))}</strong><span class="inicio-documento-ref">${esc(d.numero_resolucion||'Abrir ficha')} <b aria-hidden="true">→</b></span></button>`).join('')||'<p>No pudimos mostrar documentos en este momento. Puedes buscar en Consultar.</p>';
 }
 
-function textoDocumento(d){return [d.titulo,d.resumen_humano,d.resumen_borrador,d.descripcion_limpia,d.materia,...(d.temas||[])].filter(Boolean).join(' ').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();}
-function temasSeguidos(){try{return JSON.parse(localStorage.getItem('euclidian_temas_seguidos')||'[]');}catch(e){return [];}}
-function guardarTemas(temas){localStorage.setItem('euclidian_temas_seguidos',JSON.stringify(temas));}
-function prioridadDiaria(d,temas){const texto=textoDocumento(d);let puntos=0,razon='',accion='Abre la ficha y confirma el alcance para el caso concreto.';if(d.estado_vigencia&&d.estado_vigencia!=='vigente'&&d.estado_vigencia!=='desconocido'){puntos+=100;razon='Estado de vigencia registrado';accion='Comprueba en la fuente la norma posterior y su alcance.';}const plazo=fechaDePlazo((d.plazos_mencionados||[])[0]);const dias=plazo?diasHasta(plazo):null;if(dias!==null&&dias>=0&&dias<=30){puntos+=90;razon='Fecha próxima mencionada';accion='Confirma si es un vencimiento aplicable a tu cliente.';}if(d.es_nuevo){puntos+=40;if(!razon)razon='Publicación DIAN reciente';}if(temas.some(t=>texto.includes(t.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase()))){puntos+=30;if(!razon)razon='Tema que sigues';}return {puntos,razon:razon||'Para consulta',accion};}
-function fechaActualizacion(valor){if(!valor)return 'Fuente DIAN disponible en cada ficha.';const f=new Date(valor);if(Number.isNaN(f.getTime()))return 'Fuente DIAN disponible en cada ficha.';return `Biblioteca actualizada el ${f.toLocaleDateString('es-CO',{day:'numeric',month:'short',year:'numeric'})}.`;}
-function renderTemasSeguidos(data){const cont=document.getElementById('temasSeguidos');if(!cont)return;const activos=temasSeguidos();cont.innerHTML=TEMAS_DIARIOS.map(t=>`<button type="button" class="tema-seguido ${activos.includes(t)?'activo':''}" data-tema-diario="${esc(t)}" aria-pressed="${activos.includes(t)}">${activos.includes(t)?'✓ ': '+'}${esc(t)}</button>`).join('');cont.querySelectorAll('[data-tema-diario]').forEach(b=>b.addEventListener('click',()=>{const tema=b.dataset.temaDiario;const siguientes=temasSeguidos();const i=siguientes.indexOf(tema);if(i>=0)siguientes.splice(i,1);else siguientes.push(tema);guardarTemas(siguientes);renderPanelHoy(data);}));}
-function visualPrioridad(razon){
-  const r=String(razon||'').toLowerCase();
-  if(r.includes('vigencia'))return {clase:'cambio',glifo:'×'};
-  if(r.includes('plazo'))return {clase:'plazo',glifo:'△'};
-  if(r.includes('anteriores'))return {clase:'retro',glifo:'↶'};
-  if(r.includes('reciente'))return {clase:'nuevo',glifo:'○'};
-  if(r.includes('sigues'))return {clase:'seguido',glifo:'◎'};
-  return {clase:'info',glifo:'◇'};
-}
-function renderPanelHoy(data){
-  const panel=document.getElementById('hoy');if(!panel)return;
-  const docs=data.documentos||[],seguidos=temasSeguidos();
-  const priorizados=docs.map(d=>({d,...prioridadDiaria(d,seguidos)})).sort((a,b)=>b.puntos-a.puntos).filter(x=>x.puntos>0).slice(0,3);
-  const nuevos=docs.filter(d=>d.es_nuevo).length;
-  const plazos=docs.filter(d=>{const f=fechaDePlazo((d.plazos_mencionados||[])[0]);return f&&diasHasta(f)>=0&&diasHasta(f)<=30;}).length;
-  const cambios=docs.filter(d=>d.estado_vigencia&&d.estado_vigencia!=='vigente'&&d.estado_vigencia!=='desconocido').length;
-  document.getElementById('estadoFuente').textContent=fechaActualizacion(data.actualizado);
-  document.getElementById('hoyIntro').textContent=F.doc?'Ficha abierta desde el correo. Revisa su texto y la fuente oficial.':priorizados.length?`Señales encontradas entre los ${docs.length} documentos visibles en esta página. Confirma su aplicación en cada ficha.`:`No hay señales destacadas entre los ${docs.length} documentos visibles en esta página.`;
-  document.getElementById('hoyResumen').innerHTML=`
-    <div class="radar-metrica nuevo"><span aria-hidden="true">○</span><div><b>${nuevos}</b><small>publicaciones recientes en esta página</small></div></div>
-    <div class="radar-metrica plazo"><span aria-hidden="true">△</span><div><b>${plazos}</b><small>fechas próximas mencionadas en esta página</small></div></div>
-    <div class="radar-metrica cambio"><span aria-hidden="true">×</span><div><b>${cambios}</b><small>estados de vigencia distintos de «vigente» en esta página</small></div></div>`;
-  const lista=document.getElementById('hoyLista');
-  lista.innerHTML=priorizados.map(({d,razon,accion})=>{const v=visualPrioridad(razon);return `<article class="hoy-item tipo-${v.clase}"><div class="hoy-item-cab"><span class="hoy-senal" aria-hidden="true">${v.glifo}</span><span class="hoy-etiqueta">${esc(razon)}</span></div><div><h3>${esc(d.titulo||d.numero_resolucion)}</h3><p>${esc(accion)}</p></div><button type="button" data-abrir-doc="${esc(d.id)}"><span>Ver ficha</span><b aria-hidden="true">→</b></button></article>`;}).join('')||'<p class="hoy-vacio">El radar está tranquilo en esta vista. Explora un tema o realiza una consulta para cambiar el contexto.</p>';
-  lista.querySelectorAll('[data-abrir-doc]').forEach(b=>b.addEventListener('click',()=>document.querySelector(`article[data-id="${b.dataset.abrirDoc}"]`)?.scrollIntoView({behavior:'smooth',block:'start'})));
-  renderTemasSeguidos(data);panel.hidden=false;
-}
+function temasSeguidos(){try{const temas=JSON.parse(localStorage.getItem('euclidian_temas_seguidos')||'[]');return Array.isArray(temas)?temas:[];}catch(_){return [];}}
+function guardarTemas(temas){try{localStorage.setItem('euclidian_temas_seguidos',JSON.stringify(temas));}catch(_){}}
+function renderTemasSeguidos(){const cont=document.getElementById('temasSeguidos');if(!cont)return;const activos=temasSeguidos();cont.innerHTML=TEMAS_DIARIOS.map(t=>`<button type="button" class="tema-seguido ${activos.includes(t)?'activo':''}" data-tema-diario="${esc(t)}" aria-pressed="${activos.includes(t)}">${activos.includes(t)?'✓ ':'+'}${esc(t)}</button>`).join('');cont.querySelectorAll('[data-tema-diario]').forEach(b=>b.addEventListener('click',()=>{const tema=b.dataset.temaDiario,siguientes=temasSeguidos(),i=siguientes.indexOf(tema);if(i>=0)siguientes.splice(i,1);else siguientes.push(tema);guardarTemas(siguientes);renderTemasSeguidos();}));}
 
 async function entrarInterno(valor){
   const mal=document.getElementById('mal');
@@ -147,61 +149,67 @@ async function cargar(autenticar=false){
       throw new Error(token?'Tu sesión terminó. Vuelve a entrar.':'Clave interna incorrecta.');
     }
     if(r.status===402){
+      accesoConsulta=false;['inicioDocumentos','inicioNovedades','explorarTemas','temasSeguidos'].forEach(id=>document.getElementById(id)?.replaceChildren());
       document.getElementById('puerta').hidden=true;
       document.getElementById('cab').hidden=false;
-      ['hoy','controles','barra','bienvenida','novedadesGlobales','explorar'].forEach(id=>{const el=document.getElementById(id);if(el)el.hidden=true;});
+      ['inicioPanel','novedadesCab','controles','barra','bienvenida','explorar','lista','paginas'].forEach(id=>{const el=document.getElementById(id);if(el)el.hidden=true;});
       if(lista)lista.innerHTML='';
-      await window.euclidianAuthSinSuscripcion?.(data);
+      mostrarVista('cuenta');await window.euclidianAuthSinSuscripcion?.(data);
       return data;
     }
     if(!r.ok)throw new Error(data.detalle||data.error||'No se pudo leer la base.');
     if(CLAVE&&!token)sessionStorage.setItem('euclidian_clave',CLAVE);
     document.getElementById('puerta').hidden=true;if(mal)mal.textContent='';
-    document.getElementById('cab').hidden=false;document.getElementById('hoy').hidden=false;document.getElementById('controles').hidden=false;document.getElementById('barra').hidden=false;
-    document.getElementById('cuentaPanel').hidden=true;
-    marcarActivos();poblarTemas(data.temas||[]);poblarAnios(data.anios||[]);renderPanelHoy(data);renderExplorar(data);describirConsulta(data);
-    window.euclidianIniciarGuia?.();actualizarNovedadesGlobales(headers,generacion);
-    if(!data.documentos.length){lista.innerHTML=vistaVacia();paginacion(data);return data;}
-    lista.innerHTML=data.documentos.map(ficha).join('');paginacion(data);window.scrollTo({top:0,behavior:'smooth'});return data;
+    document.getElementById('cab').hidden=false;
+    accesoConsulta=true;ultimaRespuesta=data;
+    marcarActivos();poblarTemas(data.temas||[]);poblarAnios(data.anios||[]);renderExplorar(data);renderTemasSeguidos();describirConsulta(data);
+    if(vistaActual==='inicio')renderInicio(data);
+    lista.innerHTML=data.documentos.length?data.documentos.map(ficha).join(''):vistaVacia();
+    paginacion(data);aplicarVista();if(vistaActual==='inicio')window.euclidianIniciarGuia?.();
+    if(vistaActual==='inicio'||vistaActual==='guia')actualizarNovedadesGlobales(headers,generacion);
+    return data;
   }catch(e){
     if(generacion!==generacionCarga)return null;
     if(e.name==='AbortError')e=new Error('El servidor tardó demasiado en responder. Inténtalo de nuevo.');
     if(autenticar){if(lista)lista.innerHTML='';throw e;}
-    if(lista&&document.getElementById('puerta')?.hidden===true)lista.innerHTML=vistaError(e.message);
+    if(document.getElementById('puerta')?.hidden===true){if(vistaActual==='inicio')document.getElementById('inicioDocumentos').innerHTML=vistaError(e.message);else if(lista)lista.innerHTML=vistaError(e.message);}
     throw e;
   }finally{clearTimeout(timer);estadoCarga(false);if(btn)btn.disabled=false;}
 }
 function poblarTemas(temas){const sel=document.getElementById('selTema');if(!sel)return;const actual=sel.value;const orden=[...temas].sort((a,b)=>nombreTema(a).localeCompare(nombreTema(b),'es'));sel.innerHTML='<option value="">Todos los temas</option>'+orden.map(t=>`<option value="${t}">${nombreTema(t)}</option>`).join('');sel.value=actual;}
 function poblarAnios(anios){const sel=document.getElementById('selAnio');if(!sel)return;const actual=/^\d{4}$/.test(F.periodo)?F.periodo:'';sel.innerHTML='<option value="">Todos los años</option>'+anios.filter(x=>Number.isInteger(x.anio)&&x.anio>=1950&&x.anio<=new Date().getFullYear()+1).map(x=>`<option value="${x.anio}">${x.anio} · ${Number(x.total||0).toLocaleString('es-CO')}</option>`).join('');sel.value=actual;}
 function seleccionarAnio(anio){F.periodo=anio||'todo';F.pagina=1;marcarActivos();cargar();}
-function paginacion(data){const cont=document.getElementById('paginas'),{pagina,paginas,total,porPagina}=data;if(total===0){cont.innerHTML='';const r=document.getElementById('rango');if(r)r.textContent='0 documentos disponibles';return;}const primero=(pagina-1)*porPagina+1,ultimo=Math.min(pagina*porPagina,total),r=document.getElementById('rango');if(r)r.textContent=`${Number(total).toLocaleString('es-CO')} documentos disponibles · mostrando ${primero}–${ultimo}`;let html='';if(paginas>1){html+=`<button onclick="irA(${pagina-1})" ${pagina<=1?'disabled':''}>‹</button>`;const nums=new Set([1,paginas,pagina,pagina-1,pagina+1]),orden=[...nums].filter(n=>n>=1&&n<=paginas).sort((a,b)=>a-b);let previo=0;orden.forEach(n=>{if(n-previo>1)html+='<span style="color:var(--tenue)">…</span>';html+=`<button onclick="irA(${n})" aria-current="${n===pagina}">${n}</button>`;previo=n;});html+=`<button onclick="irA(${pagina+1})" ${pagina>=paginas?'disabled':''}>›</button>`;}cont.innerHTML=html;}
+function paginacion(data){const cont=document.getElementById('paginas'),{pagina,paginas,total,porPagina}=data;if(total===0){cont.innerHTML='';const r=document.getElementById('rango');if(r)r.textContent=F.estado==='nuevos'?'0 publicaciones en los últimos 14 días':'0 resultados con estos filtros';return;}const primero=(pagina-1)*porPagina+1,ultimo=Math.min(pagina*porPagina,total),r=document.getElementById('rango');if(r)r.textContent=`${Number(total).toLocaleString('es-CO')} documentos disponibles · mostrando ${primero}–${ultimo}`;let html='';if(paginas>1){html+=`<button onclick="irA(${pagina-1})" ${pagina<=1?'disabled':''}>‹</button>`;const nums=new Set([1,paginas,pagina,pagina-1,pagina+1]),orden=[...nums].filter(n=>n>=1&&n<=paginas).sort((a,b)=>a-b);let previo=0;orden.forEach(n=>{if(n-previo>1)html+='<span style="color:var(--tenue)">…</span>';html+=`<button onclick="irA(${n})" aria-current="${n===pagina}">${n}</button>`;previo=n;});html+=`<button onclick="irA(${pagina+1})" ${pagina>=paginas?'disabled':''}>›</button>`;}cont.innerHTML=html;}
 function irA(n){F.pagina=n;cargar();}
 async function decidir(id,decision){const art=document.querySelector(`article[data-id="${id}"]`),t=document.getElementById('r-'+id),resumen=t?t.value.trim():undefined;if(art)art.style.opacity='.4';try{const r=await fetch('/api/decidir',{method:'POST',headers:{'Content-Type':'application/json','x-clave':REVISOR},body:JSON.stringify({id,decision,resumen})});if(!r.ok){const d=await r.json();throw new Error(d.detalle||d.error||'falló');}if(art)art.remove();if(!document.querySelector('article'))cargar();}catch(e){if(art){art.style.opacity='1';art.insertAdjacentHTML('beforeend',`<div class="error" style="margin-top:10px">No se guardó la decisión.<code>${esc(e.message)}</code></div>`);}}}
 function marcarActivos(){const n=[F.doc,F.q,F.tema,F.estado!=='todos'?F.estado:'',F.periodo!=='todo'?F.periodo:''].filter(Boolean).length;const btn=document.getElementById('btnLimpiar');if(btn)btn.hidden=n===0;}
 function reiniciarFiltros(){F.orden='recientes';document.getElementById('selOrden').value='recientes';F.q='';F.doc='';F.tema='';F.estado='todos';F.periodo='todo';F.pagina=1;history.replaceState(null,'',location.pathname);const consulta=document.getElementById('consulta');if(consulta)consulta.value='';document.getElementById('selTema').value='';const anio=document.getElementById('selAnio');if(anio)anio.value='';const estado=document.getElementById('selEstado');if(estado)estado.value='todos';}
-function limpiar(){reiniciarFiltros();return cargar();}
+function limpiar(){reiniciarFiltros();mostrarVista('consultar');return cargar();}
 document.getElementById('selAnio').addEventListener('change',e=>{dejarFicha();seleccionarAnio(e.target.value);});document.getElementById('selTema').addEventListener('change',e=>{dejarFicha();F.tema=e.target.value;F.pagina=1;cargar();});document.getElementById('selEstado').addEventListener('change',e=>{dejarFicha();F.estado=e.target.value;F.pagina=1;cargar();});document.getElementById('selOrden').addEventListener('change',e=>{dejarFicha();F.orden=e.target.value;F.pagina=1;cargar();});document.getElementById('formBuscar').addEventListener('submit',e=>{e.preventDefault();dejarFicha();F.q=document.getElementById('consulta').value.trim();F.pagina=1;cargar();});
 configurarNavegacion();
 if(REVISOR){const b=document.getElementById('btnRevision');if(b)b.textContent='Salir del modo revisión';}
 if(!window.euclidianEnRecuperacion&&(CLAVE||window.euclidianTieneSesion?.()))cargar().catch(()=>{if(!CLAVE&&!window.euclidianTieneSesion?.())document.getElementById('puerta').hidden=false;});else document.getElementById('puerta').hidden=false;
 
 if(!window.__euclidianRecoveryActions){window.__euclidianRecoveryActions=true;document.addEventListener('click',e=>{
-  const accion=e.target.closest('[data-empty-action]');if(accion){const tipo=accion.dataset.emptyAction;if(tipo==='todo'){limpiar();return;}if(tipo==='explorar'){const seccion=document.getElementById('explorar');if(seccion){seccion.hidden=false;seccion.scrollIntoView({behavior:'smooth',block:'start'});}marcarNavegacion('navExplorar');return;}if(tipo==='nuevos'){dejarFicha();F.estado='nuevos';F.pagina=1;const sel=document.getElementById('selEstado');if(sel)sel.value='nuevos';marcarNavegacion('navNovedades');cargar();return;}}
+  const accion=e.target.closest('[data-empty-action]');if(accion){const tipo=accion.dataset.emptyAction;if(tipo==='todo'){limpiar().catch(()=>{});return;}if(tipo==='explorar'){mostrarVista('explorar');return;}if(tipo==='nuevos'){abrirNovedades();return;}}
   if(e.target.closest('[data-retry-load]'))cargar().catch(()=>{});
 });}
 
 async function actualizarNovedadesGlobales(headers,generacion){
-  const panel=document.getElementById('novedadesGlobales'),estado=document.getElementById('novedadesGlobalesEstado');
-  if(!panel||!estado)return;
-  panel.hidden=false;estado.textContent='Consultando publicaciones de los últimos 14 días…';
+  const panel=document.getElementById('inicioNovedades');if(!panel)return;
   const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),15000);
   try{
     const r=await fetch('/api/documentos?estado=nuevos&periodo=todo&pagina=1&orden=recientes&resumen=1',{headers,cache:'no-store',signal:controller.signal});
     if(generacion!==generacionCarga||!document.getElementById('puerta').hidden)return;
     if(!r.ok)throw new Error('sin_resumen');
-    const data=await r.json();
-    if(generacion!==generacionCarga)return;
-    estado.textContent=Number(data.total)>0?`${Number(data.total).toLocaleString('es-CO')} publicaciones DIAN recientes disponibles. Incluye toda la biblioteca, sin los filtros de tu consulta.`:'No hay publicaciones recientes disponibles con fecha y fuente comprobables. Esto no confirma que la DIAN no haya publicado novedades.';
-  }catch(_){if(generacion===generacionCarga)estado.textContent='No pudimos comprobar las novedades de toda la biblioteca. Puedes reintentar con Actualizar o consultar el índice oficial DIAN.';}finally{clearTimeout(timer);}
+    const data=await r.json();if(generacion!==generacionCarga)return;
+    panel.innerHTML=Number(data.total)>0?`<button type="button">${Number(data.total).toLocaleString('es-CO')} publicaciones recientes <span aria-hidden="true">→</span></button>`:'<p>Sin publicaciones recientes listas para consulta.</p>';
+    panel.hidden=false;
+  }catch(_){if(generacion===generacionCarga){panel.innerHTML='<p>No pudimos comprobar las novedades. Reintenta con Actualizar.</p>';panel.hidden=false;}}finally{clearTimeout(timer);}
 }
-document.getElementById('verNovedadesGlobales')?.addEventListener('click',()=>document.getElementById('navNovedades')?.click());
+
+// Reserva espacio real para la barra inferior, también al ampliar el texto.
+if(typeof ResizeObserver!=='undefined'){
+  const nav=document.querySelector('.nav-principal');
+  if(nav)new ResizeObserver(()=>document.documentElement.style.setProperty('--altura-nav',`${nav.getBoundingClientRect().height}px`)).observe(nav);
+}

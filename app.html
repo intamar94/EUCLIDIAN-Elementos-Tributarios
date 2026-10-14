@@ -70,9 +70,9 @@
   <div class="cab marco">
     <div class="identidad"><a class="marca" href="/" aria-label="EUCLIDIAN inicio">EUCL<em>i</em>DIAN</a><span class="sub">Elementos Tributarios</span></div>
     <nav class="nav-principal" aria-label="Navegación principal">
-      <a href="#hoy" class="nav-item activo" aria-current="page"><span class="nav-glyph" aria-hidden="true">◇</span>Inicio</a>
+      <a href="#inicioPanel" class="nav-item activo" aria-current="page"><span class="nav-glyph" aria-hidden="true">◇</span>Inicio</a>
       <a href="#controles" class="nav-item"><span class="nav-glyph" aria-hidden="true">⌕</span>Consultar</a>
-      <a href="#hoyLista" class="nav-item"><span class="nav-glyph" aria-hidden="true">△</span>Novedades</a>
+      <a href="#novedadesCab" class="nav-item"><span class="nav-glyph" aria-hidden="true">△</span>Novedades</a>
       <button type="button" class="nav-item nav-accion" id="navExplorar"><span class="nav-glyph" aria-hidden="true">◫</span>Explorar</button>
       <button type="button" class="nav-item nav-accion" id="navSeguir"><span class="nav-glyph" aria-hidden="true">◎</span>Seguimientos</button>
       <button type="button" class="nav-item nav-accion" id="navCuenta"><span class="nav-glyph" aria-hidden="true">○</span>Cuenta</button>
@@ -92,33 +92,26 @@
   <div id="guiaPaso" class="guia-paso" aria-live="polite" aria-atomic="true"></div>
   <div class="guia-controles"><button type="button" id="guiaAnterior">Anterior</button><span id="guiaProgreso"></span><button type="button" id="guiaSiguiente">Siguiente</button></div>
 </section>
-<section class="novedades-globales marco" id="novedadesGlobales" hidden aria-labelledby="novedadesGlobalesTitulo"><h2 id="novedadesGlobalesTitulo">Novedades de toda la biblioteca</h2><p id="novedadesGlobalesEstado" role="status">Consultando publicaciones de los últimos 14 días…</p><button type="button" id="verNovedadesGlobales">Ver todas las novedades</button></section>
-
-<section class="hoy marco" hidden id="hoy" aria-label="Atención prioritaria">
-  <div class="hoy-cabecera">
-    <div><span class="hoy-sobrelinea">RADAR DE ESTA CONSULTA</span><h1>Lo importante en esta página</h1><p class="hoy-promesa">Señales de los documentos visibles, con acceso a su fuente DIAN.</p></div>
-    <p id="estadoFuente" class="estado-fuente" aria-live="polite"></p>
-  </div>
-  <p class="hoy-intro" id="hoyIntro"></p>
-  <div class="hoy-resumen" id="hoyResumen"></div>
-  <div class="hoy-lista" id="hoyLista"></div>
-  <div class="seguimiento" aria-label="Temas que sigues">
-    <div><strong>Temas que sigues</strong><span>Priorizan esta vista en este dispositivo.</span></div>
-    <div class="temas-seguidos" id="temasSeguidos"></div>
-  </div>
+<section class="inicio-panel marco" id="inicioPanel" hidden aria-labelledby="inicioTitulo" tabindex="-1">
+  <div class="inicio-cab"><span class="seccion-kicker">TU BIBLIOTECA TRIBUTARIA</span><h1 id="inicioTitulo">Información para tu trabajo</h1><p id="inicioResumen" role="status">Preparando tu biblioteca…</p></div>
+  <div id="inicioNovedades" class="inicio-novedades" hidden></div>
+  <h2 class="inicio-subtitulo">Documentos para consultar</h2>
+  <div id="inicioDocumentos" class="inicio-documentos"></div>
 </section>
+<section class="novedades-cab marco" id="novedadesCab" hidden aria-labelledby="novedadesTitulo" tabindex="-1"><span class="seccion-kicker">NOVEDADES</span><h1 id="novedadesTitulo">Publicaciones recientes</h1><p>Últimos 14 días · documentos disponibles con fecha y fuente comprobables.</p></section>
 
 <section class="explorar marco" hidden id="explorar" aria-labelledby="explorarTitulo">
   <div class="explorar-cabecera">
-    <div class="titulo-consulta"><span class="seccion-numero" aria-hidden="true">01</span><div><span class="seccion-kicker">EXPLORAR</span><h2 id="explorarTitulo">Entra por tema, no por archivo</h2><p>Elige un tema para encontrar documentos y abrir su fuente oficial.</p></div></div>
-    <button type="button" class="accion-textual" id="cerrarExplorar" aria-label="Cerrar exploración">Cerrar</button>
+    <div class="titulo-consulta"><span class="seccion-numero" aria-hidden="true">01</span><div><span class="seccion-kicker">EXPLORAR</span><h2 id="explorarTitulo">Explorar por tema</h2><p>Elige un tema para encontrar documentos y abrir su fuente oficial.</p></div></div>
+
   </div>
+  <div class="seguimiento" aria-label="Temas que sigues"><div><strong>Temas que sigues</strong><span>Guardados en este navegador.</span></div><div class="temas-seguidos" id="temasSeguidos"></div></div>
   <div class="explorar-temas" id="explorarTemas" aria-label="Temas disponibles"></div>
 </section>
 
 <section class="cuenta-panel marco" hidden id="cuentaPanel" aria-labelledby="cuentaTitulo">
   <div class="cuenta-cabecera">
-    <div class="titulo-consulta"><span class="seccion-numero" aria-hidden="true">03</span><div><span class="seccion-kicker">CUENTA</span><h2 id="cuentaTitulo">Tu acceso a EUCLIDIAN</h2><p>Identidad, estado de suscripción y acceso, sin mezclarlo con la lectura jurídica.</p></div></div>
+    <div class="titulo-consulta"><span class="seccion-numero" aria-hidden="true">03</span><div><span class="seccion-kicker">CUENTA</span><h2 id="cuentaTitulo">Tu acceso a EUCLIDIAN</h2><p>Tu perfil y tu suscripción.</p></div></div>
     <button type="button" class="accion-textual" id="cerrarCuenta">Cerrar</button>
   </div>
   <div class="cuenta-grid">
@@ -149,7 +142,7 @@
 </section>
 
 <section class="controles marco" hidden id="controles" aria-label="Buscar documentos DIAN">
-  <div class="titulo-consulta"><span class="seccion-numero" aria-hidden="true">02</span><div><span class="seccion-kicker">CONSULTAR</span><h2>Buscar documentos tributarios</h2><p>Busca una idea, número o tema. EUCLIDIAN separa la lectura rápida de la fuente que la respalda.</p></div></div>
+  <div class="titulo-consulta"><span class="seccion-numero" aria-hidden="true">02</span><div><span class="seccion-kicker">CONSULTAR</span><h2>Buscar documentos tributarios</h2><p>Busca por número, palabra o tema.</p></div></div>
   <form class="buscador" id="formBuscar" role="search">
     <label class="solo-lectores" for="consulta">Buscar por número, título o contenido</label>
     <input id="consulta" type="search" maxlength="160" placeholder="Busca por número, título o tema, p. ej. retención en la fuente" autocomplete="off">
