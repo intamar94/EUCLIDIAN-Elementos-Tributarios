@@ -26,7 +26,7 @@ for _p in (str(ROOT), str(SCRIPTS)):
 
 from scripts.composicion import Composicion
 from scripts.verificador_aprobacion import verify
-from scripts.sintesis_literal import extraer_literal, literal_presente
+from scripts.sintesis_literal import extraer_literal, literal_presente, PREFIJO_LITERAL, MODELO_LITERAL
 from scripts.lectores_dian import Lectores
 from scripts.extractor_estructura import ExtractorEstructura
 from scripts.inspector_euclidian import inspect_row
@@ -159,6 +159,12 @@ def _verify_one(row):
                 cita = extraer_literal(response.content)
                 if cita and not d.get("resumen_humano") and literal_presente(texto, cita):
                     cambios["resumen_borrador"] = cita
+                    cambios["borrador_modelo"] = MODELO_LITERAL
+                elif not d.get("resumen_humano") and _texto(d.get("resumen_borrador")).startswith(PREFIJO_LITERAL):
+                    # Un extracto anterior no queda aprobado solo por seguir
+                    # figurando en una nota al pie de la fuente.
+                    cambios["resumen_borrador"] = None
+                    cambios["borrador_modelo"] = MODELO_LITERAL
                 d.update(cambios)
                 if not d.get("materia") and d.get("banco_datos"):
                     cambios["materia"] = _texto(d["banco_datos"])[:40]
@@ -195,6 +201,20 @@ def necesita_revision(row):
 
 
 def _load_pending(sb, limit):
+    extractos_antiguos, last_excerpt = set(), None
+    while True:
+        q = (sb.table("documentos_tributarios").select("id")
+             .like("resumen_borrador", PREFIJO_LITERAL + "%")
+             .is_("resumen_humano", "null")
+             .or_(f"borrador_modelo.is.null,borrador_modelo.neq.{MODELO_LITERAL}")
+             .order("id").limit(1000))
+        if last_excerpt:
+            q = q.gt("id", last_excerpt)
+        batch = q.execute().data or []
+        extractos_antiguos.update(row["id"] for row in batch)
+        if len(batch) < 1000:
+            break
+        last_excerpt = batch[-1]["id"]
     # También recupera fichas retenidas con reglas anteriores, aunque ningún
     # extractor haya vuelto a tocarlas. Una REVIEW actual no se repite sin cambios.
     actuales, last_reviewed = set(), None
@@ -216,7 +236,7 @@ def _load_pending(sb, limit):
         if last_id:
             q = q.gt("id", last_id)
         batch = q.execute().data or []
-        metadata.extend(row for row in batch if row["id"] not in actuales or necesita_revision(row))
+        metadata.extend(row for row in batch if row["id"] in extractos_antiguos or row["id"] not in actuales or necesita_revision(row))
         if len(batch) < 1000:
             break
         last_id = batch[-1]["id"]

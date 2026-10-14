@@ -1,5 +1,13 @@
 # Inicio guiado y correcciones de la revisión de usuario
 
+## Corrección de extractos tras la captura del concepto 16898
+
+- La selección anterior podía confundir la numeración de una nota con la del cuerpo. Se excluyen las anclas NF, la sección de notas, referencias Cfr./Véase y fórmulas de cierre. Se reconoce también «Por lo anterior» como inicio de una conclusión.
+- El concepto 16898 de 2026 se contrastó de nuevo y quedó publicado con el párrafo 7 completo, sobre el análisis de la participación directa en el sector salud, sustituyendo la referencia a la Corte Constitucional.
+- La API deja de mostrar extractos que solo aparecen después del encabezado de notas o que son referencias o cierres. Conserva la descripción documental mientras se corrige la ficha.
+- Los extractos literales anteriores se reencolan por versión del selector, sin reiniciar las revisiones de todo el corpus. El nuevo origen se registra como literal-dian-cuerpo-v2. No se atribuye aprobación humana.
+- Validación: 36 pruebas Python y contrato JS de pertenencia al cuerpo, rechazo de notas, negación alterada y ausencia de extracto.
+
 ## Cierre del flujo documental — 14 de octubre de 2026
 
 - Se contrastaron de nuevo las 13 fichas con publicación web del 5 de octubre, directamente en sus páginas DIAN. Las 13 superaron las reglas 4.2 y quedaron publicadas, sin modificar sus fechas ni atribuir revisión humana. Ejemplo: DIAN-OFICIO-16681-2026.

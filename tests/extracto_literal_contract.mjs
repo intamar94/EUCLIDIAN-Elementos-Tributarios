@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import {extractoDelCuerpo} from '../lib/extracto-literal.js';
+const prefijo='Extracto literal DIAN: ';
+const criterio='7. Por lo anterior, el análisis exige verificar la participación directa en las actividades señaladas y conservar las condiciones y excepciones previstas por la disposición.';
+const nota='4. Cfr. CORTE CONSTITUCIONAL. Esta referencia documental corresponde a una cita jurisprudencial extensa, no al criterio propio que resuelve la consulta.';
+const texto=criterio+'\n<NOTAS DE PIE DE PÁGINA>\n'+nota;
+assert.equal(extractoDelCuerpo(texto,prefijo+criterio),true);
+assert.equal(extractoDelCuerpo(texto,prefijo+nota),false);
+const notaSinMarca='2. Esta nota contiene una referencia normativa extensa que supera el mínimo de longitud, pero aparece después de la sección de notas al pie del documento.';
+assert.equal(extractoDelCuerpo(texto+'\n'+notaSinMarca,prefijo+notaSinMarca),false);
+assert.equal(extractoDelCuerpo(texto,prefijo+criterio.replace('exige','no exige')),false);
+assert.equal(extractoDelCuerpo('',null),true);
+console.log('Extractos: cuerpo, notas, cita sin marca textual, alteración y ausencia OK');

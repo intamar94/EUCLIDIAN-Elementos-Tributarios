@@ -5,6 +5,16 @@ from scripts.revisor_fiscal_euclidian import necesita_revision,evaluate,_load_pe
 from test_revisor_fiscal import BASE
 
 class SintesisLiteralTests(unittest.TestCase):
+    def test_footnotes_and_closing_do_not_replace_document_criterion(self):
+        criterio='7. Por lo anterior, el análisis de los responsables debe verificar la participación directa en las actividades señaladas, con las condiciones y excepciones de la disposición.'
+        nota='4. Cfr. CORTE CONSTITUCIONAL. Sentencia C-169 de 2004. La referencia citada desarrolla extensamente los criterios jurisprudenciales del asunto.'
+        html=f'<p>{criterio}</p><p>14. En los anteriores términos se absuelve su petición y se recuerda que puede consultar la doctrina en el normograma DIAN.</p><p><a name="NF">NOTAS DE PIE DE PÁGINA</a></p><p><a name="NF4">4. </a>{nota[3:]}</p>'
+        self.assertEqual(extraer_literal(html),PREFIJO_LITERAL+criterio)
+        self.assertIsNone(extraer_literal(f'<p>{nota}</p>'))
+
+    def test_footnote_anchor_without_section_heading_is_excluded(self):
+        nota='1. Esta es una referencia documental suficientemente larga para superar el mínimo de longitud, pero sigue siendo una nota al pie y no el criterio del documento.'
+        self.assertIsNone(extraer_literal(f'<p><a name="NF1">1. </a>{nota[3:]}</p>'))
     def test_source_title_defines_type_without_changing_stable_identifier(self):
         result=identidad_desde_titulo('Compilación Jurídica de la DIAN - Concepto 16548 de 2026 DIAN','DIAN-OFICIO-16548-2026')
         self.assertEqual(result,{'tipo_documento':'concepto','titulo':'Concepto 16548 de 2026 DIAN'})
@@ -53,6 +63,9 @@ class SintesisLiteralTests(unittest.TestCase):
                 self.rows=list(docs if table=='documentos_tributarios' else [dict(documento_id='1000',version_reglas=RULES_VERSION)])
                 self.maximum=None
             def select(self,*_):return self
+            def like(self,k,v):self.rows=[r for r in self.rows if str(r.get(k) or '').startswith(v.rstrip('%'))];return self
+            def is_(self,k,v):self.rows=[r for r in self.rows if r.get(k) is None];return self
+            def or_(self,*_):return self
             def eq(self,k,v):self.rows=[r for r in self.rows if r.get(k)==v];return self
             def gt(self,k,v):self.rows=[r for r in self.rows if r[k]>v];return self
             def in_(self,k,values):self.rows=[r for r in self.rows if r[k] in values];return self
@@ -62,3 +75,7 @@ class SintesisLiteralTests(unittest.TestCase):
         sb=SimpleNamespace(table=Query)
         selected=_load_pending(sb,1)
         self.assertEqual([d['id'] for d in selected],['1001'])
+        # Una evaluación actual no impide reparar un extracto del selector viejo.
+        docs[-2]['resumen_borrador']=PREFIJO_LITERAL+'4. Cfr. Referencia de prueba.'
+        selected=_load_pending(sb,1)
+        self.assertEqual([d['id'] for d in selected],['1000'])

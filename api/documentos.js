@@ -1,3 +1,4 @@
+import {extractoDelCuerpo} from '../lib/extracto-literal.js';
 import { autorizarConsulta, registrarUsoConsulta } from '../lib/auth-server.js';
 // EUCLIDIAN — catálogo completo de documentos.
 // La vista cliente muestra todo el corpus; el estado fiscal se conserva como dato informativo.
@@ -114,6 +115,7 @@ export default async function handler(req,res){
         for(const x of await rEvaluaciones.json())evaluaciones.set(x.documento_id,x.resultado);
       }
       for(const d of documentos){
+        if(!extractoDelCuerpo(d.texto_completo,d.resumen_borrador))d.resumen_borrador=null;
         // Una fecha de Diario Oficial u otra cita no acredita publicación web DIAN.
         // Las fechas heredadas sin el encabezado explícito no se muestran como tal.
         if(d.fecha_publicacion_web&&!CABECERA_FECHA_WEB.test(String(d.texto_completo||'')))d.fecha_publicacion_web=null;
