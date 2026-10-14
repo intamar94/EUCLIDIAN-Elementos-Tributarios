@@ -146,6 +146,8 @@ export default async function handler(req,res){
     const rMeta=await fetch(`${SUPABASE_URL}/rest/v1/rpc/metadatos_catalogo_cliente`,{method:'POST',headers:{...cabeceras,'Content-Type':'application/json'},body:JSON.stringify({p_periodo:doc?'todo':periodo})});
     if(!rMeta.ok)return res.status(502).json({error:'metadatos_no_disponibles'});
     const meta=await rMeta.json();
+    // El resumen de Inicio no consume una consulta adicional del cliente.
+    if(req.query.resumen==='1')return res.status(200).json({total,actualizado:meta.actualizado||null});
     if(acceso.modo==='usuario'&&acceso.user?.id){
       await registrarUsoConsulta(acceso.user.id,{latencia_ms:Date.now()-started,resultados:total,estado:total?'ok':'sin_resultados'});
     }

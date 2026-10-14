@@ -1,0 +1,37 @@
+/* Lectura y controles cómodos en móvil y escritorio. */
+.bienvenida,.novedades-globales{margin:18px auto;padding:24px;border:1px solid #a6b8ab;border-radius:12px;background:#fffefa;color:#17211c;overflow-wrap:anywhere}
+.bienvenida[hidden],.novedades-globales[hidden]{display:none}
+.bienvenida h1{font:600 28px/1.25 'Spectral',Georgia,serif;margin:5px 0 10px}
+.bienvenida h2,.novedades-globales h2{font:600 21px/1.35 'Spectral',Georgia,serif;margin-bottom:10px}
+.bienvenida p,.novedades-globales p{font-size:16px;line-height:1.65;max-width:75ch;color:#405548}
+.bienvenida-cab{display:flex;justify-content:space-between;align-items:flex-start;gap:20px}
+.bienvenida button,.guia-reabrir,.novedades-globales button{min-height:44px;border:1px solid #78917f;border-radius:6px;background:#fffefa;color:#203a2b;padding:10px 14px;font:500 14px/1.35 'IBM Plex Sans',sans-serif;cursor:pointer}
+.guia-reabrir{flex-shrink:0}
+.guia-indice{list-style:none;display:flex;flex-wrap:wrap;gap:8px;margin:20px 0}
+.guia-indice [aria-current]{background:#203a2b;color:#fff;border-color:#203a2b}
+.guia-paso{border-top:1px solid #cdd6cd;padding-top:20px;min-height:180px}
+.guia-paso button,.novedades-globales button{margin-top:14px}
+.guia-controles{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:16px}
+#guiaSiguiente{background:#203a2b;color:#fff}#guiaProgreso{font-size:14px;color:#405548}
+button:disabled{cursor:default;opacity:.6}
+button:focus-visible,a:focus-visible,summary:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid #28638e;outline-offset:3px}
+.auth-link,.accion-textual,.hoy-item button,.tema-seguido,.paginas button,.recargar,.abrir-fuente{min-height:44px}
+.cintas .cinta,.cintas .nuevo{font-size:12px;letter-spacing:.04em}
+.timeline-nodo time,.timeline-nodo small,.estado-clave-item small{font-size:12px;line-height:1.4;letter-spacing:.04em}
+.estado-clave-item.pendiente{color:#505b53}.codigo-texto,.seguimiento span{color:#526257}
+.ficha-acciones-lectura .accion-documento{min-height:44px}
+@media(max-width:620px){
+ .bienvenida,.novedades-globales{width:calc(100% - 24px);padding:18px}
+ .bienvenida-cab{display:block}.bienvenida-cab>button{margin-top:12px}
+ .bienvenida h1{font-size:25px}.guia-paso{min-height:0}
+ .guia-indice{display:grid;grid-template-columns:1fr 1fr}.guia-indice button{width:100%;text-align:left}
+ .guia-reabrir{margin-left:auto;font-size:13px;padding:8px}
+ .nav-item{font-size:12px;white-space:normal;overflow-wrap:anywhere;line-height:1.25}
+ .nav-principal{align-items:stretch}.nav-item .nav-glyph{flex-shrink:0}
+ .guia-controles{flex-wrap:wrap}#guiaProgreso{order:-1;flex-basis:100%;text-align:center}
+}
+/* Las anclas quedan por debajo de la cabecera fija. */
+#controles,#lista,#explorar,#cuentaPanel,#bienvenida{scroll-margin-top:100px}
+#puerta .auth-form .auth-link,#puerta .auth-tabs button,.cuenta-acciones button,.perfil-form button{min-height:44px}
+.timeline-nodo time,.timeline-nodo small,.relaciones-cab small,.cuenta-dato small,.plan-candidato small,.acceso-interno summary{color:#526257}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
