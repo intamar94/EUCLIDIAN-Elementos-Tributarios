@@ -1,0 +1,42 @@
+name: EUCLIDIAN — Ciclo documental
+on:
+  push:
+    branches: [main]
+    paths: ['scripts/**', 'sql/**', '.github/workflows/**']
+  schedule:
+    - cron: '*/15 * * * *'
+    - cron: '5 3 * * 0'
+  workflow_dispatch:
+    inputs:
+      historico:
+        description: 'Mapear también todos los índices históricos'
+        type: boolean
+        default: false
+      limite:
+        description: 'Documentos por lote (1–1000)'
+        default: '400'
+permissions:
+  contents: read
+concurrency:
+  group: euclidian-direccion-documental
+  cancel-in-progress: false
+jobs:
+  ciclo:
+    runs-on: ubuntu-latest
+    timeout-minutes: 44
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install -r scripts/requirements.txt
+      - name: Mapear, adaptar y publicar versiones contrastadas
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          LIMITE: ${{ inputs.limite || '400' }}
+          HISTORICO: ${{ inputs.historico || github.event.schedule == '5 3 * * 0' }}
+        run: |
+          ARGS=(--limite "$LIMITE" --workers 4)
+          if [ "$HISTORICO" = 'true' ]; then ARGS+=(--historico); fi
+          python scripts/direccion_documental.py "${ARGS[@]}"

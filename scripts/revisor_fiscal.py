@@ -59,4 +59,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit('Ejecutor retirado. Use python scripts/direccion_documental.py; la adaptación y publicación pertenecen al ciclo único.')
