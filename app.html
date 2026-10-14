@@ -102,11 +102,16 @@
 
 <section class="explorar marco" hidden id="explorar" aria-labelledby="explorarTitulo">
   <div class="explorar-cabecera">
-    <div class="titulo-consulta"><span class="seccion-numero" aria-hidden="true">01</span><div><span class="seccion-kicker">EXPLORAR</span><h2 id="explorarTitulo">Explorar por tema</h2><p>Elige un tema para encontrar documentos y abrir su fuente oficial.</p></div></div>
+    <div class="titulo-consulta"><span class="seccion-numero" aria-hidden="true">01</span><div><span class="seccion-kicker">EXPLORAR</span><h2 id="explorarTitulo">Explorar por tema</h2><p>Añade los temas que necesitas y abre sus documentos.</p></div></div>
 
   </div>
-  <div class="seguimiento" aria-label="Temas que sigues"><div><strong>Temas que sigues</strong><span>Guardados en este navegador.</span></div><div class="temas-seguidos" id="temasSeguidos"></div></div>
-  <div class="explorar-temas" id="explorarTemas" aria-label="Temas disponibles"></div>
+  <div class="selector-temas">
+    <label for="agregarTema">Añadir un tema</label>
+    <select id="agregarTema" aria-describedby="ayudaTemas"><option value="">Elige un tema…</option></select>
+    <p id="ayudaTemas">Tu selección se guarda en este navegador.</p>
+  </div>
+  <div id="estadoTemas" class="estado-temas solo-lectores" role="status" aria-live="polite"></div>
+  <div class="explorar-temas temas-personales" id="explorarTemas" aria-label="Tus temas seleccionados"></div>
 </section>
 
 <section class="cuenta-panel marco" hidden id="cuentaPanel" aria-labelledby="cuentaTitulo">

@@ -1,5 +1,13 @@
 # Inicio guiado y correcciones de la revisión de usuario
 
+## Selección personal de temas y tarjetas útiles
+
+- Explorar usa un desplegable nativo para añadir temas y muestra únicamente los elegidos, con «Ver documentos» y un control independiente para quitar cada uno. No hay lista completa ni temas sugeridos preseleccionados.
+- La selección persiste en este navegador. Se conservan elecciones anteriores, convirtiendo sus nombres a identificadores de tema. Los ya elegidos se excluyen del desplegable y reaparecen al quitarlos.
+- Inicio muestra temas, una breve descripción del índice DIAN y la fecha disponible de cada documento. Si la fecha exacta no está acreditada, se conserva el rótulo de año aproximado. No se generan conclusiones nuevas ni se etiqueta la selección como novedad.
+- Se elimina la etiqueta redundante del tipo de documento en Inicio; la identificación completa sigue en la ficha.
+- Pruebas Chromium en 320, 390, 768 y 1440px: añadir/quitar varios temas, evitar duplicados, persistencia, recuperar selección anterior y abrir la consulta con el tema elegido; extracto/fecha en Inicio, navegación, guía y restricciones de acceso. Datos simulados.
+
 ## Simplificación posterior de la navegación
 
 Esta revisión sustituye el diseño anterior de una página larga. Se conserva a continuación la evidencia histórica de la entrega inicial.
