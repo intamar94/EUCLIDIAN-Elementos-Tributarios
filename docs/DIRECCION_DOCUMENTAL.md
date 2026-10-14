@@ -38,3 +38,10 @@ Se instalaron las tablas, cola, exclusión, puerta y cierre atómico con RLS y a
 El reprocesamiento de todo el catálogo es gradual. Un ciclo completo significa que sus etapas terminaron, no que toda la cola histórica esté validada. La verificación operativa debe consultar sus recuentos y el resultado real de las fuentes; no basta con un workflow verde.
 
 Las regresiones de adaptación incluyen normalización de anclajes y candidatos con ceros iniciales. La prueba transaccional de alias confirmó vinculación al canónico contrastado, conservación de su publicación y rollback de los datos de prueba.
+
+
+## Histórico dinámico DIAN
+
+El histórico tributario no expone los PDF en enlaces HTML: su lista SharePoint está agrupada y colapsada. El mapeador deriva el identificador de la lista y su carpeta del contexto publicado en la página oficial y consulta su API pública, con paginación restringida a esa lista. El año del grupo documental se conserva como año, sin convertir `Modified` en fecha de publicación. La lectura real pasó de 99 PDF a 207 publicaciones únicas, sin brechas detectadas en los índices recorridos. Se incorporan al mismo ciclo y a la misma puerta documental.
+
+El mapa histórico parcial se reintenta automáticamente hasta terminar; el resultado de una etapa fallida también conserva que era histórica. Los lotes admiten hasta 1.000 documentos, conservando cuatro lectores y un presupuesto de 20 minutos; lo no iniciado permanece en cola. Las 51 regresiones incluyen extracción de lista derivada, rechazo de paginación externa y filtrado de archivos ajenos a la carpeta oficial.
