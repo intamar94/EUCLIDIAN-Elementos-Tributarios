@@ -37,11 +37,12 @@ def stage(db,cycle,name,args,timeout):
             try:proc.wait(timeout=10)
             except subprocess.TimeoutExpired:proc.kill();proc.wait()
             result={'error':str(exc)[:1000]};status='fallo'
+    if name=='mapeo':result['historico']='--historico' in args
     retry_db(lambda:db.table('etapas_documentales').update({'estado':status,'finalizado_en':now(),'resultado':result}).eq('ciclo_id',cycle).eq('etapa',name).execute())
     print('ETAPA',name,status,json.dumps(result,ensure_ascii=False),flush=True)
     return status,result
 
-def run(db,limite=400,workers=4,historico=False):
+def run(db,limite=1000,workers=4,historico=False):
     ref=os.getenv('GITHUB_SERVER_URL','local')+'/'+os.getenv('GITHUB_REPOSITORY','euclidian')+'/actions/runs/'+os.getenv('GITHUB_RUN_ID','manual')
     opened=rpc(db,'abrir_ciclo_documental',{'p_referencia':ref,'p_version':VERSION})
     if opened.get('ocupado'):print('CICLO_OCUPADO',opened,flush=True);return {'ocupado':True}
@@ -50,8 +51,8 @@ def run(db,limite=400,workers=4,historico=False):
         # Compatibilidad de la primera ejecución: reabrir errores 404 previos
         # a la clasificación HTTP para ejecutar el recuperador de alias.
         retry_db(lambda:db.table('adaptaciones_documentales').update({'estado':'pendiente','accion':'recuperar_enlace_desde_mapa','proximo_intento':now()}).eq('estado','cuarentena').is_('evidencia->>http_status','null').like('motivo','404 Client Error:%').execute())
-        previous=retry_db(lambda:db.table('etapas_documentales').select('ciclo_id').eq('etapa','mapeo').in_('estado',['completo','parcial']).eq('resultado->>historico','true').limit(1).execute()).data or []
-        historico=historico or not previous
+        previous=retry_db(lambda:db.table('etapas_documentales').select('estado').eq('etapa','mapeo').eq('resultado->>historico','true').order('iniciado_en',desc=True).limit(1).execute()).data or []
+        historico=historico or not previous or previous[0]['estado']!='completo'
         status,result=stage(db,cycle,'mapeo',['--historico'] if historico else [],900)
         statuses.append(status);results['mapeo']=result
         # Una raíz temporalmente caída no paraliza las fuentes ya identificadas.
@@ -71,7 +72,7 @@ def run(db,limite=400,workers=4,historico=False):
     return results
 
 def main():
-    p=argparse.ArgumentParser();p.add_argument('--historico',action='store_true');p.add_argument('--limite',type=int,default=400)
+    p=argparse.ArgumentParser();p.add_argument('--historico',action='store_true');p.add_argument('--limite',type=int,default=1000)
     p.add_argument('--workers',type=int,default=4);p.add_argument('--etapa',choices=['mapeo','adaptacion']);p.add_argument('--ciclo');p.add_argument('--resultado')
     args=p.parse_args()
     if not 1<=args.limite<=1000 or not 1<=args.workers<=8:raise SystemExit('Límites inválidos')

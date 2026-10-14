@@ -6,6 +6,7 @@ citados no se convierten en normas nuevas ni en interpretaciones de EUCLIDIAN.
 from __future__ import annotations
 
 import hashlib
+import json
 import re
 from datetime import datetime, timezone
 from urllib.parse import urljoin, urlsplit
@@ -52,6 +53,48 @@ def enlaces(html, base):
         yield url, a.get_text(" ", strip=True).replace("\u200b", "").strip()
 
 
+def publicaciones_lista(session,html,index):
+    """Sigue la lista SharePoint identificada por el HTML oficial, sin
+    adivinar carpetas ni convertir la fecha Modified en publicación."""
+    if isinstance(html,bytes):html=html.decode('utf-8',errors='replace')
+    contexts=re.finditer(r'ctx\.listName\s*=\s*"\{([0-9A-Fa-f-]{36})\}";[\s\S]{0,1200}?ctx\.listUrlDir\s*=\s*"([^"]+)";',html)
+    docs={}
+    for context in contexts:
+        guid,folder=context.groups()
+        if not folder.startswith('/normatividad/Publicaciones-Juridicas/'):continue
+        base=index.split('/Paginas/')[0]
+        api=f"{base}/_api/web/lists(guid'{guid}')/items?$select=FileRef,FileLeafRef,Title,A_x00f1_o&$top=5000"
+        visited=set();previous=session.headers.get('Accept')
+        session.headers['Accept']='application/json;odata=nometadata'
+        try:
+            while api:
+                if api in visited:raise ValueError('Paginación repetida en la lista de boletines')
+                if len(visited)>=50:raise ValueError('La lista supera el límite de páginas; cobertura pendiente')
+                if not api.startswith(base+f"/_api/web/lists(guid'{guid}')/items?"):
+                    raise ValueError('La paginación salió de la lista oficial identificada')
+                visited.add(api)
+                data,final,_=descargar(session,api)
+                if not final.startswith(base+'/_api/'):raise ValueError('La lista redirigió fuera de su API oficial')
+                payload=json.loads(data);container=payload.get('d',payload)
+                rows=container.get('results',payload.get('value',[]))
+                if not isinstance(rows,list):raise ValueError('Respuesta de lista sin filas reconocibles')
+                for row in rows:
+                    path=str(row.get('FileRef') or '')
+                    url=urljoin(index,path)
+                    if not path.startswith(folder+'/') or not pdf_publicacion(url):continue
+                    title=str(row.get('Title') or row.get('FileLeafRef') or '').strip()
+                    year=row.get('A_x00f1_o')
+                    if isinstance(year,(int,float)) and year==int(year) and 1900<=year<=2100:
+                        # Es el año del grupo documental; no una fecha diaria.
+                        title+=f' · Boletín tributario {int(year)}'
+                    docs[url]=(url,title)
+                api=payload.get('@odata.nextLink') or payload.get('odata.nextLink') or container.get('__next')
+                if api:api=urljoin(final,api)
+        finally:
+            if previous is None:session.headers.pop('Accept',None)
+            else:session.headers['Accept']=previous
+    return list(docs.values())
+
 def descubrir_publicaciones(session, raiz_html=None, historico=False):
     """Sólo sigue enlaces presentes en la cadena de procedencia autorizada."""
     if raiz_html is None:
@@ -87,6 +130,10 @@ def descubrir_publicaciones(session, raiz_html=None, historico=False):
             filename = path.rsplit("/", 1)[-1]
             if historico and indice_publicacion(url) and filename in PUBLICACIONES and url not in seen:
                 queue.append((url, PUBLICACIONES[filename]))
+        if not count and 'historico' in kind:
+            for url,title in publicaciones_lista(session,html,final):
+                count+=1
+                documents.setdefault(url,{'url':url,'titulo':title,'fuente_indice':final,'subtipo':kind})
         if not count:
             # SharePoint puede mostrar sus archivos mediante una lista dinámica.
             # Reportar esta brecha evita afirmar cobertura histórica completa.

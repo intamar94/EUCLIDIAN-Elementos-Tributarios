@@ -14,7 +14,7 @@ on:
         default: false
       limite:
         description: 'Documentos por lote (1–1000)'
-        default: '400'
+        default: '1000'
 permissions:
   contents: read
 concurrency:
@@ -34,7 +34,7 @@ jobs:
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
-          LIMITE: ${{ inputs.limite || '400' }}
+          LIMITE: ${{ inputs.limite || '1000' }}
           HISTORICO: ${{ inputs.historico || github.event.schedule == '5 3 * * 0' }}
         run: |
           ARGS=(--limite "$LIMITE" --workers 4)
