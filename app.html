@@ -14,6 +14,7 @@
 <link rel="stylesheet" href="/bloques.css">
 <link rel="stylesheet" href="/detalle.css" data-euclidian-detalle="1">
 <link rel="stylesheet" href="/consulta.css">
+<link rel="stylesheet" href="/bienvenida.css">
 </head>
 <body>
 <a class="saltar-contenido" href="#lista">Ir a los documentos</a>
@@ -76,6 +77,7 @@
       <button type="button" class="nav-item nav-accion" id="navSeguir"><span class="nav-glyph" aria-hidden="true">◎</span>Seguimientos</button>
       <button type="button" class="nav-item nav-accion" id="navCuenta"><span class="nav-glyph" aria-hidden="true">○</span>Cuenta</button>
     </nav>
+    <button type="button" class="guia-reabrir" id="abrirGuia">Guía de inicio</button>
     <button type="button" class="recargar accion-secundaria" id="btnRecargar" onclick="cargar()"><span aria-hidden="true">↻</span><span>Actualizar</span></button>
   </div>
 </header>
@@ -83,6 +85,14 @@
 <div class="carga-geometrica" id="cargaGeometrica" hidden role="status" aria-live="polite">
   <span class="geo-orbita" aria-hidden="true"><i></i><i></i><i></i></span><span>Ordenando la información…</span>
 </div>
+
+<section class="bienvenida marco" id="bienvenida" hidden aria-labelledby="bienvenidaTitulo">
+  <div class="bienvenida-cab"><div><span class="seccion-kicker">EMPIEZA AQUÍ</span><h1 id="bienvenidaTitulo">Tu primera consulta, paso a paso</h1><p>EUCLIDIAN te ayuda a encontrar información tributaria y comprobar su respaldo DIAN.</p></div><button type="button" id="saltarGuia">Omitir guía</button></div>
+  <ol class="guia-indice" id="guiaIndice" aria-label="Pasos de la guía"></ol>
+  <div id="guiaPaso" class="guia-paso" aria-live="polite" aria-atomic="true"></div>
+  <div class="guia-controles"><button type="button" id="guiaAnterior">Anterior</button><span id="guiaProgreso"></span><button type="button" id="guiaSiguiente">Siguiente</button></div>
+</section>
+<section class="novedades-globales marco" id="novedadesGlobales" hidden aria-labelledby="novedadesGlobalesTitulo"><h2 id="novedadesGlobalesTitulo">Novedades de toda la biblioteca</h2><p id="novedadesGlobalesEstado" role="status">Consultando publicaciones de los últimos 14 días…</p><button type="button" id="verNovedadesGlobales">Ver todas las novedades</button></section>
 
 <section class="hoy marco" hidden id="hoy" aria-label="Atención prioritaria">
   <div class="hoy-cabecera">
@@ -100,7 +110,7 @@
 
 <section class="explorar marco" hidden id="explorar" aria-labelledby="explorarTitulo">
   <div class="explorar-cabecera">
-    <div class="titulo-consulta"><span class="seccion-numero" aria-hidden="true">01</span><div><span class="seccion-kicker">EXPLORAR</span><h2 id="explorarTitulo">Entra por tema, no por archivo</h2><p>Los temas funcionan como puertas al corpus. Elige uno y EUCLIDIAN conserva la trazabilidad hasta la fuente.</p></div></div>
+    <div class="titulo-consulta"><span class="seccion-numero" aria-hidden="true">01</span><div><span class="seccion-kicker">EXPLORAR</span><h2 id="explorarTitulo">Entra por tema, no por archivo</h2><p>Elige un tema para encontrar documentos y abrir su fuente oficial.</p></div></div>
     <button type="button" class="accion-textual" id="cerrarExplorar" aria-label="Cerrar exploración">Cerrar</button>
   </div>
   <div class="explorar-temas" id="explorarTemas" aria-label="Temas disponibles"></div>
@@ -139,7 +149,7 @@
 </section>
 
 <section class="controles marco" hidden id="controles" aria-label="Buscar documentos DIAN">
-  <div class="titulo-consulta"><span class="seccion-numero" aria-hidden="true">02</span><div><span class="seccion-kicker">CONSULTAR</span><h2>Pregunta al corpus, conserva la evidencia</h2><p>Busca una idea, número o tema. EUCLIDIAN separa la lectura rápida de la fuente que la respalda.</p></div></div>
+  <div class="titulo-consulta"><span class="seccion-numero" aria-hidden="true">02</span><div><span class="seccion-kicker">CONSULTAR</span><h2>Buscar documentos tributarios</h2><p>Busca una idea, número o tema. EUCLIDIAN separa la lectura rápida de la fuente que la respalda.</p></div></div>
   <form class="buscador" id="formBuscar" role="search">
     <label class="solo-lectores" for="consulta">Buscar por número, título o contenido</label>
     <input id="consulta" type="search" maxlength="160" placeholder="Busca por número, título o tema, p. ej. retención en la fuente" autocomplete="off">
@@ -166,6 +176,7 @@
 <script src="/fichas.js" defer></script>
 <script src="/bloques.js" defer></script>
 <script src="/auth.js" defer></script>
+<script src="/bienvenida.js" defer></script>
 <script src="/bandeja.js" defer></script>
 </body>
 </html>

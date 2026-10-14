@@ -41,7 +41,7 @@ async function authToken(){
 }
 function authMostrarPuerta(){
   const puerta=document.getElementById('puerta');if(puerta)puerta.hidden=false;
-  ['cab','hoy','controles','barra','cuentaPanel'].forEach(id=>{const el=document.getElementById(id);if(el)el.hidden=true;});
+  ['cab','hoy','controles','barra','cuentaPanel','bienvenida','novedadesGlobales'].forEach(id=>{const el=document.getElementById(id);if(el)el.hidden=true;});
   ['lista','paginas','hoyLista','hoyResumen'].forEach(id=>document.getElementById(id)?.replaceChildren());
   const explorar=document.getElementById('explorar');if(explorar)explorar.hidden=true;
   ['cuentaEmail','cuentaEstado','cuentaPlan','cuentaPeriodo','cuentaUso'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent='—';});
@@ -89,7 +89,7 @@ function renderPlanesCuenta(payload,access){
     const p=document.createElement('p');p.textContent=String(plan.descripcion||'Acceso a EUCLIDIAN');
     top.append(small,h,p);
     const meta=document.createElement('div');meta.className='plan-meta';
-    const lim=document.createElement('span');lim.textContent=plan.limite_consultas_mensual?Number(plan.limite_consultas_mensual).toLocaleString('es-CO')+' consultas/mes':'Capacidad sin límite configurado';
+    const lim=document.createElement('span');lim.textContent=plan.limite_consultas_mensual?Number(plan.limite_consultas_mensual).toLocaleString('es-CO')+' consultas/mes':'Consultas sin límite mensual';
     const price=document.createElement('strong');
     price.textContent=plan.pricing_publicado&&Number.isFinite(Number(plan.precio_mensual))
       ?new Intl.NumberFormat('es-CO',{style:'currency',currency:plan.moneda||'COP',maximumFractionDigits:0}).format(Number(plan.precio_mensual))+' / mes'
