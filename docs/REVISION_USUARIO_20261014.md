@@ -1,5 +1,20 @@
 # Inicio guiado y correcciones de la revisión de usuario
 
+## Simplificación posterior de la navegación
+
+Esta revisión sustituye el diseño anterior de una página larga. Se conserva a continuación la evidencia histórica de la entrega inicial.
+
+- Cada pestaña muestra únicamente su sección: Inicio, Consultar, Novedades, Explorar o Cuenta. La guía ocupa su propia vista y conserva omisión y reapertura.
+- Inicio ofrece una introducción breve y hasta tres accesos a documentos; no muestra buscador, filtros ni radar. Las novedades disponibles tienen un acceso compacto; su ausencia ocupa una sola línea.
+- Consultar reúne buscador, filtros y fichas. Novedades muestra publicaciones de los últimos 14 días, sin buscador ni filtros heredados. Si no hay resultados, presenta un solo estado vacío y oculta el contador y el ordenamiento.
+- Explorar reúne temas y seguimientos locales. Cuenta conserva perfil y suscripción.
+- Se retiran las métricas vacías, el mensaje de radar tranquilo y la fecha de modificación de una ficha presentada como actualización global.
+- La reserva de espacio inferior usa la altura real de la barra. Se mantienen colores, tipografía, tarjetas y estados de foco.
+- La autorización sigue en el servidor. La respuesta 402 y el cierre de sesión también limpian las vistas y bloquean la exposición de resultados previos al navegar.
+- Pruebas: contratos de autenticación, sesión, E2E estático y resumen aprobados. Prueba Chromium en 320, 390, 768 y 1440px: secciones excluyentes, guía, fichas, búsqueda, novedades vacías/con resultados, temas, Cuenta, acceso pendiente y cierre de sesión. Datos simulados; no equivale a una sesión real de producción.
+
+## Registro de la entrega inicial
+
 ## Implementado
 
 - Guía inicial de cinco pasos dentro de app.html: Consultar, Novedades, Explorar/seguimientos, fichas/fuentes y Cuenta. Permite anterior/siguiente, saltar a un paso, abrir la sección, omitir y reabrir desde la cabecera. Se recuerda en este navegador; no concede acceso ni altera la suscripción.
