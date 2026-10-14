@@ -1,7 +1,7 @@
 import unittest
 from scripts.sintesis_literal import extraer_literal,literal_presente,PREFIJO_LITERAL
 from scripts.verificador_aprobacion import check_summary,norm
-from scripts.revisor_fiscal_euclidian import necesita_revision,evaluate
+from scripts.revisor_fiscal_euclidian import necesita_revision,evaluate,_load_pending,RULES_VERSION
 from test_revisor_fiscal import BASE
 
 class SintesisLiteralTests(unittest.TestCase):
@@ -29,3 +29,23 @@ class SintesisLiteralTests(unittest.TestCase):
         self.assertTrue(necesita_revision({'revisado_fiscal_en':'2026-10-13T10:00:00+00:00','estructura_extraida_en':'2026-10-14T10:00:00Z'}))
         self.assertFalse(necesita_revision({'revisado_fiscal_en':'2026-10-14T10:00:00+00:00','enriquecido_en':'2026-10-13T10:00:00Z'}))
         self.assertTrue(necesita_revision({'revisado_fiscal_en':None}))
+
+    def test_queue_finds_recent_documents_beyond_first_page_and_old_rules(self):
+        from types import SimpleNamespace
+        docs=[dict(id=f'{i:04}',fecha_publicacion_web='2026-01-01',revisado_fiscal_en='2026-10-14T10:00:00Z') for i in range(1002)]
+        docs[-1]['fecha_publicacion_web']='2026-10-05'
+        docs[-2]['fecha_publicacion_web']='2026-10-06'
+        class Query:
+            def __init__(self,table):
+                self.rows=list(docs if table=='documentos_tributarios' else [dict(documento_id='1000',version_reglas=RULES_VERSION)])
+                self.maximum=None
+            def select(self,*_):return self
+            def eq(self,k,v):self.rows=[r for r in self.rows if r.get(k)==v];return self
+            def gt(self,k,v):self.rows=[r for r in self.rows if r[k]>v];return self
+            def in_(self,k,values):self.rows=[r for r in self.rows if r[k] in values];return self
+            def order(self,k):self.rows.sort(key=lambda r:r[k]);return self
+            def limit(self,n):self.maximum=n;return self
+            def execute(self):return SimpleNamespace(data=self.rows[:self.maximum])
+        sb=SimpleNamespace(table=Query)
+        selected=_load_pending(sb,1)
+        self.assertEqual([d['id'] for d in selected],['1001'])

@@ -174,14 +174,28 @@ def necesita_revision(row):
 
 
 def _load_pending(sb, limit):
+    # También recupera fichas retenidas con reglas anteriores, aunque ningún
+    # extractor haya vuelto a tocarlas. Una REVIEW actual no se repite sin cambios.
+    actuales, last_reviewed = set(), None
+    while True:
+        q = (sb.table("revisor_fiscal_euclidian_evaluaciones")
+             .select("documento_id").eq("version_reglas", RULES_VERSION)
+             .order("documento_id").limit(1000))
+        if last_reviewed:
+            q = q.gt("documento_id", last_reviewed)
+        batch = q.execute().data or []
+        actuales.update(row["documento_id"] for row in batch)
+        if len(batch) < 1000:
+            break
+        last_reviewed = batch[-1]["documento_id"]
     metadata, last_id = [], None
     while True:
         q = sb.table("documentos_tributarios").select(
-            "id,revisado_fiscal_en,enriquecido_en,estructura_extraida_en,clasificado_en,borrador_generado_en,fecha_publicacion_web,fecha_publicacion") .order("id").limit(1000)
+            "id,revisado_fiscal_en,enriquecido_en,estructura_extraida_en,clasificado_en,borrador_generado_en,fecha_publicacion_web,fecha_publicacion").order("id").limit(1000)
         if last_id:
             q = q.gt("id", last_id)
         batch = q.execute().data or []
-        metadata.extend(row for row in batch if necesita_revision(row))
+        metadata.extend(row for row in batch if row["id"] not in actuales or necesita_revision(row))
         if len(batch) < 1000:
             break
         last_id = batch[-1]["id"]

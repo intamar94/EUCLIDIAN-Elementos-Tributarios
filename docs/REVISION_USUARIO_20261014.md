@@ -3,7 +3,7 @@
 ## Cierre del flujo documental — 14 de octubre de 2026
 
 - Se contrastaron de nuevo las 13 fichas con publicación web del 5 de octubre, directamente en sus páginas DIAN. Las 13 superaron las reglas 4.2 y quedaron publicadas, sin modificar sus fechas ni atribuir revisión humana. Ejemplo: DIAN-OFICIO-16681-2026.
-- La cola anterior solo encontraba revisado_fiscal_en vacío: omitía fichas enriquecidas o estructuradas después de una evaluación. Ahora detecta esas actualizaciones, prioriza publicaciones recientes y procesa lotes de 1000.
+- La cola anterior solo encontraba revisado_fiscal_en vacío: omitía fichas enriquecidas o estructuradas después de una evaluación. Ahora detecta esas actualizaciones y las evaluaciones con reglas anteriores, prioriza publicaciones recientes y procesa lotes de 1000.
 - Los cambios sustantivos retiran temporalmente la ficha y reinician su revisión. La evaluación y publicación se cierran en una transacción, condicionada a updated_at para rechazar versiones obsoletas. La puerta de inspección y los expedientes bloqueantes siguen aplicando.
 - Se preparan párrafos completos y literales de la fuente, identificados como extractos DIAN. Se contrastan por coincidencia íntegra, conservando negaciones, cifras y excepciones. No se escribe resumen_humano ni revisado_por_humano.
 - El ciclo de captura incorpora extracción de estructura; la revisión se ejecuta también al terminar el agente de integridad. Los registros distinguen aprobaciones, publicaciones efectivas y conflictos de versión.
