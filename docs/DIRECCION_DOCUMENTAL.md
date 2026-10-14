@@ -27,6 +27,8 @@ La base bloquea publicaciones sin evidencia de captura completa, identidad, cont
 
 `direccion_documental` mantiene una exclusión con vencimiento, renovada mediante latidos. Cada etapa tiene inicio, estado, final y resultado persistidos. Si se interrumpe el proceso, el siguiente ciclo registra la interrupción y retoma la cola; no reinicia todo ni declara éxito por omisión. La recuperación no duplica un escritor vivo y limita sus solicitudes a una cada 45 minutos.
 
+El primer ciclo tras la instalación completa automáticamente el mapa histórico; luego se refresca semanalmente. Los anclajes de una misma URL se normalizan. Si una URL antigua devuelve 404/410, el recuperador busca alternativas en el mapa oficial y vuelve a contrastar la identidad y el contenido. Cuando la URL recuperada ya tiene ficha, solo cierra el alias después de comprobar que la ficha canónica está publicada con la misma huella de fuente validada; conserva la trazabilidad histórica sin duplicar el catálogo.
+
 GitHub programa las ejecuciones, pero sus horarios pueden retrasarse. `/api/health` separa disponibilidad del servicio de frescura documental y muestra el último latido, antigüedad, etapas y recuentos, sin credenciales. No afirma cobertura completa si quedan pendientes, reintentos o cuarentenas. Las fuentes ya publicadas se contrastan de nuevo al vencer su plazo de refresco semanal; las fuentes nuevas entran desde el mapa periódico.
 
 ## Validación
@@ -34,3 +36,5 @@ GitHub programa las ejecuciones, pero sus horarios pueden retrasarse. `/api/heal
 Se instalaron las tablas, cola, exclusión, puerta y cierre atómico con RLS y acceso operativo restringido al servidor. La prueba transaccional verificó exclusión de dos escritores, latido, recuperación de una exclusión vencida, rechazo de evidencia incompleta, publicación con evidencia completa y rechazo de una versión concurrentemente modificada, con rollback de todos los datos de prueba. Los 17.875 registros iniciales quedaron en la cola; anon no puede leerla ni ejecutar la apertura de ciclos.
 
 El reprocesamiento de todo el catálogo es gradual. Un ciclo completo significa que sus etapas terminaron, no que toda la cola histórica esté validada. La verificación operativa debe consultar sus recuentos y el resultado real de las fuentes; no basta con un workflow verde.
+
+Las regresiones de adaptación incluyen normalización de anclajes y candidatos con ceros iniciales. La prueba transaccional de alias confirmó vinculación al canónico contrastado, conservación de su publicación y rollback de los datos de prueba.
