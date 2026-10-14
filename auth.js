@@ -43,7 +43,7 @@ function authMostrarPuerta(){
   window.euclidianRestablecerVista?.();
   const puerta=document.getElementById('puerta');if(puerta)puerta.hidden=false;
   ['cab','inicioPanel','novedadesCab','controles','barra','cuentaPanel','bienvenida','lista','paginas'].forEach(id=>{const el=document.getElementById(id);if(el)el.hidden=true;});
-  ['lista','paginas','inicioDocumentos','inicioNovedades','explorarTemas','temasSeguidos'].forEach(id=>document.getElementById(id)?.replaceChildren());
+  ['lista','paginas','inicioDocumentos','inicioNovedades','explorarTemas','estadoTemas'].forEach(id=>document.getElementById(id)?.replaceChildren());
   const explorar=document.getElementById('explorar');if(explorar)explorar.hidden=true;
   ['cuentaEmail','cuentaEstado','cuentaPlan','cuentaPeriodo','cuentaUso'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent='—';});
   ['perfilNombre','perfilCiudad'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});

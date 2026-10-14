@@ -9,7 +9,6 @@ const docInicial=consultaInicial.get('doc')||'';
 const F = { estado:'todos', periodo:'todo', tema:'', q:(consultaInicial.get('q')||'').trim().slice(0,160), doc:/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(docInicial)?docInicial:'', orden:'recientes', pagina:1 };
 function dejarFicha(){if(F.doc){F.doc='';history.replaceState(null,'',location.pathname);}}
 const cajaConsulta=document.getElementById('consulta'); if(cajaConsulta)cajaConsulta.value=F.q;
-const TEMAS_DIARIOS=['Renta','IVA','Retención','Facturación electrónica','SIMPLE'];
 
 function skeletonConsulta(){
   return `<div class="skeleton-lista" aria-hidden="true">${Array.from({length:3},(_,i)=>`<article class="skeleton-ficha"><div class="skeleton-linea mini"></div><div class="skeleton-linea titulo"></div><div class="skeleton-grid"><div><div class="skeleton-linea"></div><div class="skeleton-linea corta"></div><div class="skeleton-bloque"></div></div><div class="skeleton-lateral"><div class="skeleton-linea corta"></div><div class="skeleton-linea"></div></div></div></article>`).join('')}</div>`;
@@ -56,13 +55,35 @@ function describirConsulta(data){
   const estado=document.getElementById('estadoConsulta');
   if(estado)estado.textContent=partes.length?`${Number(data.total||0).toLocaleString('es-CO')} resultados · ${partes.join(' · ')}`:`${Number(data.total||0).toLocaleString('es-CO')} documentos disponibles`;
 }
-function renderExplorar(data){
-  const seccion=document.getElementById('explorar'), cont=document.getElementById('explorarTemas');
-  if(!seccion||!cont)return;
-  const temas=(data.temas||[]).slice().sort((a,b)=>(temasSeguidos().includes(nombreTema(b))?1:0)-(temasSeguidos().includes(nombreTema(a))?1:0)||nombreTema(a).localeCompare(nombreTema(b),'es'));
-  cont.innerHTML=temas.map((t,i)=>`<button type="button" class="tema-explora" data-explora-tema="${esc(t)}"><span class="tema-indice">${String(i+1).padStart(2,'0')}</span><strong>${esc(nombreTema(t))}</strong><span class="tema-flecha" aria-hidden="true">↗</span></button>`).join('');
-  cont.querySelectorAll('[data-explora-tema]').forEach(btn=>btn.addEventListener('click',()=>{reiniciarFiltros();F.tema=btn.dataset.exploraTema;F.pagina=1;const sel=document.getElementById('selTema');if(sel)sel.value=F.tema;mostrarVista('consultar');cargar().catch(()=>{});}));
+let catalogoTemas=[];
+const claveTemas='euclidian_temas_seleccionados_v2';
+function temasSeguidos(){
+  try{
+    const guardados=localStorage.getItem(claveTemas);
+    const anteriores=JSON.parse(guardados===null?(localStorage.getItem('euclidian_temas_seguidos')||'[]'):guardados);
+    if(!Array.isArray(anteriores))return [];
+    return [...new Set(anteriores.filter(t=>typeof t==='string').map(t=>Object.hasOwn(ETIQUETAS,t)?t:Object.keys(ETIQUETAS).find(k=>ETIQUETAS[k]===t)||(t==='Retención'?'retencion':t)).filter(t=>/^[a-z0-9_]+$/.test(t)))];
+  }catch(_){return [];}
 }
+function guardarTemas(temas){try{localStorage.setItem(claveTemas,JSON.stringify(temas));return true;}catch(_){return false;}}
+function renderExplorar(data){
+  const cont=document.getElementById('explorarTemas'),sel=document.getElementById('agregarTema');if(!cont||!sel)return;
+  if(data){const recibidos=(data.temas||[]).filter(t=>typeof t==='string'&&!t.startsWith('dian:')&&t!=='boletin_mensual');catalogoTemas=[...new Set([...catalogoTemas,...recibidos])].sort((a,b)=>nombreTema(a).localeCompare(nombreTema(b),'es'));}
+  const seleccionados=temasSeguidos();
+  sel.innerHTML='<option value="">Elige un tema…</option>'+catalogoTemas.filter(t=>!seleccionados.includes(t)).map(t=>`<option value="${esc(t)}">${esc(nombreTema(t))}</option>`).join('');
+  sel.disabled=catalogoTemas.every(t=>seleccionados.includes(t));
+  if(sel.disabled)sel.options[0].textContent=catalogoTemas.length?'Todos los temas disponibles están añadidos':'No hay temas disponibles';
+  cont.innerHTML=seleccionados.map(t=>`<div class="tema-personal"><button type="button" class="tema-personal-abrir" data-explora-tema="${esc(t)}"><strong>${esc(nombreTema(t))}</strong><span>Ver documentos <b aria-hidden="true">→</b></span></button><button type="button" class="tema-personal-quitar" data-quitar-tema="${esc(t)}" aria-label="Quitar ${esc(nombreTema(t))}">×</button></div>`).join('')||'<p class="temas-vacio">Elige un tema en el desplegable para empezar.</p>';
+}
+function cambiarSeleccionTemas(tema,agregar){
+  const actuales=temasSeguidos();
+  const siguientes=agregar?[...new Set([...actuales,tema])]:actuales.filter(t=>t!==tema);
+  const ok=guardarTemas(siguientes);
+  document.getElementById('estadoTemas').classList.toggle('solo-lectores',ok);
+  document.getElementById('estadoTemas').textContent=ok?`${nombreTema(tema)}: ${agregar?'añadido':'quitado'}.`:'No se pudo guardar la selección en este navegador.';
+  if(ok)renderExplorar();
+}
+
 let vistaActual=(F.doc||F.q)?'consultar':'inicio';
 let ultimaRespuesta=null,accesoConsulta=false;
 const vistas={inicio:['inicioPanel'],consultar:['controles','barra','lista','paginas'],novedades:['novedadesCab','barra','lista','paginas'],explorar:['explorar'],cuenta:['cuentaPanel'],guia:['bienvenida']};
@@ -82,7 +103,7 @@ function mostrarVista(vista){
   window.scrollTo({top:0,behavior:'instant'});
 }
 window.euclidianCambiarVista=mostrarVista;
-window.euclidianRestablecerVista=()=>{generacionCarga++;ultimaRespuesta=null;accesoConsulta=false;vistaActual='inicio';window.euclidianVistaActual='inicio';};
+window.euclidianRestablecerVista=()=>{generacionCarga++;ultimaRespuesta=null;catalogoTemas=[];accesoConsulta=false;vistaActual='inicio';window.euclidianVistaActual='inicio';};
 function abrirNovedades(){reiniciarFiltros();F.estado='nuevos';document.getElementById('selEstado').value='nuevos';mostrarVista('novedades');return cargar().catch(()=>{});}
 function abrirConsulta(){dejarFicha();if(F.estado==='nuevos')reiniciarFiltros();mostrarVista('consultar');return cargar().catch(()=>{});}
 function configurarNavegacion(){
@@ -93,7 +114,7 @@ function configurarNavegacion(){
   if(consultar){consultar.id='navConsultar';consultar.addEventListener('click',e=>{e.preventDefault();abrirConsulta();});}
   if(novedades){novedades.id='navNovedades';novedades.addEventListener('click',e=>{e.preventDefault();abrirNovedades();});}
   document.getElementById('navExplorar')?.addEventListener('click',()=>mostrarVista('explorar'));
-  document.getElementById('navSeguir')?.addEventListener('click',()=>{mostrarVista('explorar');document.querySelector('.seguimiento')?.scrollIntoView({block:'center'});});
+  document.getElementById('navSeguir')?.addEventListener('click',()=>{mostrarVista('explorar');document.getElementById('agregarTema')?.focus();});
   document.getElementById('navCuenta')?.addEventListener('click',async()=>{
     mostrarVista('cuenta');
     if(window.euclidianTieneSesion?.()){await window.euclidianMostrarCuenta?.();return;}
@@ -102,16 +123,22 @@ function configurarNavegacion(){
   });
   document.getElementById('inicioDocumentos')?.addEventListener('click',e=>{const btn=e.target.closest('[data-inicio-doc]');if(!btn)return;reiniciarFiltros();F.doc=btn.dataset.inicioDoc;mostrarVista('consultar');cargar().catch(()=>{});});
   document.getElementById('inicioNovedades')?.addEventListener('click',e=>{if(e.target.closest('button'))abrirNovedades();});
+  document.getElementById('agregarTema')?.addEventListener('change',e=>{const tema=e.target.value;if(catalogoTemas.includes(tema))cambiarSeleccionTemas(tema,true);});
+  document.getElementById('explorarTemas')?.addEventListener('click',e=>{
+    const quitar=e.target.closest('[data-quitar-tema]');if(quitar){cambiarSeleccionTemas(quitar.dataset.quitarTema,false);document.getElementById('agregarTema').focus();return;}
+    const abrir=e.target.closest('[data-explora-tema]');if(abrir){reiniciarFiltros();F.tema=abrir.dataset.exploraTema;document.getElementById('selTema').value=F.tema;mostrarVista('consultar');cargar().catch(()=>{});}
+  });
 }
 function renderInicio(data){
   document.getElementById('inicioResumen').textContent='Consulta normas y doctrina con su fuente DIAN.';
   const docs=(data.documentos||[]).slice(0,3);
-  document.getElementById('inicioDocumentos').innerHTML=docs.map(d=>`<button type="button" class="inicio-documento" data-inicio-doc="${esc(d.id)}"><span class="inicio-documento-tipo">${esc(d.tipo_documento||'Documento DIAN')}</span><strong>${esc(tituloFicha(d))}</strong><span class="inicio-documento-ref">${esc(d.numero_resolucion||'Abrir ficha')} <b aria-hidden="true">→</b></span></button>`).join('')||'<p>No pudimos mostrar documentos en este momento. Puedes buscar en Consultar.</p>';
+  document.getElementById('inicioDocumentos').innerHTML=docs.map(d=>{
+    const temas=(d.temas||[]).filter(t=>!t.startsWith('dian:')&&t!=='boletin_mensual').slice(0,2).map(nombreTema).join(' · ');
+    const titulo=tituloFicha(d),descripcion=String(d.descripcion_limpia||d.contenido||'').replace(/\s+/g,' ').trim();
+    const extracto=descripcion&&descripcion.toLowerCase()!==titulo.toLowerCase()?descripcion.slice(0,220)+(descripcion.length>220?'…':''):'';
+    return `<button type="button" class="inicio-documento" data-inicio-doc="${esc(d.id)}">${temas?`<span class="inicio-documento-tipo">${esc(temas)}</span>`:''}<strong>${esc(titulo)}</strong>${extracto?`<span class="inicio-documento-extracto">${esc(extracto)}</span>`:''}<span class="inicio-documento-ref">${fechaPrincipal(d)}<b aria-hidden="true">Ver ficha →</b></span></button>`;
+  }).join('')||'<p>No pudimos mostrar documentos en este momento. Puedes buscar en Consultar.</p>';
 }
-
-function temasSeguidos(){try{const temas=JSON.parse(localStorage.getItem('euclidian_temas_seguidos')||'[]');return Array.isArray(temas)?temas:[];}catch(_){return [];}}
-function guardarTemas(temas){try{localStorage.setItem('euclidian_temas_seguidos',JSON.stringify(temas));}catch(_){}}
-function renderTemasSeguidos(){const cont=document.getElementById('temasSeguidos');if(!cont)return;const activos=temasSeguidos();cont.innerHTML=TEMAS_DIARIOS.map(t=>`<button type="button" class="tema-seguido ${activos.includes(t)?'activo':''}" data-tema-diario="${esc(t)}" aria-pressed="${activos.includes(t)}">${activos.includes(t)?'✓ ':'+'}${esc(t)}</button>`).join('');cont.querySelectorAll('[data-tema-diario]').forEach(b=>b.addEventListener('click',()=>{const tema=b.dataset.temaDiario,siguientes=temasSeguidos(),i=siguientes.indexOf(tema);if(i>=0)siguientes.splice(i,1);else siguientes.push(tema);guardarTemas(siguientes);renderTemasSeguidos();}));}
 
 async function entrarInterno(valor){
   const mal=document.getElementById('mal');
@@ -149,7 +176,7 @@ async function cargar(autenticar=false){
       throw new Error(token?'Tu sesión terminó. Vuelve a entrar.':'Clave interna incorrecta.');
     }
     if(r.status===402){
-      accesoConsulta=false;['inicioDocumentos','inicioNovedades','explorarTemas','temasSeguidos'].forEach(id=>document.getElementById(id)?.replaceChildren());
+      accesoConsulta=false;['inicioDocumentos','inicioNovedades','explorarTemas','estadoTemas'].forEach(id=>document.getElementById(id)?.replaceChildren());
       document.getElementById('puerta').hidden=true;
       document.getElementById('cab').hidden=false;
       ['inicioPanel','novedadesCab','controles','barra','bienvenida','explorar','lista','paginas'].forEach(id=>{const el=document.getElementById(id);if(el)el.hidden=true;});
@@ -162,7 +189,7 @@ async function cargar(autenticar=false){
     document.getElementById('puerta').hidden=true;if(mal)mal.textContent='';
     document.getElementById('cab').hidden=false;
     accesoConsulta=true;ultimaRespuesta=data;
-    marcarActivos();poblarTemas(data.temas||[]);poblarAnios(data.anios||[]);renderExplorar(data);renderTemasSeguidos();describirConsulta(data);
+    marcarActivos();poblarTemas(data.temas||[]);poblarAnios(data.anios||[]);renderExplorar(data);describirConsulta(data);
     if(vistaActual==='inicio')renderInicio(data);
     lista.innerHTML=data.documentos.length?data.documentos.map(ficha).join(''):vistaVacia();
     paginacion(data);aplicarVista();if(vistaActual==='inicio')window.euclidianIniciarGuia?.();

@@ -70,3 +70,23 @@ body{padding-bottom:24px}
  #cab .guia-reabrir{font-size:12px;padding:6px}
  #cab #btnRecargar{width:34px;min-height:40px}
 }
+/* Explorar conserva solo la selección del usuario. */
+.selector-temas{display:grid;gap:7px;max-width:560px;margin:22px 0 8px}
+.selector-temas label{font:600 14px/1.4 'IBM Plex Sans',sans-serif;color:#203a2b}
+.selector-temas select{width:100%;min-height:48px;font-size:16px;background:#fffefa;border-color:#9fb0a2;padding:10px 34px 10px 12px}
+.selector-temas p,.estado-temas{font-size:13px;line-height:1.5;color:#526257}
+.estado-temas{min-height:20px;margin:8px 0}
+.temas-personales{grid-template-columns:repeat(2,minmax(0,1fr))}
+.tema-personal{display:flex;min-width:0;border:1px solid #cdd6cd;border-radius:8px;background:#fffefa;overflow:hidden}
+.tema-personal-abrir{display:flex;flex:1;flex-direction:column;gap:6px;min-width:0;min-height:80px;padding:14px 16px;border:0;background:transparent;color:#203a2b;text-align:left;cursor:pointer}
+.tema-personal-abrir strong{font:600 16px/1.4 'IBM Plex Sans',sans-serif;overflow-wrap:anywhere}
+.tema-personal-abrir span{font:13px/1.4 'IBM Plex Sans',sans-serif;color:#526257}
+.tema-personal-abrir:hover{background:#edf3ee}
+.tema-personal-quitar{align-self:center;flex:none;width:44px;height:44px;margin:6px;border:1px solid #d2dcd2;border-radius:6px;background:#fffefa;color:#526257;font:22px/1 'IBM Plex Sans',sans-serif;cursor:pointer}
+.tema-personal-quitar:hover{background:#fbeae9;color:#8b382f;border-color:#b88b86}
+.temas-vacio{grid-column:1/-1;color:#526257;font-size:15px;line-height:1.5}
+.inicio-documento-extracto{font:14px/1.5 'IBM Plex Sans',sans-serif;color:#526257;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.inicio-documento-ref{width:100%;align-items:flex-end;flex-wrap:wrap}
+.inicio-documento-ref .fecha-principal{font:12px/1.4 'IBM Plex Sans',sans-serif;color:#526257;letter-spacing:normal}
+.inicio-documento-ref b{margin-left:auto;font-weight:600;color:#203a2b;white-space:nowrap}
+@media(max-width:620px){.temas-personales{grid-template-columns:1fr}.tema-personal-abrir{min-height:76px}.inicio-documento-tipo{letter-spacing:.03em;line-height:1.5}}
