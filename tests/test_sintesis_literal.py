@@ -1,10 +1,23 @@
 import unittest
 from scripts.sintesis_literal import extraer_literal,literal_presente,PREFIJO_LITERAL
 from scripts.verificador_aprobacion import check_summary,norm
-from scripts.revisor_fiscal_euclidian import necesita_revision,evaluate,_load_pending,RULES_VERSION
+from scripts.revisor_fiscal_euclidian import necesita_revision,evaluate,_load_pending,RULES_VERSION,identidad_desde_titulo,_guardar_cambios
 from test_revisor_fiscal import BASE
 
 class SintesisLiteralTests(unittest.TestCase):
+    def test_source_title_defines_type_without_changing_stable_identifier(self):
+        result=identidad_desde_titulo('Compilación Jurídica de la DIAN - Concepto 16548 de 2026 DIAN','DIAN-OFICIO-16548-2026')
+        self.assertEqual(result,{'tipo_documento':'concepto','titulo':'Concepto 16548 de 2026 DIAN'})
+        self.assertEqual(identidad_desde_titulo('Compilación Jurídica de la DIAN - Concepto 16549 de 2026 DIAN','DIAN-OFICIO-16548-2026'),{})
+
+    def test_concurrent_change_is_requeued_without_overwriting_other_writer(self):
+        from unittest.mock import Mock
+        sb=Mock();q=sb.table.return_value.update.return_value
+        q.eq.return_value.eq.return_value.execute.return_value.data=[]
+        result=_guardar_cambios(sb,{'id':'id-prueba','updated_at':'2026-10-14T00:00:00Z'},{'materia':'IVA'})
+        self.assertEqual(result,'CONFLICTO')
+        q.eq.assert_called_once_with('id','id-prueba')
+
     def test_complete_conclusion_keeps_exception_and_negation(self):
         text='10. Así las cosas, no existe obligación de realizar el trámite descrito para estos contribuyentes, excepto cuando se configure el supuesto expresamente indicado en esta disposición.'
         quote=extraer_literal('<p>'+text+'</p>')

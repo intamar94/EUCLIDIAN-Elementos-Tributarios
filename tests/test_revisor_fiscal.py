@@ -4,6 +4,8 @@ from scripts.revisor_fiscal_euclidian import evaluate
 
 
 BASE = {
+    "numero_resolucion": "DIAN-OFICIO-13000-2026",
+    "titulo": "Oficio 13000 de 2026 DIAN",
     "enlace_oficial": "https://normograma.dian.gov.co/dian/compilacion/docs/oficio_dian_13000_2026.htm",
     "contenido": "Contenido oficial suficiente.",
     "fecha_publicacion": "2026-08-21",
@@ -50,6 +52,13 @@ class RevisorFiscalTests(unittest.TestCase):
         result, _, _, failed, _ = evaluate(doc, True)
         self.assertEqual(result, "APPROVE")
         self.assertNotIn("ADVERTENCIAS", failed)
+
+    def test_current_date_conflict_cannot_pass_with_verified_source(self):
+        doc = dict(BASE, fecha_publicacion_web="2026-08-20")
+        result, score, _, failed, _ = evaluate(doc, True)
+        self.assertEqual(result, "REVIEW")
+        self.assertLess(score, 100)
+        self.assertIn("INTEGRIDAD_ACTUAL", failed)
 
 
 if __name__ == "__main__":

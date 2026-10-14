@@ -17,6 +17,13 @@ _index_lock=threading.Lock()
 
 def norm(s):
     s=unicodedata.normalize("NFKD",str(s or "")).encode("ascii","ignore").decode().lower();return re.sub(r"\s+"," ",s).strip()
+
+def identidad_documental_coincide(source_text,doc):
+    ident=re.search(r"-(\d+)-((?:19|20)\d{2})$",str(doc.get("numero_resolucion") or ""))
+    # Se contrasta la primera identificación del encabezado, no una cita
+    # posterior ni el año aislado (2026 aparece en miles de documentos).
+    header=re.search(r"\b(?:concepto|oficio|resolucion|circular|comunicado|decreto|ley|sentencia|acuerdo)(?:\s+(?:numero|no\.?))?\s+(\d+)\s+de\s+((?:19|20)\d{2})\b",norm(source_text)[:2000])
+    return bool(ident and header and (int(ident[1]),ident[2])==(int(header[1]),header[2]))
 def words(s):return {x for x in re.findall(r"[a-z0-9]{4,}",norm(s)) if x not in STOP}
 def date_candidates(value):
     s=str(value or "").strip();out={norm(s)} if s else set();m=re.fullmatch(r"(\d{4})-(\d{2})-(\d{2})",s)
@@ -73,7 +80,8 @@ def _index_urls(session):
 def discover_official_url(session,doc):
     """Encuentra una URL individual vigente cuando la URL almacenada quedó obsoleta."""
     number=norm(doc.get("numero_resolucion")); title=norm(doc.get("titulo")); internal=norm(doc.get("numero_interno"))
-    tokens=[x for x in re.findall(r"\d{3,9}",number) if x]
+    # El año no identifica el documento ni debe puntuar candidatos distintos.
+    tokens=[x for x in re.findall(r"\d{1,9}",re.sub(r"-(?:19|20)\d{2}$","",number)) if x]
     variants=set(tokens)
     for x in list(tokens):
         try:variants.add(str(int(x)))
@@ -88,7 +96,7 @@ def discover_official_url(session,doc):
     for _,href in sorted(best,reverse=True)[:8]:
         try:
             _,source,final=load(session,href)
-            if any(x in source for x in variants):return source,final,href
+            if identidad_documental_coincide(source,doc):return source,final,href
         except Exception:
             continue
     return None,None,None
@@ -134,13 +142,8 @@ def verify(session,doc):
     fp=urlparse(final)
     if fp.scheme!="https" or fp.netloc!=DOMINIO or not fp.path.startswith(PREFIJO):return False,["La fuente redirige fuera del Normograma DIAN."]
     if "normograma" not in source and "compilacion juridica dian" not in source:errors.append("La página no se identifica como Normograma DIAN.")
-    number=norm(doc.get("numero_resolucion"));digits=re.findall(r"\d{3,9}",number)
-    if digits:
-        variants=set(digits)
-        for x in digits:
-            try:variants.add(str(int(x)))
-            except ValueError:pass
-        if not any(n in source for n in variants):errors.append("El número del documento no aparece en la fuente.")
+    if not identidad_documental_coincide(source,doc):
+        return False,["El número y año del encabezado oficial no corresponden a esta ficha."]
     webdate=str(doc.get("fecha_publicacion_web") or "")
     docdate=str(doc.get("fecha_publicacion") or "")
     if webdate:
