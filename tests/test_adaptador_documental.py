@@ -15,6 +15,11 @@ PARAGRAPH='7. Por lo anterior, no existe obligación de realizar el trámite des
 HTML=f'<html><head><title>Compilación Jurídica de la DIAN - Concepto 16898 de 2026 DIAN</title></head><body><h1>CONCEPTO 16898 DE 2026</h1><p>{PARAGRAPH}</p></body></html>'
 CAP=extraer_contenido(HTML.encode(),URL)
 class AdaptacionTests(unittest.TestCase):
+    def test_normalize_alias_only_as_candidate_not_source_proof(self):
+        self.assertEqual(a.identificadores_alternos('DIAN-OFICIO-016346-2026'),['DIAN-OFICIO-016346-2026','DIAN-OFICIO-16346-2026','DIAN-CONCEPTO-16346-2026'])
+        from fuente_documental import canonica
+        self.assertEqual(canonica(URL+'#4'),URL)
+        self.assertNotEqual(canonica(URL),canonica(URL.replace('_16898_','_016898_')))
     def test_unknown_validity_and_complete_literal_instead_of_invention(self):
         d,p=a.adaptar(ROW,CAP)
         self.assertEqual(d['tipo_documento'],'concepto')

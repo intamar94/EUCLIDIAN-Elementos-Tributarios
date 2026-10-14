@@ -68,7 +68,7 @@ def adaptar(row,capture):
     """Los campos opcionales no sustentados se retiran, sin bloquear la fuente."""
     import re
     d=dict(row);pending=[];reader=EnriquecedorFechasV2.__new__(EnriquecedorFechasV2)
-    d.update(texto_completo=capture.texto,enriquecido_en=now())
+    d.update(texto_completo=capture.texto,enriquecido_en=now(),enlace_oficial=capture.url)
     if capture.paginas:
         from boletines_dian import pdf_publicacion, indice_publicacion
         notes=str(row.get('notas_verificacion') or '')
@@ -146,7 +146,7 @@ def failure(row,error,ciclo):
     technical=not permanent and (isinstance(error,requests.RequestException) or any(x in message.lower() for x in ('timeout','connection','tempor','429','502','503','504')))
     return dict(row),{},False,{'identidad_verificada':False,'fuente_estable':False,
         'reintentar':technical,'accion':'reintentar_fuente' if technical else 'recuperar_fuente_o_corregir_identidad',
-        'errores':[message],'campos_pendientes':[], 'ciclo_id':ciclo}
+        'http_status':getattr(getattr(error,'response',None),'status_code',None),'errores':[message],'campos_pendientes':[], 'ciclo_id':ciclo}
 
 def procesar(row,ciclo=None):
     s=session()
@@ -172,6 +172,14 @@ def procesar(row,ciclo=None):
     except Exception as exc:return failure(row,exc,ciclo)
     finally:s.close()
 
+def identificadores_alternos(numero):
+    import re
+    match=re.fullmatch(r'(DIAN-[A-Z_]+)-(\d+)-(\d{4})',numero)
+    if not match:return [numero]
+    prefixes=[match[1]]
+    if match[1] in ('DIAN-OFICIO','DIAN-CONCEPTO'):prefixes=['DIAN-OFICIO','DIAN-CONCEPTO']
+    return list(dict.fromkeys([numero]+[f'{p}-{int(match[2])}-{match[3]}' for p in prefixes]))
+
 def guardar(db,row,changes,ok,evidence):
     stamp=row['updated_at']
     if changes:
@@ -187,7 +195,7 @@ def guardar(db,row,changes,ok,evidence):
 
 def run(db,limite=200,workers=4,minutos=20,ciclo=None):
     rows=retry_db(lambda:db.rpc('cola_adaptacion_documental',{'p_limite':limite,'p_version':VERSION}).execute()).data or []
-    counts={'seleccionados':len(rows),'publicados':0,'reintentar':0,'cuarentena':0,'conflictos':0,'errores_tecnicos':0,'procesados':0}
+    counts={'alias_resueltos':0,'seleccionados':len(rows),'publicados':0,'reintentar':0,'cuarentena':0,'conflictos':0,'errores_tecnicos':0,'procesados':0}
     deadline=time.monotonic()+minutos*60
     iterator=iter(rows)
     with ThreadPoolExecutor(max_workers=workers) as pool:
@@ -205,15 +213,25 @@ def run(db,limite=200,workers=4,minutos=20,ciclo=None):
                 original=futures.pop(future)
                 try:
                     _,changes,ok,evidence=future.result()
-                    if not ok and not evidence.get('reintentar'):
-                        candidates=retry_db(lambda:db.table('fuentes_dian_mapeadas').select('url').eq('numero_resolucion',original['numero_resolucion']).limit(4).execute()).data or []
+                    if not ok and evidence.get('http_status') in (404,410):
+                        candidates=retry_db(lambda:db.table('fuentes_dian_mapeadas').select('url').in_('numero_resolucion',identificadores_alternos(original['numero_resolucion'])).limit(8).execute()).data or []
                         for candidate in candidates:
                             if candidate['url']==original['enlace_oficial']:continue
                             alternative=dict(original,enlace_oficial=candidate['url'])
                             _,fixed,valid,proof=procesar(alternative,ciclo)
                             if valid:
-                                changes=dict(fixed,enlace_oficial=candidate['url']);ok=True;evidence=proof
-                                evidence['enlace_recuperado_desde']=original['enlace_oficial'];break
+                                changes=dict(fixed,enlace_oficial=candidate['url']);ok=True
+                                proof.update(enlace_recuperado_desde=original['enlace_oficial'],http_origen=evidence.get('http_status'))
+                                evidence=proof;break
+                    if ok and changes.get('enlace_oficial'):
+                        canonical=retry_db(lambda:db.table('documentos_tributarios').select('id').eq('enlace_oficial',changes['enlace_oficial']).neq('id',original['id']).limit(1).execute()).data or []
+                        if canonical:
+                            result=retry_db(lambda:db.rpc('resolver_alias_documental',{'p_alias':original['id'],'p_canonico':canonical[0]['id'],'p_actualizado_en':original['updated_at'],'p_evidencia':evidence}).execute()).data
+                            if result.get('resuelto'):
+                                counts['alias_resueltos']+=1;counts['procesados']+=1;submit();continue
+                            # La otra ficha debe quedar contrastada antes de cerrar
+                            # el alias. No publicar dos registros de la misma URL.
+                            changes={};ok=False;evidence.update(reintentar=True,accion='esperar_validacion_canonica',errores=['Fuente recuperada; la ficha canónica todavía no tiene la misma validación completa'])
                     result=guardar(db,original,changes,ok,evidence)
                     if result.get('conflicto'):counts['conflictos']+=1
                     elif result.get('publicado'):counts['publicados']+=1

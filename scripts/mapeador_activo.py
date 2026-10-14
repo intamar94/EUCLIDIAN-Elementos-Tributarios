@@ -5,7 +5,7 @@ from urllib.parse import urljoin, urlsplit, urlunsplit
 from bs4 import BeautifulSoup
 from scraper import Scraper, INDICES, BASE
 from validar_fuentes_dian import FUENTES_RAIZ
-from fuente_documental import descargar
+from fuente_documental import descargar, canonica
 from boletines_dian import descubrir_publicaciones, registro_publicacion
 from adaptador_documental import retry_db, session, now
 from identidad_documental import identidad_desde_titulo
@@ -17,6 +17,7 @@ class Mapa(Scraper):
     def _extraer_documento(self,*args):
         record=super()._extraer_documento(*args)
         if record:
+            record['enlace_oficial']=canonica(record['enlace_oficial'])
             url=record['enlace_oficial'];old=self.por_url.get(url)
             if not old or len(record.get('contenido') or '')>len(old.get('contenido') or ''):self.por_url[url]=record
         return record
@@ -61,8 +62,11 @@ def run(db,ciclo,historico=False):
             except Exception as exc:errors.append({'fuente':'boletines','error':str(exc)[:350]})
         for key in ('indices_fallidos','partes_error','partes_404'):
             if mapper.stats[key]:errors.append({'fuente':key,'error':str(mapper.stats[key])})
-        existing=list(pages(db,'documentos_tributarios','id,numero_resolucion,enlace_oficial,contenido,titulo,temas,anio_publicacion'))
-        by_url={d['enlace_oficial']:d for d in existing};by_num={d['numero_resolucion']:d for d in existing}
+        existing=list(pages(db,'documentos_tributarios','id,numero_resolucion,enlace_oficial,contenido,titulo,temas,anio_publicacion,publicado_cliente'))
+        by_url={}
+        for d in sorted(existing,key=lambda r:(r['enlace_oficial']==canonica(r['enlace_oficial']),bool(r.get('publicado_cliente')))):
+            by_url[canonica(d['enlace_oficial'])]=d
+        by_num={d['numero_resolucion']:d for d in existing}
         registry=[]
         for record in records:
             url=record['enlace_oficial'];old=by_url.get(url);digest=fingerprint(record)
@@ -76,7 +80,9 @@ def run(db,ciclo,historico=False):
                     # Registrar la colisión para resolverla, nunca sobrescribir.
                     registry.append({'url':url,'numero_resolucion':record['numero_resolucion'],'raiz':FUENTES_RAIZ['tributario'],'indice':record.get('notas_verificacion'),'huella':digest,'registro':record,'visto_en':now(),'ciclo_id':ciclo})
                     continue
-            root=FUENTES_RAIZ['novedades_boletines' if record['tipo_documento']=='boletin' else 'tributario']
+            import re
+            provenance=re.search(r'raiz: (https://[^ |]+)',str(record.get('notas_verificacion') or ''))
+            root=provenance[1] if provenance and provenance[1] in FUENTES_RAIZ.values() else FUENTES_RAIZ['tributario']
             canonical=old['numero_resolucion'] if old else record['numero_resolucion']
             registry.append({'url':url,'numero_resolucion':canonical,'raiz':root,'indice':record.get('notas_verificacion'),'huella':digest,'registro':record,'visto_en':now(),'ciclo_id':ciclo})
             if old:

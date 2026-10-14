@@ -47,6 +47,11 @@ def run(db,limite=400,workers=4,historico=False):
     if opened.get('ocupado'):print('CICLO_OCUPADO',opened,flush=True);return {'ocupado':True}
     cycle=opened['ciclo_id'];results={};statuses=[]
     try:
+        # Compatibilidad de la primera ejecución: reabrir errores 404 previos
+        # a la clasificación HTTP para ejecutar el recuperador de alias.
+        retry_db(lambda:db.table('adaptaciones_documentales').update({'estado':'pendiente','accion':'recuperar_enlace_desde_mapa','proximo_intento':now()}).eq('estado','cuarentena').is_('evidencia->>http_status','null').like('motivo','404 Client Error:%').execute())
+        previous=retry_db(lambda:db.table('etapas_documentales').select('ciclo_id').eq('etapa','mapeo').in_('estado',['completo','parcial']).eq('resultado->>historico','true').limit(1).execute()).data or []
+        historico=historico or not previous
         status,result=stage(db,cycle,'mapeo',['--historico'] if historico else [],900)
         statuses.append(status);results['mapeo']=result
         # Una raíz temporalmente caída no paraliza las fuentes ya identificadas.
