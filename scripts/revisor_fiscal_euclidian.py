@@ -28,6 +28,7 @@ from scripts.verificador_aprobacion import verify
 from scripts.sintesis_literal import extraer_literal, literal_presente
 from scripts.lectores_dian import Lectores
 from scripts.extractor_estructura import ExtractorEstructura
+from scripts.inspector_euclidian import inspect_row
 from bs4 import BeautifulSoup
 
 RULES_VERSION = "4.2"
@@ -105,8 +106,14 @@ def evaluate(d: dict, source_verified: bool = False):
     rule("A_QUIEN", audience, "No está determinada la naturaleza que permite explicar a quién afecta.")
     rule("EVIDENCIA", source_verified, "La información crítica de la ficha no pudo corroborarse íntegramente contra la fuente oficial accesible.")
 
+    # La inspección guardada puede preceder a esta descarga. Se controlan
+    # también los datos actuales antes de intentar la publicación atómica.
+    criticals = [x["detalle"] for x in inspect_row(d, datetime.now(timezone.utc).date()) if x["nivel"] == "critico"]
+    if criticals:
+        rule("INTEGRIDAD_ACTUAL", False, " | ".join(criticals))
+
     result = "APPROVE" if not failed else "REVIEW"
-    score = max(0, round(len(passed) / 10 * 100))
+    score = max(0, round(len(passed) / (len(passed) + len(failed)) * 100))
     return result, score, passed, failed, reasons
 
 
