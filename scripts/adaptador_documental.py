@@ -252,7 +252,7 @@ def run(db,limite=200,workers=4,minutos=20,ciclo=None):
                 try:
                     _,changes,ok,evidence=future.result()
                     if not ok and evidence.get('http_status') in (404,410):
-                        candidates=retry_db(lambda:db.table('fuentes_dian_mapeadas').select('url,huella').in_('numero_resolucion',identificadores_alternos(original['numero_resolucion'])).limit(8).execute()).data or []
+                        candidates=retry_db(lambda:db.rpc('alternativas_fuente_documental',{'p_numero':original['numero_resolucion'],'p_url':original['enlace_oficial']}).execute()).data or []
                         for candidate in candidates:
                             if candidate['url']==original['enlace_oficial']:continue
                             alternative=dict(original,enlace_oficial=candidate['url'])

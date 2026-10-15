@@ -30,3 +30,13 @@ begin
 end; $$;
 revoke all on function public.reencolar_enlaces_recuperables() from public,anon,authenticated;
 grant execute on function public.reencolar_enlaces_recuperables() to service_role;
+
+-- Usa la misma identidad para reencolar y encontrar candidatos, incluso con ceros.
+create or replace function public.alternativas_fuente_documental(p_numero text,p_url text)
+returns table(url text,huella text) language sql stable security invoker set search_path=public,pg_temp as $$
+ select m.url,m.huella from public.fuentes_dian_mapeadas m
+ where public.clave_identidad_documental(m.numero_resolucion)=public.clave_identidad_documental(p_numero)
+ and m.url<>p_url order by m.visto_en desc,m.url limit 8;
+$$;
+revoke all on function public.alternativas_fuente_documental(text,text) from public,anon,authenticated;
+grant execute on function public.alternativas_fuente_documental(text,text) to service_role;
