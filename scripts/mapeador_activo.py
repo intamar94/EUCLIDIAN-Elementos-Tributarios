@@ -35,6 +35,16 @@ def pages(db,table,fields):
         if len(rows)<300:break
         last=rows[-1]['id']
 
+def indices_desde_raices(linked):
+    indices=list(INDICES);known={i for i,_ in indices}
+    for url in sorted(linked):
+        p=urlsplit(url)
+        if p.scheme!='https' or p.hostname!='normograma.dian.gov.co' or not p.path.startswith('/dian/compilacion/'):continue
+        name=p.path.rsplit('/',1)[-1].removesuffix('.html')
+        if name.startswith('nyb_novedades_') and name!='nyb_novedades_juridicas_portal_web_dian' and name not in known:
+            indices.append((name,'boletin'));known.add(name)
+    return indices
+
 def run(db,ciclo,historico=False):
     mapper=Mapa(historico);errors=[];roots={};linked=set()
     counts={'nuevos':0,'actualizados':0,'sin_cambio':0,'colisiones':0}
@@ -48,7 +58,8 @@ def run(db,ciclo,historico=False):
                     p=urlsplit(urljoin(final,a['href']))
                     linked.add(urlunsplit((p.scheme,p.netloc,p.path,'','')))
             except Exception as exc:errors.append({'fuente':url,'error':str(exc)[:350]})
-        for indice,categoria in INDICES:
+        indices=indices_desde_raices(linked)
+        for indice,categoria in indices:
             # Solo se recorren índices enlazados desde las raíces autorizadas.
             if urljoin(BASE,indice+'.html') not in linked:
                 errors.append({'fuente':indice,'error':'Índice no enlazado desde una raíz accesible'});continue
@@ -101,5 +112,6 @@ def run(db,ciclo,historico=False):
         for start in range(0,len(registry),100):
             batch=registry[start:start+100]
             retry_db(lambda:db.table('fuentes_dian_mapeadas').upsert(batch,on_conflict='url').execute())
-        return dict(counts,fuentes=len(records),historico=historico,errores=errors,estado='parcial' if errors else 'completo')
+        reopened=retry_db(lambda:db.rpc('reencolar_enlaces_recuperables',{}).execute()).data
+        return dict(counts,enlaces_reabiertos=reopened,fuentes=len(records),historico=historico,errores=errors,estado='parcial' if errors else 'completo')
     finally:mapper.s.close()
