@@ -1,7 +1,7 @@
 import {extractoDelCuerpo} from '../lib/extracto-literal.js';
 import { autorizarConsulta, registrarUsoConsulta } from '../lib/auth-server.js';
 // EUCLIDIAN — catálogo completo de documentos.
-// La vista cliente muestra todo el corpus; el estado fiscal se conserva como dato informativo.
+// La vista cliente entrega exclusivamente las versiones publicadas por la puerta documental.
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY;
 const CLAVE = process.env.EUCLIDIAN_CLAVE;
@@ -14,7 +14,7 @@ function filtroAnio(periodo){
   const op=/^\d{4}$/.test(periodo)?'eq':'gte';
   return `and=(or(anio_publicacion.${op}.${valor},and(anio_publicacion.is.null,anio.${op}.${valor})))`;
 }
-const ORDENES = { recientes:'fecha_publicacion.desc.nullslast,fecha_publicacion_web.desc.nullslast,numero_resolucion.desc', prioridad:'orden_prioridad.asc,fecha_publicacion.desc.nullslast,fecha_publicacion_web.desc.nullslast', antiguos:'fecha_publicacion.asc.nullslast,fecha_publicacion_web.asc.nullslast,numero_resolucion.asc' };
+const ORDENES = { recientes:'fecha_orden_documental.desc.nullslast,numero_resolucion.desc', prioridad:'orden_prioridad.asc,fecha_orden_documental.desc.nullslast,numero_resolucion.desc', antiguos:'fecha_orden_documental.asc.nullslast,numero_resolucion.asc' };
 // Solo columnas expuestas por v_bandeja. Los metadatos de verificación se derivan abajo.
 const CAMPOS = ['id','numero_resolucion','numero_interno','tipo_documento','contenido','descripcion_limpia','titulo','resumen_humano','resumen_borrador','enlace_oficial','materia','temas','fecha_publicacion','fecha_es_real','fecha_entrada_vigencia','fecha_publicacion_web','diario_oficial','entidad_emisora','estado_vigencia','motivo_cambio_estado','clasificacion_obligatoriedad','zonas_afectadas','plazos_mencionados','anotaciones_vigencia','tesis_juridica','tesis_respuesta','problema_juridico','fuentes_formales','descriptores','doctrina_citada','jurisprudencia_citada','modifica_a','modificado_por','anio','anio_publicacion','es_nuevo'].join(',');
 const FUENTES = {

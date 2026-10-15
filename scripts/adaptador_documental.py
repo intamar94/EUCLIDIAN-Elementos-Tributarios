@@ -42,6 +42,7 @@ def retry_db(operation):
         except Exception as exc:
             text=str(exc).lower()
             transient=any(s in text for s in ('504','503','502','429','gateway timeout','timeout','connection reset','server disconnected'))
+            if '57014' in text or 'statement timeout' in text:raise
             if not transient or attempt==2:raise
             time.sleep(2**attempt)
 
@@ -81,7 +82,9 @@ def adaptar(row,capture):
             clasificacion_obligatoriedad='orientativo',resumen_borrador=None,
             borrador_modelo=MODELO_LITERAL,plazos_mencionados=[],fuentes_formales=[],
             tesis_juridica=None,problema_juridico=None,tiene_efectos_retroactivos=False,anos_afectados=[])
-        d.update(resumen_humano=None,revisado_por_humano=False,fecha_entrada_vigencia=None,fecha_fin_vigencia=None)
+        d.update(resumen_humano=None,revisado_por_humano=False,fecha_entrada_vigencia=None,fecha_fin_vigencia=None,
+            fecha_publicacion=None,fecha_publicacion_web=None,fecha_es_real=False,zonas_afectadas=[],
+            doctrina_citada=[],jurisprudencia_citada=[],descriptores=[],tesis_respuesta=None)
         pending.append('La vigencia corresponde a cada acto citado, no al boletín informativo.')
         return d,pending
     if not identidad_documental_coincide(capture.texto,d):raise ValueError('El encabezado no corresponde al número y año de la ficha')
@@ -193,11 +196,45 @@ def guardar(db,row,changes,ok,evidence):
         'reglas_fallidas':[] if ok else ['ADAPTACION_PENDIENTE'],
         'motivos':evidence.get('errores',[]),'version_reglas':VERSION,'fuente_verificada':ok,'adaptacion':evidence}}).execute()).data
 
+# El texto anterior no se descarga desde la base: siempre se vuelve a
+# capturar de DIAN. Evita serializar megabytes de 1.000 fichas para elegir IDs.
+METADATA_FIELDS=','.join(('id','numero_resolucion','tipo_documento','subtipo','fecha_publicacion',
+ 'fecha_entrada_vigencia','fecha_fin_vigencia','titulo','contenido','resumen_humano','enlace_oficial',
+ 'clasificacion_obligatoriedad','tiene_efectos_retroactivos','anos_afectados','zonas_afectadas',
+ 'temas','estado_vigencia','motivo_cambio_estado','hash_contenido','revisado_por_humano',
+ 'publicado_cliente','notas_verificacion','updated_at','diario_oficial','entidad_emisora',
+ 'fecha_es_real','enriquecido_en','plazos_mencionados','anotaciones_vigencia','materia',
+ 'descripcion_limpia','clasificado_en','resumen_borrador','borrador_generado_en','borrador_modelo',
+ 'tesis_juridica','tesis_respuesta','problema_juridico','fuentes_formales','descriptores',
+ 'area_derecho','estructura_extraida_en','numero_interno','fecha_publicacion_web','banco_datos',
+ 'dependencia_emisora','doctrina_citada','jurisprudencia_citada','anio','precision_fecha',
+ 'anio_publicacion','fuente_verificacion_url','estado_fuente_verificacion','fuente_verificada_en'))
+
+def metadata_chunk(db,ids):
+    try:
+        return retry_db(lambda:db.table('documentos_tributarios').select(METADATA_FIELDS).in_('id',ids).execute()).data or []
+    except Exception as exc:
+        if len(ids)>1 and ('57014' in str(exc) or 'statement timeout' in str(exc).lower()):
+            middle=len(ids)//2
+            return metadata_chunk(db,ids[:middle])+metadata_chunk(db,ids[middle:])
+        raise
+
+def metadata_rows(db,ids):
+    for start in range(0,len(ids),20):
+        chunk=ids[start:start+20]
+        rows={r['id']:r for r in metadata_chunk(db,chunk)}
+        for id_ in chunk:
+            if id_ not in rows:continue # Borrado externo: no fabricar una ficha.
+            row=rows[id_]
+            row['texto_completo']=None # Se sustituye por la captura íntegra nueva.
+            yield row
+
 def run(db,limite=200,workers=4,minutos=20,ciclo=None):
-    rows=retry_db(lambda:db.rpc('cola_adaptacion_documental',{'p_limite':limite,'p_version':VERSION}).execute()).data or []
-    counts={'alias_resueltos':0,'seleccionados':len(rows),'publicados':0,'reintentar':0,'cuarentena':0,'conflictos':0,'errores_tecnicos':0,'procesados':0}
+    selected=retry_db(lambda:db.rpc('ids_cola_adaptacion_documental',{'p_limite':limite,'p_version':VERSION}).execute()).data or []
+    ids=[r['documento_id'] for r in selected]
+    counts={'alias_resueltos':0,'seleccionados':len(ids),'publicados':0,'reintentar':0,'cuarentena':0,'conflictos':0,'errores_tecnicos':0,'procesados':0}
     deadline=time.monotonic()+minutos*60
-    iterator=iter(rows)
+    iterator=iter(metadata_rows(db,ids))
     with ThreadPoolExecutor(max_workers=workers) as pool:
         futures={}
         def submit():

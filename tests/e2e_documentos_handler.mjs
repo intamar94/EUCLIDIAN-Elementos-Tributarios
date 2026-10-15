@@ -69,4 +69,13 @@ async function call({key='ci-euclidian-local',query={}}={}){
   console.log(`OK - última publicación visible de extremo a extremo: ${latest.numero_resolucion}, web ${latest.fecha_publicacion_web}`);
 }
 
-console.log('E2E handler documentos: 4/4 escenarios OK');
+{
+  const headers={apikey:process.env.SUPABASE_SERVICE_KEY,Authorization:`Bearer ${process.env.SUPABASE_SERVICE_KEY}`};
+  const raw=await fetch(`${process.env.SUPABASE_URL}/rest/v1/v_bandeja?select=id,numero_resolucion,fecha_orden_documental&publicado_cliente=is.true&order=fecha_orden_documental.desc.nullslast,numero_resolucion.desc&limit=1`,{headers});
+  assert.equal(raw.ok,true);const [latest]=await raw.json();assert.ok(latest);
+  const res=await call({query:{periodo:'todo',estado:'todos',orden:'recientes'}});
+  assert.equal(res.code,200);assert.equal(res.body.documentos[0]?.id,latest.id,'Lo más reciente debe ordenar por publicación DIAN, con fecha del acto como alternativa');
+  console.log(`OK - orden real de publicación: ${latest.numero_resolucion}, ${latest.fecha_orden_documental}`);
+}
+
+console.log('E2E handler documentos: 5/5 escenarios OK');
