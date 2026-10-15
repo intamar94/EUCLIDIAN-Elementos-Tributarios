@@ -19,6 +19,7 @@ Hay cuatro workflows. No se añaden revisores paralelos. Las rutas de aprobació
 ## Hallazgos corregidos
 
 - Varios escritores y cadenas dependientes de un inspector: sustituidos por dirección única, cola y latidos.
+- Omisión de novedades aduaneras, cambiarias e institucionales: el mapa descubre también esos índices cuando están enlazados desde la raíz oficial. Los enlaces 404/410 vuelven a la cola al aparecer una alternativa oficial nueva; las alternativas rechazadas conservan URL y huella para evitar ciclos repetidos sin cambios. La equivalencia numérica sirve únicamente para encontrar candidatos, que deben superar el contraste completo.
 - Mapeador solo diagnóstico: ahora persiste fuentes e ingresa cambios reales. La lista dinámica de boletines se lee desde el contexto y la API públicos de la página oficial.
 - Falsas colisiones por anclas y URLs antiguas con ceros: se normalizan las anclas; los alias se cierran solo contra una ficha canónica validada con la misma huella de fuente.
 - Lote de 1.000 fichas con texto que agotaba el tiempo de respuesta: la cola devuelve solo identificadores. Se leen metadatos en grupos de 20, sin descargar el texto anterior; los grupos se reducen si alcanzan el límite. La prioridad se mantiene al escribir en la cola. La selección real de 1.000 pendientes midió 114 ms, frente al timeout del lote anterior.
@@ -34,7 +35,9 @@ El mapa histórico terminó con 17.949 fuentes en esa ejecución, cero colisione
 
 Se contrastaron directamente 540 documentos de 2026 sin errores de acceso. Los documentos con publicación web más reciente identificada en esas fuentes son del 5 de octubre; entre ellos, el Oficio 16681. Su ficha está publicada con adaptación 5.0. Este alcance corresponde a las fuentes tributarias autorizadas; no afirma conocer cualquier publicación futura o ajena a esos índices.
 
-Las pruebas incluyen 57 regresiones Python, contratos de acceso, perfil, sesión, consulta, extractos, rutas retiradas y readiness. Las pruebas SQL transaccionales comprobaron exclusión, pérdida y recuperación de reserva, cierre sin etapas huérfanas, CAS, evidencia incompleta rechazada y alias vinculados a una ficha canónica publicada; los datos de prueba se revierten.
+El ciclo de producción 38660061920 terminó correctamente: 1.000 seleccionados y procesados, 998 publicados, 2 aislados y cero errores técnicos o conflictos. Al cerrar, había 1.742 publicados, 16.209 pendientes, 20 alias resueltos y 12 aislados, sobre 17.983 documentos. Estas cifras son una instantánea, no un certificado de todo el histórico.
+
+Las pruebas incluyen 58 regresiones Python, contratos de acceso, perfil, sesión, consulta, extractos, rutas retiradas y readiness. Las pruebas SQL transaccionales comprobaron exclusión, pérdida y recuperación de reserva, cierre sin etapas huérfanas, CAS, evidencia incompleta rechazada y alias vinculados a una ficha canónica publicada; los datos de prueba se revierten.
 
 Producción respondió 200 en salud y 401 al intentar consultar sin sesión. Las tablas operativas tienen RLS y permisos de servidor; las advertencias informativas de ausencia de políticas en tablas internas corresponden al cierre de acceso a anon/authenticated. No se habilitó lectura pública para silenciar esas advertencias.
 

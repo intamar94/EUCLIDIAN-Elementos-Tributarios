@@ -16,7 +16,7 @@ HTML=f'<html><head><title>Compilación Jurídica de la DIAN - Concepto 16898 de 
 CAP=extraer_contenido(HTML.encode(),URL)
 class AdaptacionTests(unittest.TestCase):
     def test_normalize_alias_only_as_candidate_not_source_proof(self):
-        self.assertEqual(a.identificadores_alternos('DIAN-OFICIO-016346-2026'),['DIAN-OFICIO-016346-2026','DIAN-OFICIO-16346-2026','DIAN-CONCEPTO-16346-2026'])
+        self.assertEqual(a.identificadores_alternos('DIAN-OFICIO-016346-2026'),['DIAN-OFICIO-016346-2026','DIAN-OFICIO-16346-2026','DIAN-CONCEPTO-16346-2026','DIAN-OF-16346-2026'])
         from fuente_documental import canonica
         self.assertEqual(canonica(URL+'#4'),URL)
         self.assertNotEqual(canonica(URL),canonica(URL.replace('_16898_','_016898_')))
@@ -114,6 +114,14 @@ class AdaptacionTests(unittest.TestCase):
         d,_=a.adaptar(row,Captura(pdf,'[Página 1] '+PARAGRAPH*2,'a'*64,'completo',1))
         self.assertIsNone(d['fecha_publicacion']);self.assertIsNone(d['fecha_publicacion_web']);self.assertFalse(d['fecha_es_real'])
         self.assertEqual(d['zonas_afectadas'],[]);self.assertEqual(d['clasificacion_obligatoriedad'],'orientativo')
+    def test_mapper_follows_all_legal_news_linked_by_authorized_root(self):
+        from mapeador_activo import indices_desde_raices
+        base='https://normograma.dian.gov.co/dian/compilacion/'
+        links={base+'nyb_novedades_derecho_aduanero.html',base+'nyb_novedades_derecho_cambiario.html',base+'nyb_novedades_asuntos_institucionales.html',base+'nyb_novedades_juridicas_portal_web_dian.html','https://external.example/dian/compilacion/nyb_novedades_falsa.html'}
+        actual={i for i,_ in indices_desde_raices(links)}
+        self.assertIn('nyb_novedades_derecho_aduanero',actual);self.assertIn('nyb_novedades_derecho_cambiario',actual)
+        self.assertIn('nyb_novedades_asuntos_institucionales',actual)
+        self.assertNotIn('nyb_novedades_juridicas_portal_web_dian',actual);self.assertNotIn('nyb_novedades_falsa',actual)
     def test_only_two_automatic_operational_workflows(self):
         w=Path(__file__).resolve().parents[1]/'.github/workflows'
         self.assertEqual({p.name for p in w.glob('*.yml')},{'ciclo_documental.yml','supervision_documental.yml','control_calidad.yml','enviar_boletin.yml'})

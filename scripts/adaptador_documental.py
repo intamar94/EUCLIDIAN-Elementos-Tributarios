@@ -180,7 +180,8 @@ def identificadores_alternos(numero):
     match=re.fullmatch(r'(DIAN-[A-Z_]+)-(\d+)-(\d{4})',numero)
     if not match:return [numero]
     prefixes=[match[1]]
-    if match[1] in ('DIAN-OFICIO','DIAN-CONCEPTO'):prefixes=['DIAN-OFICIO','DIAN-CONCEPTO']
+    if match[1] in ('DIAN-OFICIO','DIAN-CONCEPTO','DIAN-OF'):prefixes=['DIAN-OFICIO','DIAN-CONCEPTO','DIAN-OF']
+    if match[1] in ('DIAN-R','DIAN-RES','DIAN-RESOLUCION'):prefixes=['DIAN-RESOLUCION','DIAN-RES','DIAN-R']
     return list(dict.fromkeys([numero]+[f'{p}-{int(match[2])}-{match[3]}' for p in prefixes]))
 
 def guardar(db,row,changes,ok,evidence):
@@ -251,7 +252,7 @@ def run(db,limite=200,workers=4,minutos=20,ciclo=None):
                 try:
                     _,changes,ok,evidence=future.result()
                     if not ok and evidence.get('http_status') in (404,410):
-                        candidates=retry_db(lambda:db.table('fuentes_dian_mapeadas').select('url').in_('numero_resolucion',identificadores_alternos(original['numero_resolucion'])).limit(8).execute()).data or []
+                        candidates=retry_db(lambda:db.table('fuentes_dian_mapeadas').select('url,huella').in_('numero_resolucion',identificadores_alternos(original['numero_resolucion'])).limit(8).execute()).data or []
                         for candidate in candidates:
                             if candidate['url']==original['enlace_oficial']:continue
                             alternative=dict(original,enlace_oficial=candidate['url'])
@@ -260,6 +261,7 @@ def run(db,limite=200,workers=4,minutos=20,ciclo=None):
                                 changes=dict(fixed,enlace_oficial=candidate['url']);ok=True
                                 proof.update(enlace_recuperado_desde=original['enlace_oficial'],http_origen=evidence.get('http_status'))
                                 evidence=proof;break
+                            evidence.setdefault('alternativas_no_validas',[]).append({'url':candidate['url'],'huella_indice':candidate.get('huella'),'motivos':proof.get('errores',[])})
                     if ok and changes.get('enlace_oficial'):
                         canonical=retry_db(lambda:db.table('documentos_tributarios').select('id').eq('enlace_oficial',changes['enlace_oficial']).neq('id',original['id']).limit(1).execute()).data or []
                         if canonical:
