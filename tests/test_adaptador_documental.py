@@ -72,6 +72,48 @@ class AdaptacionTests(unittest.TestCase):
             with patch('supervision_documental.rpc',side_effect=[{'activo':False},allowed]):
                 self.assertEqual(supervision(Mock(),dispatch)['rescate'],allowed)
             self.assertEqual(dispatch.call_count,int(allowed))
+    def test_failed_dispatch_releases_rescue_reservation(self):
+        with patch('supervision_documental.rpc',side_effect=[{'activo':False},True,True]) as rpc:
+            with self.assertRaisesRegex(RuntimeError,'GitHub'):
+                supervision(Mock(),Mock(side_effect=RuntimeError('GitHub temporalmente no disponible')))
+        self.assertEqual(rpc.call_args.args[1],'liberar_rescate_documental')
+    def test_failed_process_launch_closes_stage_instead_of_leaving_it_running(self):
+        from direccion_documental import stage
+        db=Mock()
+        with patch('direccion_documental.subprocess.Popen',side_effect=OSError('No se pudo iniciar')):
+            state,result=stage(db,'cycle','mapeo',['--historico'],60)
+        self.assertEqual(state,'fallo');self.assertTrue(result['historico'])
+        self.assertIn('No se pudo iniciar',result['error'])
+        self.assertEqual(db.table.return_value.update.call_args.args[0]['estado'],'fallo')
+    def test_lost_lease_terminates_child_before_another_stage(self):
+        from direccion_documental import stage
+        child=Mock();child.poll.return_value=None;child.wait.return_value=0
+        with patch('direccion_documental.subprocess.Popen',return_value=child),patch('direccion_documental.rpc',return_value=False):
+            state,result=stage(Mock(),'cycle','adaptacion',[],60)
+        self.assertEqual(state,'fallo');self.assertIn('exclusión',result['error']);child.terminate.assert_called_once()
+    def test_loading_metadata_is_lazy_and_does_not_request_old_body(self):
+        ids=[str(i) for i in range(100)]
+        with patch.object(a,'metadata_chunk',return_value=[{'id':i} for i in ids[:20]]) as load:
+            iterator=a.metadata_rows(Mock(),ids)
+            first=[next(iterator) for _ in range(4)]
+        self.assertEqual(load.call_count,1)
+        self.assertEqual([r['id'] for r in first],ids[:4])
+        self.assertTrue(all(r['texto_completo'] is None for r in first))
+        self.assertNotIn('texto_completo',a.METADATA_FIELDS.split(','))
+    def test_statement_timeout_reduces_batch_instead_of_repeating_same_request(self):
+        db=Mock()
+        op=db.table.return_value.select.return_value.in_.return_value.execute
+        op.side_effect=[Exception('57014 canceling statement due to statement timeout'),SimpleNamespace(data=[{'id':'1'}]),SimpleNamespace(data=[{'id':'2'}])]
+        self.assertEqual(a.metadata_chunk(db,['1','2']),[{'id':'1'},{'id':'2'}])
+        self.assertEqual(op.call_count,3)
+    def test_bulletin_period_is_not_reused_as_publication_date_or_legal_claim(self):
+        from fuente_documental import Captura
+        pdf='https://www.dian.gov.co/normatividad/Publicaciones-Juridicas/BoletinesTributarios/01_Enero.pdf'
+        row=dict(ROW,tipo_documento='boletin',enlace_oficial=pdf,fecha_publicacion='2026-01-01',fecha_publicacion_web='2026-02-01',fecha_es_real=True,
+            notas_verificacion='Procedencia DIAN | raiz: https://normograma.dian.gov.co/dian/compilacion/novedades_boletines.html | indice: https://www.dian.gov.co/normatividad/Publicaciones-Juridicas/Paginas/BoletinesTributarios.aspx',zonas_afectadas=['Bogotá'])
+        d,_=a.adaptar(row,Captura(pdf,'[Página 1] '+PARAGRAPH*2,'a'*64,'completo',1))
+        self.assertIsNone(d['fecha_publicacion']);self.assertIsNone(d['fecha_publicacion_web']);self.assertFalse(d['fecha_es_real'])
+        self.assertEqual(d['zonas_afectadas'],[]);self.assertEqual(d['clasificacion_obligatoriedad'],'orientativo')
     def test_only_two_automatic_operational_workflows(self):
         w=Path(__file__).resolve().parents[1]/'.github/workflows'
         self.assertEqual({p.name for p in w.glob('*.yml')},{'ciclo_documental.yml','supervision_documental.yml','control_calidad.yml','enviar_boletin.yml'})

@@ -79,16 +79,7 @@ function fichaBoletin(d){
 ficha = function(d){
   if(d.tipo_documento==='boletin')return fichaBoletin(d);
   const html=fichaBaseEUCLIDIAN(d).replace('Ver texto de la DIAN','Descripción del índice DIAN');
-  return html.replace('</article>',`${bloqueTextoFuente(d)}${window.euclidianPuedeRevisar?bloqueAcciones(d):''}</article>`);
+  return html.replace('</article>',`${bloqueTextoFuente(d)}</article>`);
 };
-
-function bloqueAcciones(d){
-  const id=String(d.id??'');
-  if(!id)return '';
-  const attr=esc(id);
-  const texto=esc(d.resumen_humano||d.resumen_borrador||'');
-  return `<section class="revision-editor" aria-label="Revisión humana"><label for="r-${attr}">Síntesis clara para el usuario</label><textarea id="r-${attr}" maxlength="4000" rows="5" oninput="contar(this.id.slice(2))">${texto}</textarea><div class="revision-ayuda">Separa esta síntesis del texto literal de la DIAN. La revisión humana puede corregirla antes de publicarla.</div><button type="button" data-review-save="${attr}">Guardar síntesis</button><div class="revision-acciones"><button type="button" data-review-decision="aprobar" data-review-id="${attr}">Aprobar y publicar ficha</button><button type="button" class="secundario" data-review-decision="descartar" data-review-id="${attr}">Descartar ficha</button></div></section>`;
-}
-if(!window.__euclidianReviewActions){window.__euclidianReviewActions=true;document.addEventListener('click',e=>{const save=e.target.closest('[data-review-save]');if(save){guardarResumen(save.dataset.reviewSave);return;}const decision=e.target.closest('[data-review-decision]');if(decision)decidir(decision.dataset.reviewId,decision.dataset.reviewDecision);});}
 
 if(!window.__euclidianCopyReference){window.__euclidianCopyReference=true;document.addEventListener('click',async e=>{const b=e.target.closest('[data-copy-ref]');if(!b)return;const texto=b.dataset.copyRef||'';if(!texto)return;const anterior=b.querySelector('span')?.textContent||'Copiar referencia';try{if(navigator.clipboard&&window.isSecureContext){await navigator.clipboard.writeText(texto);}else{const t=document.createElement('textarea');t.value=texto;t.setAttribute('readonly','');t.style.position='fixed';t.style.opacity='0';document.body.appendChild(t);t.select();document.execCommand('copy');t.remove();}const s=b.querySelector('span');if(s)s.textContent='Referencia copiada';b.classList.add('copiado');setTimeout(()=>{if(s)s.textContent=anterior;b.classList.remove('copiado');},1800);}catch(_){const s=b.querySelector('span');if(s)s.textContent='No se pudo copiar';setTimeout(()=>{if(s)s.textContent=anterior;},1800);}});}

@@ -62,6 +62,7 @@ jobs:
         run: |
           node tests/e2e_consulta_contract.mjs
           node tests/extracto_literal_contract.mjs
+          node tests/retired_routes_contract.mjs
       - name: Contrato determinista de Auth y entitlement
         run: |
           node tests/auth_flow_contract.mjs

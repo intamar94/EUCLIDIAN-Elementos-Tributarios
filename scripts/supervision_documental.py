@@ -7,7 +7,10 @@ def run(db,dispatch):
     state=rpc(db,'estado_direccion_documental')
     if state.get('activo'):return {'estado':'activo','rescate':False}
     if not rpc(db,'reservar_rescate_documental'):return {'estado':'sin_rescate_necesario','rescate':False}
-    dispatch()
+    try:dispatch()
+    except Exception:
+        rpc(db,'liberar_rescate_documental')
+        raise
     return {'estado':'rescate_solicitado','rescate':True}
 
 def dispatch():

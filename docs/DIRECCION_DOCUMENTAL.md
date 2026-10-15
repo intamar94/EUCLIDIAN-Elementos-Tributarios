@@ -45,3 +45,10 @@ Las regresiones de adaptación incluyen normalización de anclajes y candidatos 
 El histórico tributario no expone los PDF en enlaces HTML: su lista SharePoint está agrupada y colapsada. El mapeador deriva el identificador de la lista y su carpeta del contexto publicado en la página oficial y consulta su API pública, con paginación restringida a esa lista. El año del grupo documental se conserva como año, sin convertir `Modified` en fecha de publicación. La lectura real pasó de 99 PDF a 207 publicaciones únicas, sin brechas detectadas en los índices recorridos. Se incorporan al mismo ciclo y a la misma puerta documental.
 
 El mapa histórico parcial se reintenta automáticamente hasta terminar; el resultado de una etapa fallida también conserva que era histórica. Los lotes admiten hasta 1.000 documentos, conservando cuatro lectores y un presupuesto de 20 minutos; lo no iniciado permanece en cola. Las 51 regresiones incluyen extracción de lista derivada, rechazo de paginación externa y filtrado de archivos ajenos a la carpeta oficial.
+
+
+## Segunda auditoría de arquitectura
+
+Se retiran también las rutas y controles antiguos de aprobación manual. La consulta adopta un orden común por publicación web acreditada o fecha real del acto, con el año como criterio de orden cuando falta el día. La vigencia desconocida no genera una urgencia ficticia. El cierre del ciclo interrumpe las etapas huérfanas y un dispatch de recuperación fallido libera su reserva.
+
+La prueba de lote ampliado detectó un timeout al serializar 1.000 textos anteriores desde la base. El ejecutor ahora solicita solo IDs, carga metadatos de 20 en 20 y captura el texto nuevamente desde DIAN. Los grupos se reducen automáticamente ante un timeout de sentencia. La prioridad se mantiene en la cola mediante los triggers de ingreso y cambio. La selección de 1.000 pendientes midió 114 ms. Las regresiones pasan a 57.

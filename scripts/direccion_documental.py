@@ -20,9 +20,10 @@ def stage(db,cycle,name,args,timeout):
     retry_db(lambda:db.table('etapas_documentales').insert({'ciclo_id':cycle,'etapa':name,'estado':'en_curso'}).execute())
     with tempfile.TemporaryDirectory(prefix='euclidian-') as tmp:
         target=Path(tmp)/'resultado.json'
-        proc=subprocess.Popen([sys.executable,str(Path(__file__).resolve()),'--etapa',name,'--ciclo',cycle,'--resultado',str(target),*args],cwd=ROOT)
+        proc=None
         started=time.monotonic()
         try:
+            proc=subprocess.Popen([sys.executable,str(Path(__file__).resolve()),'--etapa',name,'--ciclo',cycle,'--resultado',str(target),*args],cwd=ROOT)
             while proc.poll() is None:
                 try:proc.wait(timeout=25)
                 except subprocess.TimeoutExpired:pass
@@ -33,9 +34,10 @@ def stage(db,cycle,name,args,timeout):
             status=result.get('estado','completo')
             if result.get('errores_tecnicos'):status='parcial'
         except Exception as exc:
-            proc.terminate()
-            try:proc.wait(timeout=10)
-            except subprocess.TimeoutExpired:proc.kill();proc.wait()
+            if proc is not None:
+                proc.terminate()
+                try:proc.wait(timeout=10)
+                except subprocess.TimeoutExpired:proc.kill();proc.wait()
             result={'error':str(exc)[:1000]};status='fallo'
     if name=='mapeo':result['historico']='--historico' in args
     retry_db(lambda:db.table('etapas_documentales').update({'estado':status,'finalizado_en':now(),'resultado':result}).eq('ciclo_id',cycle).eq('etapa',name).execute())
