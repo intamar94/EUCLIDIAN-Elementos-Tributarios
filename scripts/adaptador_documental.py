@@ -27,6 +27,7 @@ from lectores_dian import Lectores
 from enriquecedor_fechas_v2 import EnriquecedorFechasV2, DEPARTAMENTOS
 from inspector_euclidian import inspect_row, trusted_bulletin
 from identidad_documental import identidad_desde_titulo
+from cabecera_dian import cabecera_oficial
 from verificador_aprobacion import identidad_documental_coincide, norm
 from sintesis_literal import extraer_literal, MODELO_LITERAL, comparable
 from retroactividad_dian import explicit_retroactivity
@@ -93,8 +94,9 @@ def adaptar(row,capture):
         d.update(identidad_desde_titulo(soup.title.get_text(' ',strip=True),d['numero_resolucion']))
     # El encabezado aporta tipo e identidad; ninguna categoría viene de un
     # nombre de archivo heredado que pudiera estar mal clasificado.
-    header=re.search(r'\b(concepto|oficio|resolucion|circular|comunicado|decreto|ley|sentencia)\s+(?:numero\s+|no\.?\s+)?0*(\d+)\s+de\s+(\d{4})',norm(capture.texto)[:2000])
-    if header:d['tipo_documento']=header[1]
+    header=cabecera_oficial(capture.texto)
+    if header:
+        d['tipo_documento']=header[0]
     d['clasificacion_obligatoriedad']=(
         'obligatorio_dian_y_contribuyentes' if d['tipo_documento'] in ('ley','decreto','resolucion')
         else 'obligatorio_dian_solo' if d['tipo_documento'] in ('concepto','oficio')
