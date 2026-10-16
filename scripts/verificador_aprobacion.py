@@ -5,6 +5,7 @@ import requests
 from bs4 import BeautifulSoup
 from supabase import create_client
 from validar_fuentes_dian import FUENTES_RAIZ, TIMEOUT
+from cabecera_dian import cabecera_oficial
 
 log = logging.getLogger("euclidian.aprobacion")
 logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
@@ -18,12 +19,13 @@ _index_lock=threading.Lock()
 def norm(s):
     s=unicodedata.normalize("NFKD",str(s or "")).encode("ascii","ignore").decode().lower();return re.sub(r"\s+"," ",s).strip()
 
-def identidad_documental_coincide(source_text,doc):
-    ident=re.search(r"-(\d+)-((?:19|20)\d{2})$",str(doc.get("numero_resolucion") or ""))
-    # Se contrasta la primera identificación del encabezado, no una cita
-    # posterior ni el año aislado (2026 aparece en miles de documentos).
-    header=re.search(r"\b(?:concepto|oficio|resolucion|circular|comunicado|decreto|ley|sentencia|acuerdo)(?:\s+(?:numero|no\.?))?\s+(\d+)\s+de\s+((?:19|20)\d{2})\b",norm(source_text)[:2000])
-    return bool(ident and header and (int(ident[1]),ident[2])==(int(header[1]),header[2]))
+def identidad_documental_coincide(source_text, doc):
+    ident = re.search(r"-(\d+)-((?:19|20)\d{2})$", str(doc.get("numero_resolucion") or ""))
+    # El título SEO puede referirse a otro número. La primera cabecera del
+    # cuerpo oficial prevalece, pero las citas posteriores no validan una ficha.
+    header = cabecera_oficial(source_text)
+    return bool(ident and header and (int(ident[1]), ident[2]) == (header[1], header[2]))
+
 def words(s):return {x for x in re.findall(r"[a-z0-9]{4,}",norm(s)) if x not in STOP}
 def date_candidates(value):
     s=str(value or "").strip();out={norm(s)} if s else set();m=re.fullmatch(r"(\d{4})-(\d{2})-(\d{2})",s)
