@@ -56,7 +56,7 @@ function bloqueEstadoClave(d){
 function bloqueAccionesLectura(d){
   const fuente=enlaceDianSeguro(d.enlace_oficial);
   const referencia=[d.numero_resolucion,tituloFicha(d),fechaDocumentoConfiable(d)?fechaLarga(d.fecha_publicacion):''].filter(Boolean).join(' · ');
-  return `<div class="ficha-acciones-lectura" aria-label="Acciones del documento">${fuente?`<a class="accion-documento primaria" href="${esc(fuente)}" target="_blank" rel="noopener noreferrer"><span>Fuente DIAN</span><b aria-hidden="true">↗</b></a>`:''}<button type="button" class="accion-documento secundaria" data-copy-ref="${esc(referencia)}"><span>Copiar referencia</span><b aria-hidden="true">⧉</b></button></div>`;
+  return `<div class="ficha-acciones-lectura" aria-label="Acciones del documento">${fuente?`<a class="accion-documento primaria" href="${esc(fuente)}" target="_blank" rel="noopener noreferrer"><span>Fuente DIAN</span><b aria-hidden="true">↗</b></a>`:''}<button type="button" class="accion-documento secundaria" data-copy-ref="${esc(referencia)}"><span>Copiar referencia</span><b aria-hidden="true">⧉</b></button>${window.euclidianBotonGuardar?.(d)||''}</div>`;
 }
 function resumenResultado(d){
   const texto=String(d.resumen_humano||d.resumen_borrador||d.descripcion_limpia||d.contenido||'').replace(/^Extracto literal DIAN: /,'').replace(/\s+/g,' ').trim();
