@@ -72,3 +72,69 @@ section[id]{scroll-margin-top:96px}
 .precio-plan strong{font:600 clamp(32px,5vw,46px)/1.2 'Spectral',Georgia,serif;color:var(--ink)}
 .plan-incluye{padding-left:20px;color:var(--ink);font-size:14px;line-height:1.8}.preguntas{max-width:800px;margin:44px auto 0}.preguntas h3{font:600 28px 'Spectral',Georgia,serif}.preguntas details{border-top:1px solid var(--line);padding:15px 0}.preguntas summary{cursor:pointer;font-weight:600;min-height:32px}.preguntas p{color:var(--muted);line-height:1.7;max-width:70ch}.preguntas summary:focus-visible{outline:3px solid var(--red);outline-offset:4px}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{animation:none!important;transition:none!important}}
+
+
+/* Refinamiento comercial: secciones de lectura frente a acciones reales */
+:root{--warm-pending:#8a612a;--warm-pending-bg:#faf6eb;--trust-blue:#315d77}
+.como-funciona{padding:26px 0 78px}
+.como-funciona .suscripcion-pasos{margin-left:60px;grid-template-columns:repeat(3,minmax(0,1fr));gap:35px;align-items:start;align-content:start}
+.como-funciona .suscripcion-pasos>div{position:relative;gap:13px;align-items:flex-start;padding-top:10px;border-top:2px solid #b8c8bb}
+.como-funciona .suscripcion-pasos>div>span{width:32px;height:32px;flex:0 0 32px;border:0;border-radius:0;background:transparent;color:var(--blue);font-size:12px}
+.como-funciona .suscripcion-pasos strong{font-size:15px}
+.preguntas{width:min(calc(100% - 32px),var(--max));max-width:var(--max);margin:0 auto;padding:24px 0 78px}
+.preguntas-lista{max-width:860px;margin-left:60px;border-bottom:1px solid var(--line)}
+.preguntas details{border-top:1px solid var(--line);padding:0;background:transparent}
+.preguntas summary{display:flex;align-items:center;justify-content:space-between;gap:24px;min-height:60px;padding:17px 5px;list-style:none;cursor:pointer;font-size:16px;color:#25372b}
+.preguntas summary::-webkit-details-marker{display:none}
+.preguntas summary::after{content:'+';flex:0 0 25px;text-align:center;font:400 24px/1 'IBM Plex Sans',sans-serif;color:var(--blue)}
+.preguntas details[open] summary::after{content:'−'}
+.preguntas summary:hover{color:var(--green)}
+.preguntas details p{max-width:70ch;padding:0 35px 19px 5px;margin:0;color:#526156;font-size:14px;line-height:1.7}
+.suscripcion{padding:22px 0 75px;border-top:1px solid #d7dfd4}
+.suscripcion-contenido{display:block;margin-left:60px;max-width:1000px}
+.suscripcion-estado{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:38px;background:#e8eee7;border-color:#cbd6cc;padding:32px 36px;border-radius:12px}
+.suscripcion-estado .plan-cabecera{min-width:0}
+.suscripcion-estado .plan-detalles{min-width:0;border-left:1px solid #c6d3c7;padding-left:34px}
+.suscripcion-estado h3{font-size:clamp(28px,3vw,37px);margin:12px 0 14px}
+.suscripcion-estado .precio-plan{color:#3f5244;margin:0 0 17px}
+.suscripcion-estado .precio-intro{font-size:14px;color:#405c49;line-height:1.65;margin:0}
+.suscripcion-estado .disponibilidad{display:inline-block;padding:4px 0;color:#6c5430;font-size:11px;line-height:1.4}
+.suscripcion-estado .plan-detalles h4{margin:0 0 12px;color:#294536;font:600 17px 'IBM Plex Sans',sans-serif}
+.suscripcion-estado .plan-detalles p{font-size:13px;color:#526658}
+.plan-incluye{padding-left:20px;margin:0 0 18px;font-size:14px;line-height:1.65;color:#283c30}
+.plan-incluye li{padding-left:2px;margin-bottom:9px}
+.suscripcion-cierre{max-width:1000px;margin:24px 0 0 60px;padding:36px 38px 40px;background:#203a2b;color:#f7faf6;border-radius:12px}
+.suscripcion-cierre .eyebrow{color:#c6dacb}
+.suscripcion-cierre h3{max-width:740px;font:600 clamp(27px,3vw,39px)/1.15 'Spectral',Georgia,serif;margin:10px 0 12px;letter-spacing:-.025em}
+.suscripcion-cierre p{max-width:680px;margin:0;color:#d5e0d7;font-size:14px;line-height:1.65}
+.cierre-acciones{display:flex;flex-wrap:wrap;align-items:center;gap:22px;margin-top:25px}
+.cierre-acciones .primary{background:#fbfaf5;border:1px solid #fbfaf5;color:#203a2b;min-height:48px}
+.cierre-acciones .primary:hover{background:#deede1;border-color:#deede1}
+.cierre-entrar{color:#e0ede3;font-size:13px;font-weight:600;text-underline-offset:4px}
+.cierre-entrar:hover{color:#fff}
+.mini-estado>span{background:var(--warm-pending-bg);border-left:3px solid #bb914f;padding:6px 9px;color:#6c583e}
+.mini-estado b{color:#755222}
+.mini-tema{border:0;border-bottom:1px solid #cad6ca;border-radius:0;background:transparent}
+.mini-tema b{color:#315d77}
+@media(max-width:900px){
+  .como-funciona .suscripcion-pasos,.preguntas-lista,.suscripcion-contenido,.suscripcion-cierre{margin-left:0}
+  .como-funciona .suscripcion-pasos{gap:19px}
+  .suscripcion-estado{gap:20px;padding:28px}
+  .suscripcion-estado .plan-detalles{padding-left:22px}
+}
+@media(max-width:620px){
+  .como-funciona{padding:14px 0 58px}
+  .como-funciona .suscripcion-pasos{grid-template-columns:1fr;gap:22px}
+  .como-funciona .suscripcion-pasos>div{padding-top:12px}
+  .preguntas{width:min(calc(100% - 24px),var(--max));padding:12px 0 58px}
+  .preguntas summary{font-size:15px;line-height:1.4;min-height:60px;padding:15px 4px}
+  .preguntas details p{font-size:14px;padding:0 14px 17px 4px}
+  .suscripcion{padding:25px 0 50px}
+  .suscripcion-estado{grid-template-columns:1fr;gap:24px;padding:24px 22px}
+  .suscripcion-estado .plan-detalles{padding:22px 0 0;border-left:0;border-top:1px solid #c6d3c7}
+  .suscripcion-cierre{margin-top:16px;padding:27px 23px 30px}
+  .suscripcion-cierre h3{font-size:30px}
+  .cierre-acciones{display:grid;grid-template-columns:1fr;gap:16px}
+  .cierre-acciones .primary{width:100%;justify-content:center;text-align:center;padding:12px;min-height:52px}
+  .cierre-entrar{text-align:center;padding:8px 0;min-height:44px}
+}

@@ -252,3 +252,42 @@ article:after{content:"";position:absolute;width:54px;height:54px;right:-29px;to
 .ayuda-consulta{font:400 13px/1.6 'IBM Plex Sans',sans-serif;color:#536357;max-width:80ch}
 .volver-portada{display:inline-block;margin:12px 0;color:#284e38;font:500 14px/1.5 'IBM Plex Sans',sans-serif}
 @media(max-width:620px){.estado-clave{grid-template-columns:1fr}.fechas-documento{font-size:13px}}
+
+
+/* Jerarquía visual: estado = información, botón = acción, detalle = desplegable.
+   No se usa únicamente el color para comunicar el significado. */
+.estado-clave{gap:10px;margin:6px 0 17px}
+.estado-clave-item{position:relative;align-items:flex-start;gap:9px;min-width:0;min-height:55px;padding:11px 12px;border:0;border-left:3px solid #a9b8ae;border-radius:2px;background:#f1f3ef;box-shadow:none;cursor:default}
+.estado-clave-item small{margin-bottom:4px;font-size:10px;letter-spacing:.1em;color:#536358}
+.estado-clave-item strong{font-size:13px;line-height:1.4;font-weight:600;color:#2c4035}
+.estado-figura{width:20px;height:20px;flex:0 0 20px;border:0;border-radius:0;color:inherit;font-size:15px}
+.estado-clave-item.estado-vigencia.pendiente{background:#f9f5eb;border-left-color:#b38a46;color:#795a28}
+.estado-clave-item.estado-vigencia.pendiente small{color:#785f3a}
+.estado-clave-item.estado-vigencia.ok{background:#edf3ed;border-left-color:#4d7857;color:#315c3e}
+.estado-clave-item.estado-vigencia.alerta{background:#faf0ed;border-left-color:#a84a41;color:#8b3c34}
+.estado-clave-item.estado-evidencia.ok{background:#ecf3f7;border-left-color:#43728d;color:#315d77}
+.estado-clave-item.estado-evidencia.orienta{background:#f1f5f7;border-left-color:#7292a5;color:#315d77}
+.estado-clave-item.estado-evidencia.pendiente{background:#f2f4f3;border-left-color:#84968a;color:#5c6a60}
+.ficha-acciones-lectura{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:center;gap:9px;margin:0 0 12px}
+.accion-documento{min-width:0;min-height:46px;white-space:normal;text-align:center}
+.accion-documento.primaria{border-radius:6px;background:#203a2b;border-color:#203a2b;color:#fff}
+.accion-documento.secundaria{border-radius:6px;background:#fffefa;border-color:#bdcac0;color:#324c3b}
+.accion-documento.secundaria:hover{background:#edf4ee;border-color:#789480}
+.ficha-acciones-lectura .guardar-documento{grid-column:1/-1;justify-self:start;width:auto;min-height:44px;padding:9px 2px;background:transparent;border:0!important;border-radius:0;text-decoration:underline;text-underline-offset:4px;color:#315d77;font-weight:500}
+.ficha-acciones-lectura .guardar-documento:hover{background:transparent;color:#194a67;text-decoration-thickness:2px}
+.ficha-acciones-lectura .guardar-documento[aria-pressed="true"]{background:transparent;color:#2a6144}
+.ficha-acciones-lectura .guardar-documento::before{content:'+';display:inline-block;margin-right:3px;font:600 17px/1 'IBM Plex Mono',monospace;text-decoration:none}
+.ficha-acciones-lectura .guardar-documento[aria-pressed="true"]::before{content:'✓'}
+.detalle-resultado{margin-top:5px;padding-top:11px;border-top:1px solid #d6dcd6}
+.detalle-resultado>summary{display:flex;align-items:center;justify-content:space-between;gap:12px;list-style:none;min-height:48px;padding:10px 1px;color:#315d77;font-size:14px;font-weight:600}
+.detalle-resultado>summary::-webkit-details-marker{display:none}
+.detalle-resultado>summary::after{content:'⌄';font:500 24px/1 'IBM Plex Sans',sans-serif;transform:translateY(-3px);color:#315d77}
+.detalle-resultado[open]>summary::after{transform:rotate(180deg) translateY(-3px)}
+.detalle-resultado>summary:hover{color:#1a4b68;text-decoration:underline;text-underline-offset:4px}
+@media(max-width:620px){
+  .estado-clave{grid-template-columns:1fr;gap:8px;margin-bottom:13px}
+  .estado-clave-item{min-height:52px;padding:10px 12px}
+  .estado-clave-item strong{font-size:13px}
+  .ficha-acciones-lectura{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .ficha-acciones-lectura .guardar-documento{min-height:44px}
+}
