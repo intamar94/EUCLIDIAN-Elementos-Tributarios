@@ -88,6 +88,16 @@ function authRecuperacionDesdeHash(){
   authMostrarPuerta();authStatus('Enlace verificado. Define tu nueva contraseña.','ok');
   return true;
 }
+
+window.euclidianCuentaInterna=(interno)=>{
+  for(const id of ['cuentaEmail','cuentaPlan','cuentaPeriodo','cuentaUso']){
+    const el=document.getElementById(id);const fila=el?.closest?.('.cuenta-dato');if(fila)fila.hidden=interno;
+  }
+  const recuperar=document.getElementById('cuentaRecuperar');if(recuperar)recuperar.hidden=interno;
+  const descripcion=document.getElementById('cuentaDescripcion');if(descripcion)descripcion.textContent=interno?'Acceso personal de administración. No requiere una suscripción de cliente.':'Tu perfil y tu suscripción.';
+  if(interno){document.getElementById('suscripcionOferta').hidden=true;document.getElementById('cuentaGestionarPago').hidden=true;}
+};
+
 function renderPlanesCuenta(payload,access){
   const oferta=document.getElementById('suscripcionOferta');
   const cont=document.getElementById('planesDisponibles');
@@ -117,7 +127,7 @@ function renderPlanesCuenta(payload,access){
     cont.append(art);
   }
   const nota=document.getElementById('suscripcionNota');
-  if(nota)nota.textContent=payload?.billing_enabled?'Suscripción mensual con renovación automática. Podrás gestionar la cancelación desde tu cuenta. El acceso se activa al confirmar el pago.':'La contratación en línea aún no está disponible. Te mostraremos las condiciones completas antes de que puedas suscribirte.';
+  if(nota)nota.textContent=payload?.billing_enabled?'Suscripción mensual con renovación automática. Podrás gestionar la cancelación desde tu cuenta. El acceso se activa al confirmar el pago.':'La contratación en línea aún no está disponible. Precio propuesto para Colombia: $29.900 COP al mes por usuario. Antes de contratar se confirmarán impuestos aplicables, consultas incluidas, renovación y cancelación. No se realizará ningún cobro.';
 }
 async function authCobro(body,boton){
   if(boton)boton.disabled=true;
@@ -150,6 +160,7 @@ async function authCuenta(){
     if(generacion!==authGeneracion)return null;
     const gestionar=document.getElementById('cuentaGestionarPago');if(gestionar)gestionar.hidden=!(planes.billing_enabled&&data.access?.plan_codigo);
     const panel=document.getElementById('cuentaPanel');
+    window.euclidianCuentaInterna(false);
     document.getElementById('cuentaEmail').textContent=data.user?.email||'—';
     document.getElementById('cuentaEstado').textContent=data.access?.permitido?'Activo':String(data.access?.estado||'Pendiente').replaceAll('_',' ');
     document.getElementById('cuentaPlan').textContent=data.access?.plan_codigo||'Sin plan activo';

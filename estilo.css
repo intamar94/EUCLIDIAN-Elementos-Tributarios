@@ -277,3 +277,10 @@ a:hover{text-decoration-color:var(--tinta)}
   .menu{flex:1 1 100%}
   .menu-panel{position:static;max-height:none;box-shadow:none;margin-top:5px}
 }
+
+/* Acceso y controles: estados legibles sin mostrar formularios durante restauración. */
+.restaurando-sesion{padding:3rem 1.5rem;text-align:center;color:var(--tenue)}
+[hidden]{display:none!important}
+button,a,input,select,summary{touch-action:manipulation}
+button:focus-visible,a:focus-visible,summary:focus-visible{outline:3px solid #86433a;outline-offset:4px}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;transition-duration:.01ms!important}}

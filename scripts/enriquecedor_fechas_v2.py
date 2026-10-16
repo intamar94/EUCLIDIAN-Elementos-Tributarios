@@ -195,7 +195,7 @@ class EnriquecedorFechasV2:
             (rf"\(\s*{mes}\s+(\d{{1,2}})(?:\s+de\s+((?:19|20)\d{{2}}))?\s*\)","mes_dia"),
             (rf"\(\s*(\d{{1,2}})\s+(?:de\s+)?{mes}(?:\s+de\s+((?:19|20)\d{{2}}))?\s*\)","dia_mes"),
             (rf"\b(\d{{1,2}})\s+de\s+{mes}\s+de\s+((?:19|20)\d{{2}})\b","dia_mes"),
-            (rf"\bde\s+{mes}\s+(\d{{1,2}})\s+de\s+((?:19|20)\d{{2}})\b","mes_dia"),
+            (rf"(?:^|\n)\s*(?:de\s+)?{mes}\s+(\d{{1,2}})\s+de\s+((?:19|20)\d{{2}})\b","mes_dia"),
             (rf"\b{mes}\s+(\d{{1,2}})/(\d{{2}})\b","mes_dia_corto"),
         ]
         for patron,orden in patrones:

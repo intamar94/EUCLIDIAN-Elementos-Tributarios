@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /scripts/
+Disallow: /tests/
+Disallow: /sql/
+Disallow: /docs/
+
+Sitemap: https://euclidian-elementos-tributarios.vercel.app/sitemap.xml

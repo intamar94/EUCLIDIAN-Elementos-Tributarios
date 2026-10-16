@@ -32,7 +32,7 @@ from sintesis_literal import extraer_literal, MODELO_LITERAL, comparable
 from retroactividad_dian import explicit_retroactivity
 from plazos_dian import complete_deadlines
 
-VERSION='5.0'
+VERSION='5.1'
 
 def now():return datetime.now(timezone.utc).isoformat()
 

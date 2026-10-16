@@ -29,3 +29,16 @@ class FechasDocumentoTests(unittest.TestCase):
 
         self.assertEqual(str(fecha), "1995-07-04")
 
+
+    def test_historical_month_first_header(self):
+        for month in ['Agosto', 'AGOSTO', 'agosto']:
+            text = f'CONCEPTO 016681 DE 1988\n{month} 26 de 1988\nDETERMINACION DE LA SANCION'
+            self.assertEqual(str(self.lector._fecha_documento(text, 'DIAN-CONCEPTO_TRIBUTARIO-16681-1988')), '1988-08-26')
+
+    def test_does_not_use_cited_or_conflicting_month_first_date(self):
+        for text in [
+            'CONCEPTO 016681 DE 1988\nAgosto 26 de 1987',
+            'CONCEPTO 016681 DE 1988\nSe cita el oficio de Agosto 26 de 1988',
+            'CONCEPTO 016681 DE 1988\nFebrero 31 de 1988',
+        ]:
+            self.assertIsNone(self.lector._fecha_documento(text, 'DIAN-CONCEPTO_TRIBUTARIO-16681-1988'))

@@ -18,7 +18,9 @@
 </head>
 <body>
 <a class="saltar-contenido" href="#lista">Ir a los documentos</a>
-<div id="puerta">
+<p id="restaurandoSesion" role="status" class="restaurando-sesion">Preparando tu acceso…</p>
+<noscript>Necesitas activar JavaScript para consultar EUCLIDIAN.</noscript>
+<div id="puerta" hidden>
   <div class="auth-caja">
     <img class="ilustracion" src="/euclides.png" alt="Euclides explica a sus discípulos" width="1400" height="770">
     <a class="volver-portada" href="/">← Volver a la portada</a>
@@ -116,7 +118,7 @@
 
 <section class="cuenta-panel marco" hidden id="cuentaPanel" aria-labelledby="cuentaTitulo">
   <div class="cuenta-cabecera">
-    <div class="titulo-consulta"><span class="seccion-numero" aria-hidden="true">03</span><div><span class="seccion-kicker">CUENTA</span><h2 id="cuentaTitulo">Tu acceso a EUCLIDIAN</h2><p>Tu perfil y tu suscripción.</p></div></div>
+    <div class="titulo-consulta"><span class="seccion-numero" aria-hidden="true">03</span><div><span class="seccion-kicker">CUENTA</span><h2 id="cuentaTitulo">Tu acceso a EUCLIDIAN</h2><p id="cuentaDescripcion">Tu perfil y tu suscripción.</p></div></div>
     <button type="button" class="accion-textual" id="cerrarCuenta">Cerrar</button>
   </div>
   <div class="cuenta-grid">

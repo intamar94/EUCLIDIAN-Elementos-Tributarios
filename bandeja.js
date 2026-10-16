@@ -21,6 +21,9 @@ function estadoCarga(activo,mensaje='Ordenando la información…'){
     if(texto)texto.textContent=mensaje;
   }
   if(lista)lista.setAttribute('aria-busy',activo?'true':'false');
+  if(activo){
+    for(const id of ['estadoConsulta','rango']){const el=document.getElementById(id);if(el)el.textContent='Cargando resultados…';}
+  }
 }
 function liberarCarga(){estadoCarga(false);const btn=document.getElementById('btnRecargar');if(btn)btn.disabled=false;}
 function marcarNavegacion(id){
@@ -118,7 +121,8 @@ function configurarNavegacion(){
     mostrarVista('cuenta');
     if(!CLAVE&&window.euclidianTieneSesion?.()){await window.euclidianMostrarCuenta?.();return;}
     document.getElementById('cuentaEmail').textContent='Acceso interno';document.getElementById('cuentaEstado').textContent='Interno';
-    ['cuentaPlan','cuentaPeriodo','cuentaUso'].forEach(id=>document.getElementById(id).textContent='—');document.getElementById('perfilForm').hidden=true;
+    window.euclidianCuentaInterna?.(true);
+    document.getElementById('perfilForm').hidden=true;
   });
   document.getElementById('inicioDocumentos')?.addEventListener('click',e=>{const btn=e.target.closest('[data-inicio-doc]');if(!btn)return;reiniciarFiltros();F.doc=btn.dataset.inicioDoc;mostrarVista('consultar');cargar().catch(()=>{});});
   document.getElementById('inicioNovedades')?.addEventListener('click',e=>{if(e.target.closest('button'))abrirNovedades();});
@@ -187,6 +191,7 @@ async function cargar(autenticar=false){
     return data;
   }catch(e){
     if(generacion!==generacionCarga)return null;
+    for(const id of ['estadoConsulta','rango']){const el=document.getElementById(id);if(el)el.textContent='Consulta no completada';}
     if(e.name==='AbortError')e=new Error('El servidor tardó demasiado en responder. Inténtalo de nuevo.');
     if(autenticar){if(lista)lista.innerHTML='';throw e;}
     if(document.getElementById('puerta')?.hidden===true){if(vistaActual==='inicio')document.getElementById('inicioDocumentos').innerHTML=vistaError(e.message);else if(lista)lista.innerHTML=vistaError(e.message);}
@@ -204,7 +209,7 @@ function poblarTemas(temas){
 
 function poblarAnios(anios){const sel=document.getElementById('selAnio');if(!sel)return;const actual=/^\d{4}$/.test(F.periodo)?F.periodo:'';sel.innerHTML='<option value="">Todos los años</option>'+anios.filter(x=>Number.isInteger(x.anio)&&x.anio>=1950&&x.anio<=new Date().getFullYear()+1).map(x=>`<option value="${x.anio}">${x.anio} · ${Number(x.total||0).toLocaleString('es-CO')}</option>`).join('');sel.value=actual;}
 function seleccionarAnio(anio){F.periodo=anio||'todo';F.pagina=1;marcarActivos();cargar().catch(()=>{});}
-function paginacion(data){const cont=document.getElementById('paginas'),{pagina,paginas,total,porPagina}=data;if(total===0){cont.innerHTML='';const r=document.getElementById('rango');if(r)r.textContent=F.estado==='nuevos'?'0 publicaciones en los últimos 14 días':'0 resultados con estos filtros';return;}const primero=(pagina-1)*porPagina+1,ultimo=Math.min(pagina*porPagina,total),r=document.getElementById('rango');if(r)r.textContent=`${Number(total).toLocaleString('es-CO')} documentos disponibles · mostrando ${primero}–${ultimo}`;let html='';if(paginas>1){html+=`<button onclick="irA(${pagina-1})" ${pagina<=1?'disabled':''}>‹</button>`;const nums=new Set([1,paginas,pagina,pagina-1,pagina+1]),orden=[...nums].filter(n=>n>=1&&n<=paginas).sort((a,b)=>a-b);let previo=0;orden.forEach(n=>{if(n-previo>1)html+='<span style="color:var(--tenue)">…</span>';html+=`<button onclick="irA(${n})" aria-current="${n===pagina}">${n}</button>`;previo=n;});html+=`<button onclick="irA(${pagina+1})" ${pagina>=paginas?'disabled':''}>›</button>`;}cont.innerHTML=html;}
+function paginacion(data){const cont=document.getElementById('paginas'),{pagina,paginas,total,porPagina}=data;if(total===0){cont.innerHTML='';const r=document.getElementById('rango');if(r)r.textContent=F.estado==='nuevos'?'0 publicaciones en los últimos 14 días':'0 resultados con estos filtros';return;}const primero=(pagina-1)*porPagina+1,ultimo=Math.min(pagina*porPagina,total),r=document.getElementById('rango');if(r)r.textContent=`${Number(total).toLocaleString('es-CO')} documentos disponibles · mostrando ${primero}–${ultimo}`;let html='';if(paginas>1){html+=`<button aria-label="Página anterior" onclick="irA(${pagina-1})" ${pagina<=1?'disabled':''}>‹</button>`;const nums=new Set([1,paginas,pagina,pagina-1,pagina+1]),orden=[...nums].filter(n=>n>=1&&n<=paginas).sort((a,b)=>a-b);let previo=0;orden.forEach(n=>{if(n-previo>1)html+='<span style="color:var(--tenue)">…</span>';html+=`<button onclick="irA(${n})" aria-label="Página ${n}" aria-current="${n===pagina?'page':'false'}">${n}</button>`;previo=n;});html+=`<button aria-label="Página siguiente" onclick="irA(${pagina+1})" ${pagina>=paginas?'disabled':''}>›</button>`;}cont.innerHTML=html;}
 function irA(n){F.pagina=n;cargar().catch(()=>{});}
 
 function marcarActivos(){const n=[F.doc,F.q,F.tema,F.estado!=='todos'?F.estado:'',F.periodo!=='todo'?F.periodo:''].filter(Boolean).length;const btn=document.getElementById('btnLimpiar');if(btn)btn.hidden=n===0;}
@@ -212,7 +217,17 @@ function reiniciarFiltros(){F.orden='recientes';document.getElementById('selOrde
 function limpiar(){reiniciarFiltros();mostrarVista('consultar');return cargar();}
 document.getElementById('selAnio').addEventListener('change',e=>{dejarFicha();seleccionarAnio(e.target.value);});document.getElementById('selTema').addEventListener('change',e=>{dejarFicha();F.tema=e.target.value;F.pagina=1;cargar().catch(()=>{});});document.getElementById('selEstado').addEventListener('change',e=>{dejarFicha();F.estado=e.target.value;F.pagina=1;cargar().catch(()=>{});});document.getElementById('selOrden').addEventListener('change',e=>{dejarFicha();F.orden=e.target.value;F.pagina=1;cargar().catch(()=>{});});document.getElementById('formBuscar').addEventListener('submit',e=>{e.preventDefault();dejarFicha();F.q=document.getElementById('consulta').value.trim();F.pagina=1;cargar().catch(()=>{});});
 configurarNavegacion();
-if(!window.euclidianEnRecuperacion&&(CLAVE||window.euclidianTieneSesion?.()))cargar().catch(()=>{if(!CLAVE&&!window.euclidianTieneSesion?.())document.getElementById('puerta').hidden=false;});else document.getElementById('puerta').hidden=false;
+async function restaurarEntrada(){
+  const puerta=document.getElementById('puerta');
+  if(!window.euclidianEnRecuperacion&&(CLAVE||window.euclidianTieneSesion?.())){
+    try{await cargar();}catch(err){
+      puerta.hidden=false;
+      const mal=document.getElementById('mal');if(mal)mal.textContent=err.message||'No se pudo recuperar el acceso. Inténtalo de nuevo.';
+    }
+  }else puerta.hidden=false;
+  document.getElementById('restaurandoSesion')?.remove();
+}
+restaurarEntrada();
 
 if(!window.__euclidianRecoveryActions){window.__euclidianRecoveryActions=true;document.addEventListener('click',e=>{
   const accion=e.target.closest('[data-empty-action]');if(accion){const tipo=accion.dataset.emptyAction;if(tipo==='todo'){limpiar().catch(()=>{});return;}if(tipo==='explorar'){mostrarVista('explorar');return;}if(tipo==='nuevos'){abrirNovedades();return;}}
