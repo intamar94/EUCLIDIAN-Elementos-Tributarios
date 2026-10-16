@@ -47,8 +47,8 @@ function bloqueEstadoClave(d){
   const relaciones=((d.modificado_por||[]).length+(d.modifica_a||[]).length);
   const relacionTexto=relaciones?relaciones+' relación'+(relaciones===1?'':'es')+' normativa'+(relaciones===1?'':'s'):'Aún no hay relaciones identificadas en EUCLIDIAN';
   return `<div class="estado-clave" aria-label="Estado esencial del documento">
-    <div class="estado-clave-item ${vigenciaClase}"><span class="estado-figura" aria-hidden="true">${vigente?'○':desconocido?'◇':'×'}</span><div><small>Vigencia</small><strong>${esc(vigenciaTexto)}</strong></div></div>
-    <div class="estado-clave-item ${fuenteClase}"><span class="estado-figura" aria-hidden="true">${fuenteVerificada?'●':fuenteDisponible?'◐':'○'}</span><div><small>Evidencia</small><strong>${esc(fuenteTexto)}</strong></div></div>
+    <div class="estado-clave-item estado-vigencia ${vigenciaClase}"><span class="estado-figura" aria-hidden="true">${vigente?'○':desconocido?'◇':'×'}</span><div><small>Vigencia</small><strong>${esc(vigenciaTexto)}</strong></div></div>
+    <div class="estado-clave-item estado-evidencia ${fuenteClase}"><span class="estado-figura" aria-hidden="true">${fuenteVerificada?'●':fuenteDisponible?'◐':'○'}</span><div><small>Evidencia</small><strong>${esc(fuenteTexto)}</strong></div></div>
     <div class="estado-clave-item neutro contexto-detalle"><span class="estado-figura" aria-hidden="true">${relaciones?'⌁':'·'}</span><div><small>Contexto</small><strong>${esc(relacionTexto)}</strong></div></div>
   </div>`;
 }
