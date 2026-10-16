@@ -18,10 +18,24 @@ function authGuardar(data){
   authSet(AUTH_KEYS.expires,exp);
   return true;
 }
+// El plazo cubre tanto la conexión como la lectura del cuerpo de respuesta.
+async function authRespuesta(url,opciones={}){
+  const controller=new AbortController();let timer;
+  try{
+    return await Promise.race([
+      (async()=>{
+        const r=await fetch(url,{...opciones,signal:controller.signal});
+        const data=await r.json().catch(()=>({error:'respuesta_invalida'}));
+        return {r,data};
+      })(),
+      new Promise((_,reject)=>{timer=setTimeout(()=>{
+        controller.abort();reject(new Error('El servidor tardó demasiado en responder. Inténtalo de nuevo.'));
+      },15000);})
+    ]);
+  }finally{clearTimeout(timer);}
+}
 async function authPost(body){
-  const r=await fetch('/api/auth',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),cache:'no-store'});
-  const data=await r.json().catch(()=>({error:'respuesta_invalida'}));
-  return {r,data};
+  return authRespuesta('/api/auth',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),cache:'no-store'});
 }
 async function authToken(){
   let access=authGet(AUTH_KEYS.access);
@@ -109,8 +123,7 @@ async function authCobro(body,boton){
   if(boton)boton.disabled=true;
   try{
     const token=await authToken();if(!token)throw new Error('Vuelve a iniciar sesión.');
-    const r=await fetch('/api/checkout',{method:'POST',headers:{Authorization:`Bearer ${token}`,'Content-Type':'application/json'},body:JSON.stringify(body),cache:'no-store'});
-    const data=await r.json();
+    const {r,data}=await authRespuesta('/api/checkout',{method:'POST',headers:{Authorization:`Bearer ${token}`,'Content-Type':'application/json'},body:JSON.stringify(body),cache:'no-store'});
     if(!r.ok)throw new Error(data.error==='checkout_en_preparacion'?'Tu compra se está preparando. Intenta de nuevo en un minuto.':data.error==='pago_pendiente_confirmacion'?'Tu pago está pendiente de confirmación. Actualiza el acceso en unos momentos.':'La gestión de pagos no está disponible en este momento.');
     const destino=new URL(data.url);if(destino.protocol!=='https:'||!['checkout.stripe.com','billing.stripe.com'].includes(destino.hostname))throw new Error('Destino de pago inválido.');
     location.assign(destino.href);
@@ -119,37 +132,41 @@ async function authCobro(body,boton){
 }
 async function authCuenta(){
   const generacion=authGeneracion;
-  const token=await authToken();if(!token){authMostrarPuerta();return null;}
-  const headers={Authorization:`Bearer ${token}`};
-  const [sessionRes,profileRes,usageRes,plansRes]=await Promise.all([
-    fetch('/api/session',{headers,cache:'no-store'}),
-    fetch('/api/profile',{headers,cache:'no-store'}),
-    fetch('/api/usage',{headers,cache:'no-store'}),
-    fetch('/api/plans',{headers,cache:'no-store'})
-  ]);
-  const data=await sessionRes.json().catch(()=>({}));
-  if(generacion!==authGeneracion)return null;
-  if(sessionRes.status===401){authClear();authMostrarPuerta();return null;}
-  if(!sessionRes.ok)return null;
-  const perfil=profileRes.ok?await profileRes.json().catch(()=>({})): {};
-  const uso=usageRes.ok?await usageRes.json().catch(()=>({})): {};
-  const planes=plansRes.ok?await plansRes.json().catch(()=>({planes:[]})):{planes:[]};
-  if(generacion!==authGeneracion)return null;
-  const gestionar=document.getElementById('cuentaGestionarPago');if(gestionar)gestionar.hidden=!(planes.billing_enabled&&data.access?.plan_codigo);
-  const panel=document.getElementById('cuentaPanel');
-  document.getElementById('cuentaEmail').textContent=data.user?.email||'—';
-  document.getElementById('cuentaEstado').textContent=data.access?.permitido?'Activo':String(data.access?.estado||'Pendiente').replaceAll('_',' ');
-  document.getElementById('cuentaPlan').textContent=data.access?.plan_codigo||'Sin plan activo';
-  const fin=data.access?.periodo_fin?new Date(data.access.periodo_fin):null;
-  document.getElementById('cuentaPeriodo').textContent=fin&&!Number.isNaN(fin.getTime())?fin.toLocaleDateString('es-CO'):'—';
-  const usoTexto=Number.isFinite(Number(uso.consultas_mes))?Number(uso.consultas_mes).toLocaleString('es-CO'):'—';
-  document.getElementById('cuentaUso').textContent=uso.limite_consultas_mensual?usoTexto+' / '+Number(uso.limite_consultas_mensual).toLocaleString('es-CO'):usoTexto;
-  const p=perfil.profile||{};
-  const nombre=document.getElementById('perfilNombre'),ciudad=document.getElementById('perfilCiudad'),form=document.getElementById('perfilForm');
-  if(nombre)nombre.value=p.nombre||'';if(ciudad)ciudad.value=p.ciudad||'';if(form)form.hidden=false;
-  renderPlanesCuenta(planes,data.access);
-  if(panel&&(!window.euclidianVistaActual||window.euclidianVistaActual==='cuenta')){panel.hidden=false;panel.scrollIntoView({behavior:'smooth',block:'start'});}
-  return data;
+  try{
+    const token=await authToken();if(!token){authMostrarPuerta();return null;}
+    const headers={Authorization:`Bearer ${token}`};
+    const [{r:sessionRes,data},{r:profileRes,data:perfilData},{r:usageRes,data:usoData},{r:plansRes,data:planesData}]=await Promise.all([
+      authRespuesta('/api/session',{headers,cache:'no-store'}),
+      authRespuesta('/api/profile',{headers,cache:'no-store'}),
+      authRespuesta('/api/usage',{headers,cache:'no-store'}),
+      authRespuesta('/api/plans',{headers,cache:'no-store'})
+    ]);
+    if(generacion!==authGeneracion)return null;
+    if(sessionRes.status===401){authClear();authMostrarPuerta();return null;}
+    if(!sessionRes.ok)throw new Error('No se pudo comprobar tu acceso. Inténtalo de nuevo.');
+    const perfil=profileRes.ok?perfilData:{};
+    const uso=usageRes.ok?usoData:{};
+    const planes=plansRes.ok?planesData:{planes:[]};
+    if(generacion!==authGeneracion)return null;
+    const gestionar=document.getElementById('cuentaGestionarPago');if(gestionar)gestionar.hidden=!(planes.billing_enabled&&data.access?.plan_codigo);
+    const panel=document.getElementById('cuentaPanel');
+    document.getElementById('cuentaEmail').textContent=data.user?.email||'—';
+    document.getElementById('cuentaEstado').textContent=data.access?.permitido?'Activo':String(data.access?.estado||'Pendiente').replaceAll('_',' ');
+    document.getElementById('cuentaPlan').textContent=data.access?.plan_codigo||'Sin plan activo';
+    const fin=data.access?.periodo_fin?new Date(data.access.periodo_fin):null;
+    document.getElementById('cuentaPeriodo').textContent=fin&&!Number.isNaN(fin.getTime())?fin.toLocaleDateString('es-CO'):'—';
+    const usoTexto=Number.isFinite(Number(uso.consultas_mes))?Number(uso.consultas_mes).toLocaleString('es-CO'):'—';
+    document.getElementById('cuentaUso').textContent=uso.limite_consultas_mensual?usoTexto+' / '+Number(uso.limite_consultas_mensual).toLocaleString('es-CO'):usoTexto;
+    const p=perfil.profile||{};
+    const nombre=document.getElementById('perfilNombre'),ciudad=document.getElementById('perfilCiudad'),form=document.getElementById('perfilForm');
+    if(nombre)nombre.value=p.nombre||'';if(ciudad)ciudad.value=p.ciudad||'';if(form)form.hidden=false;
+    renderPlanesCuenta(planes,data.access);
+    if(panel&&(!window.euclidianVistaActual||window.euclidianVistaActual==='cuenta')){panel.hidden=false;panel.scrollIntoView({behavior:'smooth',block:'start'});}
+    return data;
+  }catch(err){
+    if(generacion===authGeneracion){const estado=document.getElementById('cuentaEstado');if(estado)estado.textContent=err.message||'No se pudo cargar la cuenta. Inténtalo de nuevo.';}
+    return null;
+  }
 }
 window.euclidianAuthToken=authToken;
 window.euclidianTieneSesion=()=>!!(authGet(AUTH_KEYS.access)||authGet(AUTH_KEYS.refresh));
@@ -239,12 +256,11 @@ document.getElementById('perfilForm')?.addEventListener('submit',async e=>{
   if(btn)btn.disabled=true;if(estado)estado.textContent='Guardando…';
   try{
     const token=await authToken();if(!token)throw new Error('Sesión expirada.');
-    const r=await fetch('/api/profile',{
+    const {r,data}=await authRespuesta('/api/profile',{
       method:'PATCH',
       headers:{Authorization:`Bearer ${token}`,'Content-Type':'application/json'},
       body:JSON.stringify({nombre:document.getElementById('perfilNombre').value,ciudad:document.getElementById('perfilCiudad').value})
     });
-    const data=await r.json().catch(()=>({}));
     if(!r.ok)throw new Error(data.error||'No se pudo guardar el perfil.');
     if(estado)estado.textContent='Perfil guardado';
     setTimeout(()=>{if(estado)estado.textContent='';},1800);
