@@ -124,7 +124,6 @@ button:disabled{opacity:.55;cursor:wait}.error button,.aviso button{margin-top:1
   }
   .nav-item{min-width:0;min-height:54px;padding:6px 2px;flex-direction:column;justify-content:center;gap:3px;border-radius:9px;font-size:12px;text-align:center}
   .nav-glyph{width:auto;height:18px;font-size:16px}.nav-item.activo:after{display:none}.nav-item.activo{background:#e2ece4;color:#173e29}
-  #navSeguir{display:none}
   .carga-geometrica{bottom:calc(80px + env(safe-area-inset-bottom))}
 }
 
@@ -239,3 +238,17 @@ article:after{content:"";position:absolute;width:54px;height:54px;right:-29px;to
 .plan-candidato small{color:#728078;font:600 12px 'IBM Plex Mono',monospace;letter-spacing:.1em}.plan-candidato h4{margin:3px 0 4px;font:600 15px 'IBM Plex Sans',sans-serif}.plan-candidato p{margin:0;max-width:570px;color:#5c695f;font-size:12px;line-height:1.45}
 .plan-meta{flex:none;display:grid;gap:4px;text-align:right}.plan-meta span{color:#657168;font-size:12px}.plan-meta strong{color:#283f31;font-size:12px}.suscripcion-nota{margin:10px 0 0;color:#69746c;font-size:12px;line-height:1.45}
 @media(max-width:620px){.plan-candidato{display:grid}.plan-meta{text-align:left}}
+
+/* Resultados: resumen breve; evidencia y contenido completo al abrir detalles. */
+.fechas-documento{display:flex;flex-direction:column;gap:5px;margin:0 0 14px;font:400 13px/1.5 'IBM Plex Sans',sans-serif;color:#35483c;white-space:normal}
+.fechas-documento small{font-size:12px}
+.resumen-resultado{margin:0 0 16px;max-width:78ch}
+.resumen-resultado>span{font:600 12px/1.4 'IBM Plex Sans',sans-serif;color:#536357}
+.resumen-resultado p{margin:5px 0;font:400 16px/1.6 'IBM Plex Sans',sans-serif;overflow-wrap:anywhere}
+.estado-clave{grid-template-columns:repeat(2,minmax(0,1fr))}
+.contexto-detalle{display:none}
+.detalle-resultado{margin-top:16px;border-top:1px solid #d4d9d2;padding-top:12px}
+.detalle-resultado>summary{cursor:pointer;min-height:44px;padding:10px 0;font:500 14px/1.5 'IBM Plex Sans',sans-serif;color:#284e38}
+.ayuda-consulta{font:400 13px/1.6 'IBM Plex Sans',sans-serif;color:#536357;max-width:80ch}
+.volver-portada{display:inline-block;margin:12px 0;color:#284e38;font:500 14px/1.5 'IBM Plex Sans',sans-serif}
+@media(max-width:620px){.estado-clave{grid-template-columns:1fr}.fechas-documento{font-size:13px}}

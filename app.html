@@ -21,6 +21,7 @@
 <div id="puerta">
   <div class="auth-caja">
     <img class="ilustracion" src="/euclides.png" alt="Euclides explica a sus discípulos" width="1400" height="770">
+    <a class="volver-portada" href="/">← Volver a la portada</a>
     <div class="auth-identidad"><div class="marca">EUCL<em>i</em>DIAN</div><div class="sub">Elementos Tributarios</div></div>
 
     <div class="auth-tabs" role="tablist" aria-label="Acceso a EUCLIDIAN">
@@ -74,7 +75,6 @@
       <a href="#controles" class="nav-item"><span class="nav-glyph" aria-hidden="true">⌕</span>Consultar</a>
       <a href="#novedadesCab" class="nav-item"><span class="nav-glyph" aria-hidden="true">△</span>Novedades</a>
       <button type="button" class="nav-item nav-accion" id="navExplorar"><span class="nav-glyph" aria-hidden="true">◫</span>Explorar</button>
-      <button type="button" class="nav-item nav-accion" id="navSeguir"><span class="nav-glyph" aria-hidden="true">◎</span>Seguimientos</button>
       <button type="button" class="nav-item nav-accion" id="navCuenta"><span class="nav-glyph" aria-hidden="true">○</span>Cuenta</button>
     </nav>
     <button type="button" class="guia-reabrir" id="abrirGuia">Guía de inicio</button>
@@ -95,10 +95,10 @@
 <section class="inicio-panel marco" id="inicioPanel" hidden aria-labelledby="inicioTitulo" tabindex="-1">
   <div class="inicio-cab"><span class="seccion-kicker">TU BIBLIOTECA TRIBUTARIA</span><h1 id="inicioTitulo">Información para tu trabajo</h1><p id="inicioResumen" role="status">Preparando tu biblioteca…</p></div>
   <div id="inicioNovedades" class="inicio-novedades" hidden></div>
-  <h2 class="inicio-subtitulo">Documentos para consultar</h2>
+  <h2 class="inicio-subtitulo">Últimos documentos de la biblioteca</h2><p class="ayuda-consulta">Tres resultados del catálogo, ordenados por su fecha documental disponible. Para ver las publicaciones de los últimos 14 días, abre Novedades.</p>
   <div id="inicioDocumentos" class="inicio-documentos"></div>
 </section>
-<section class="novedades-cab marco" id="novedadesCab" hidden aria-labelledby="novedadesTitulo" tabindex="-1"><span class="seccion-kicker">NOVEDADES</span><h1 id="novedadesTitulo">Publicaciones recientes</h1><p>Últimos 14 días · documentos disponibles con fecha y fuente comprobables.</p></section>
+<section class="novedades-cab marco" id="novedadesCab" hidden aria-labelledby="novedadesTitulo" tabindex="-1"><span class="seccion-kicker">NOVEDADES</span><h1 id="novedadesTitulo">Publicaciones recientes</h1><p>Últimos 14 días según la publicación web DIAN o la fecha verificada del documento. Ambas fechas se muestran por separado; una publicación reciente puede corresponder a un documento anterior.</p></section>
 
 <section class="explorar marco" hidden id="explorar" aria-labelledby="explorarTitulo">
   <div class="explorar-cabecera">
@@ -108,7 +108,7 @@
   <div class="selector-temas">
     <label for="agregarTema">Añadir un tema</label>
     <select id="agregarTema" aria-describedby="ayudaTemas"><option value="">Elige un tema…</option></select>
-    <p id="ayudaTemas">Tu selección se guarda en este navegador.</p>
+    <p id="ayudaTemas">Tu selección se guarda en este navegador. Es un acceso rápido a documentos; no activa avisos ni se sincroniza entre dispositivos.</p>
   </div>
   <div id="estadoTemas" class="estado-temas solo-lectores" role="status" aria-live="polite"></div>
   <div class="explorar-temas temas-personales" id="explorarTemas" aria-label="Tus temas seleccionados"></div>
@@ -154,17 +154,18 @@
     <button type="submit">Buscar</button>
   </form>
   <div class="filtros-directos">
-    <label class="filtro" for="selAnio"><span>Año de referencia</span><select id="selAnio" title="Año de publicación; si no consta, año del documento"><option value="">Todos los años</option></select></label>
-    <label class="filtro" for="selTema"><span>Tema</span><select id="selTema"><option value="">Todos los temas</option></select></label>
+    <label class="filtro" for="selAnio"><span>Año de publicación o documento</span><select id="selAnio" aria-describedby="ayudaAnio"><option value="">Todos los años</option></select></label>
+    <label class="filtro" for="selTema"><span>Tema o publicación</span><select id="selTema"><option value="">Todos los temas</option></select></label>
     <label class="filtro" for="selEstado"><span>Vista</span><select id="selEstado"><option value="todos">Todos los documentos</option><option value="nuevos">Publicaciones DIAN recientes</option></select></label>
     <button type="button" class="limpiar" id="btnLimpiar" hidden onclick="limpiar()">Quitar filtros</button>
   </div>
+  <p class="ayuda-consulta" id="ayudaAnio">El filtro usa el año de publicación registrado; cuando falta, usa el año del documento. La ficha distingue la fecha del acto de su publicación web.</p>
   <p class="estado-consulta" id="estadoConsulta" role="status" aria-live="polite"></p>
 </section>
 
 <div class="barra marco" hidden id="barra">
   <span id="rango" aria-live="polite"></span>
-  <label>Ordenar <select id="selOrden"><option value="recientes">Lo más reciente</option><option value="prioridad">Relevancia práctica</option><option value="antiguos">Lo más antiguo</option></select></label>
+  <label>Ordenar <select id="selOrden"><option value="recientes">Lo más reciente</option><option value="prioridad" title="Prioridad registrada en el catálogo; no evalúa tu caso particular">Prioridad del catálogo</option><option value="antiguos">Lo más antiguo</option></select></label>
 </div>
 <main class="marco" id="lista" tabindex="-1" aria-label="Resultados de la consulta" aria-busy="false"></main>
 <nav class="paginas marco" id="paginas" aria-label="Páginas de resultados"></nav>

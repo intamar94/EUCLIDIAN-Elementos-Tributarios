@@ -79,12 +79,14 @@ function anioIdentificador(d){
    documento. Distingue la fecha propia del acto de la fecha en que la DIAN
    lo publicó en su web; ambas pueden ser relevantes y no son equivalentes. */
 function fechaPrincipal(d){
-  if (fechaDocumentoConfiable(d))
-    return `<span class="fecha-principal">Documento DIAN · ${fechaLarga(d.fecha_publicacion)}</span>`;
-  if (d.fecha_publicacion_web)
-    return `<span class="fecha-principal">Publicada por DIAN · ${fechaLarga(d.fecha_publicacion_web)}</span>`;
-  const anio=anioIdentificador(d)||d.anio_publicacion||d.anio||String(d.fecha_publicacion||'').slice(0,4);
-  return anio?`<span class="fecha-principal aproximada" title="La fecha exacta del acto no está verificada">Año del documento · ${esc(anio)}</span>`:'';
+  const fechas=[];
+  if(d.fecha_publicacion_web)fechas.push(`<span>Publicación web DIAN · <time datetime="${esc(String(d.fecha_publicacion_web).slice(0,10))}">${fechaLarga(d.fecha_publicacion_web)}</time></span>`);
+  if(fechaDocumentoConfiable(d))fechas.push(`<span>Fecha del documento · <time datetime="${esc(String(d.fecha_publicacion).slice(0,10))}">${fechaLarga(d.fecha_publicacion)}</time></span>`);
+  else {
+    const anio=anioIdentificador(d)||d.anio_publicacion||d.anio;
+    if(anio)fechas.push(`<span>Año del documento · ${esc(anio)} <small>(fecha exacta sin verificar)</small></span>`);
+  }
+  return fechas.length?`<span class="fecha-principal fechas-documento">${fechas.join('')}</span>`:'<span class="fecha-principal">Fechas sin verificar</span>';
 }
 
 function esc(s){

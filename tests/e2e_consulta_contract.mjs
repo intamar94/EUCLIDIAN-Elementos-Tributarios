@@ -32,7 +32,7 @@ const checks=[
  ['UI consulta API',nav.includes("fetch('/api/documentos?")],
  ['UI enlaza fuente DIAN',blocks.includes('enlace_oficial')&&blocks.includes('Abrir fuente DIAN')],
  ['UI muestra fuentes oficiales',blocks.includes('Fuentes oficiales')&&blocks.includes('Abrir documento oficial')],
- ['P3 navegación completa',['Inicio','Consultar','Novedades','Explorar','Seguimientos','Cuenta'].every(x=>html.includes(x))],
+ ['P3 navegación completa',['Inicio','Consultar','Novedades','Explorar','Cuenta'].every(x=>html.includes(x))],
  ['P3 carga accesible',html.includes('cargaGeometrica')&&nav.includes('estadoCarga(true')&&nav.includes('estadoCarga(false)')],
  ['P3 exploración funcional',html.includes('explorarTemas')&&nav.includes('renderExplorar(data)')],
  ['P3 acciones de ficha',blocks.includes('ficha-acciones-lectura')&&blocks.includes('data-copy-ref')],
@@ -49,7 +49,7 @@ const checks=[
  ['P4 service role no llega al navegador',!auth.includes('SUPABASE_SERVICE_KEY')&&!html.includes('SUPABASE_SERVICE_KEY')],
  ['P4 session endpoint',sessionApi.includes('verificarUsuario(req)')&&sessionApi.includes('estadoAcceso(user.id)')],
  ['P4 Auth API usa publicable',authApi.includes('SUPABASE_PUBLISHABLE_KEY')&&!authApi.includes('SUPABASE_SERVICE_KEY')],
- ['P4 perfil editable',html.includes('perfilForm')&&auth.includes("fetch('/api/profile'")&&profileApi.includes("['GET','PATCH']")],
+ ['P4 perfil editable',html.includes('perfilForm')&&auth.includes("authRespuesta('/api/profile'")&&profileApi.includes("['GET','PATCH']")],
  ['P4 ownership de perfil',profileApi.includes('verificarUsuario(req)')&&profileApi.includes('user.id')&&!profileApi.includes('req.body.user_id')],
  ['P5 uso mensual por usuario',usageApi.includes('verificarUsuario(req)')&&usageApi.includes('consultas_mes')&&html.includes('cuentaUso')],
  ['P5 telemetría sin texto de consulta',usageSql.includes('No almacena el texto')&&!usageSql.includes('query_text')&&!usageSql.includes('consulta_texto')]

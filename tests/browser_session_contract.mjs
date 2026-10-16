@@ -3,8 +3,8 @@ import vm from 'node:vm';
 import {readFile} from 'node:fs/promises';
 const storage=new Map(),events=new Map();
 const elementos=new Map();
-for(const id of ['lista','paginas','hoyLista','hoyResumen','cuentaEmail','perfilNombre','puerta','mal'])elementos.set(id,{hidden:false,textContent:'datos previos',value:'perfil anterior',dataset:{},replaceChildren(){this.textContent='';},addEventListener(){}});
-const ctx=vm.createContext({URL,URLSearchParams,Date,Number,String,Object,Promise,console,setTimeout,
+for(const id of ['lista','paginas','hoyLista','hoyResumen','cuentaEmail','cuentaEstado','perfilNombre','puerta','mal'])elementos.set(id,{hidden:false,textContent:'datos previos',value:'perfil anterior',dataset:{},replaceChildren(){this.textContent='';},addEventListener(){}});
+const ctx=vm.createContext({URL,URLSearchParams,Date,Number,String,Object,Promise,console,setTimeout,clearTimeout,AbortController,
   localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v),removeItem:k=>storage.delete(k)},
   document:{getElementById:id=>elementos.get(id)||null},location:{hash:'',pathname:'/app.html',search:''},
   history:{replaceState(){}},window:{addEventListener:(name,fn)=>events.set(name,fn)}});
@@ -27,3 +27,24 @@ ctx.fetch=async()=>{await espera;return {ok:true,status:200,json:async()=>({user
 const cuenta=ctx.window.euclidianMostrarCuenta();await new Promise(resolve=>setTimeout(resolve,0));
 ctx.window.euclidianAuthExpirada();liberarCuenta();assert.equal(await cuenta,null,'Una cuenta tardía no debe reabrir el panel tras cerrar sesión');
 console.log('Sesión navegador: refresh concurrente, logout durante refresh, limpieza y cierre entre pestañas OK');
+
+// Un servidor sin respuesta, o con cuerpo incompleto, debe liberar la UI y permitir reintentar.
+const timers=new Map();let timerId=0,signal;
+ctx.setTimeout=(fn,ms)=>{assert.equal(ms,15000);timers.set(++timerId,fn);return timerId;};
+ctx.clearTimeout=id=>timers.delete(id);
+storage.set('euclidian_access_token','vencido');storage.set('euclidian_refresh_token','refresh');storage.set('euclidian_expires_at','1');
+ctx.fetch=async(_url,options)=>{signal=options.signal;return new Promise(()=>{});};
+const refreshColgado=ctx.window.euclidianAuthToken();
+const refreshRechazado=assert.rejects(refreshColgado,/tardó demasiado/);
+[...timers.values()][0]();await refreshRechazado;
+assert.equal(signal.aborted,true);assert.equal(timers.size,0);
+ctx.fetch=async()=>({ok:true,json:async()=>({access_token:'recuperado',expires_in:3600})});
+assert.equal(await ctx.window.euclidianAuthToken(),'recuperado','El timeout debe liberar la renovación para reintentar');
+ctx.fetch=async()=>({ok:true,status:200,json:()=>new Promise(()=>{})});
+const cuentaColgada=ctx.window.euclidianMostrarCuenta();
+await new Promise(resolve=>setTimeout(resolve,0));
+for(const fn of [...timers.values()])fn();
+assert.equal(await cuentaColgada,null);
+assert.match(elementos.get('cuentaEstado').textContent,/tardó demasiado/);
+assert.equal(timers.size,0);
+console.log('Esperas acotadas: refresh sin respuesta, cuerpo de cuenta incompleto y recuperación posterior OK');

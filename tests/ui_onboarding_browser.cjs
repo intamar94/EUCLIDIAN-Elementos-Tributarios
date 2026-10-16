@@ -4,12 +4,12 @@ for(const width of [320,390,768,1440]){
  const browser=await chromium.launch({headless:true,...(process.env.CHROMIUM_PATH?{executablePath:process.env.CHROMIUM_PATH}:{}),args:['--no-sandbox','--disable-dev-shm-usage']});
  const context=await browser.newContext({viewport:{width,height:900},reducedMotion:'reduce'});const page=await context.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));
  await context.addInitScript(()=>{localStorage.setItem('euclidian_access_token','test-only');localStorage.setItem('euclidian_expires_at',String(Date.now()/1000+3600));});
- const doc={id:'11111111-1111-4111-8111-111111111111',numero_resolucion:'DIAN-TEST-1-2026',titulo:'Documento simulado para revisar la interfaz',tipo_documento:'resolucion',descripcion_limpia:'Ejemplo de prueba visual. No representa información tributaria real.',temas:['iva'],enlace_oficial:'https://normograma.dian.gov.co/dian/compilacion/tributario.html',consulta_documental:true,estado_vigencia:'desconocido',modifica_a:Array.from({length:7},(_,i)=>({numero:`Relación de prueba ${i+1}`,enlace:'https://normograma.dian.gov.co/dian/compilacion/tributario.html'}))};
+ const doc={id:'11111111-1111-4111-8111-111111111111',numero_resolucion:'DIAN-TEST-1-2026',titulo:'Documento simulado para revisar la interfaz',fecha_publicacion:'2026-09-18',fecha_es_real:true,fecha_publicacion_web:'2026-10-05',tipo_documento:'resolucion',descripcion_limpia:'Ejemplo de prueba visual. No representa información tributaria real.',temas:['iva'],enlace_oficial:'https://normograma.dian.gov.co/dian/compilacion/tributario.html',consulta_documental:true,estado_vigencia:'desconocido',modifica_a:Array.from({length:7},(_,i)=>({numero:`Relación de prueba ${i+1}`,enlace:'https://normograma.dian.gov.co/dian/compilacion/tributario.html'}))};
  let novedadesVacias=true,sinAcceso=false;
  await page.route('**/api/**',async route=>{const u=new URL(route.request().url());let body={};if(u.pathname==='/api/documentos'){
  if(sinAcceso){await route.fulfill({status:402,json:{access:{estado:'pendiente'}}});return;}
  const nuevos=u.searchParams.get('estado')==='nuevos',vacio=nuevos&&novedadesVacias;
- body=u.searchParams.get('resumen')?{total:novedadesVacias?0:42}:{documentos:vacio?[]:[doc],total:vacio?0:1,pagina:1,paginas:1,porPagina:25,temas:['iva','renta','retencion'],anios:[{anio:2026,total:1}]};
+ body=u.searchParams.get('resumen')?{total:novedadesVacias?0:42}:{documentos:vacio?[]:[doc],total:vacio?0:1,pagina:1,paginas:1,porPagina:25,temas:['iva','renta','retencion','doctriflash','boletin_tributario_historico'],anios:[{anio:2026,total:1}]};
  }else if(u.pathname==='/api/session')body={user:{id:'test-user',email:'prueba@example.com'},profile:{},access:{permitido:!sinAcceso,estado:sinAcceso?'pendiente':'activo',plan_codigo:'individual'}};else if(u.pathname==='/api/plans')body={planes:[],billing_enabled:false};else if(u.pathname==='/api/usage')body={};await route.fulfill({json:body});});
  const visible=async id=>page.locator('#'+id).isVisible();
  const loaded=async()=>page.waitForFunction(()=>document.querySelector('#lista').getAttribute('aria-busy')==='false');
@@ -18,21 +18,46 @@ for(const width of [320,390,768,1440]){
  for(let i=0;i<4;i++)await page.locator('#guiaSiguiente').click();await page.locator('#guiaSiguiente').click();await page.locator('#inicioPanel').waitFor({state:'visible'});
  assert.equal(await visible('lista'),false);assert.equal(await visible('controles'),false);assert.equal(await page.locator('.inicio-documento').count(),1);assert.match(await page.locator('.inicio-documento-extracto').textContent(),/Ejemplo de prueba/);assert.match(await page.locator('.inicio-documento-ref').textContent(),/2026/);
  await page.screenshot({path:`/tmp/euclidian-inicio-${width}.png`,fullPage:true});
- await page.locator('.inicio-documento').click();await loaded();assert.equal(await visible('controles'),true);assert.equal(await visible('inicioPanel'),false);await page.locator('.timeline-mas summary').click();assert.equal(await page.locator('.timeline-mas li').count(),2);
+ await page.locator('.inicio-documento').click();await loaded();assert.equal(await visible('controles'),true);assert.equal(await visible('inicioPanel'),false);assert.equal(await page.locator('#navSeguir').count(),0);assert.equal(await page.locator('.detalle-resultado').getAttribute('open'),null);assert.match(await page.locator('#lista .fechas-documento').innerText(),/Publicación web DIAN · 5 de octubre de 2026/);assert.match(await page.locator('#lista .fechas-documento').innerText(),/Fecha del documento · 18 de septiembre de 2026/);assert.equal(await page.locator('#lista a:visible').filter({hasText:'Fuente DIAN'}).count(),1);await page.screenshot({path:`/tmp/euclidian-resultado-${width}.png`,fullPage:true});await page.locator('.detalle-resultado > summary').click();await page.locator('.timeline-mas summary').click();assert.equal(await page.locator('.timeline-mas li').count(),2);
  await page.locator('#consulta').fill('prueba');await page.locator('#formBuscar button').click();await loaded();
  await page.locator('#navNovedades').click();await page.locator('#estadoVacioTitulo').waitFor({state:'visible'});await loaded();assert.equal(await visible('controles'),false);assert.equal(await visible('inicioPanel'),false);assert.equal(await visible('barra'),false);assert.equal(await visible('novedadesCab'),true);assert.equal(await page.locator('.estado-vacio:visible').count(),1);assert.equal(await page.locator('#consulta').inputValue(),'');assert.equal(await page.locator('body').innerText().then(t=>t.includes('El radar está tranquilo')),false);
  await page.screenshot({path:`/tmp/euclidian-novedades-${width}.png`,fullPage:true});
- await page.locator('#navExplorar').click();assert.equal(await visible('explorar'),true);assert.equal(await visible('lista'),false);assert.equal(await visible('novedadesCab'),false);assert.equal(await page.locator('.tema-personal').count(),0);await page.locator('#agregarTema').selectOption('iva');await page.locator('#agregarTema').selectOption('renta');assert.equal(await page.locator('.tema-personal').count(),2);assert.equal(await page.locator('#agregarTema option[value="iva"]').count(),0);await page.locator('[data-quitar-tema="renta"]').click();assert.equal(await page.locator('.tema-personal').count(),1);assert.equal(await page.locator('#agregarTema option[value="renta"]').count(),1);await page.screenshot({path:`/tmp/euclidian-temas-${width}.png`,fullPage:true});
+ await page.locator('#navExplorar').click();assert.equal(await visible('explorar'),true);assert.equal(await visible('lista'),false);assert.equal(await visible('novedadesCab'),false);assert.equal(await page.locator('.tema-personal').count(),0);assert.equal(await page.locator('#agregarTema option[value="doctriflash"]').count(),0);assert.equal(await page.locator('#agregarTema option[value="boletin_tributario_historico"]').count(),0);assert.equal(await page.locator('#selTema optgroup[label="Publicaciones DIAN"] option').count(),2);await page.locator('#agregarTema').selectOption('iva');await page.locator('#agregarTema').selectOption('renta');assert.equal(await page.locator('.tema-personal').count(),2);assert.equal(await page.locator('#agregarTema option[value="iva"]').count(),0);await page.locator('[data-quitar-tema="renta"]').click();assert.equal(await page.locator('.tema-personal').count(),1);assert.equal(await page.locator('#agregarTema option[value="renta"]').count(),1);await page.screenshot({path:`/tmp/euclidian-temas-${width}.png`,fullPage:true});
  await page.locator('[data-explora-tema="iva"]').click();await loaded();assert.equal(await visible('controles'),true);assert.equal(await visible('explorar'),false);assert.equal(await page.locator('#selTema').inputValue(),'iva');
  await page.locator('#navCuenta').click();await page.locator('#cuentaEmail').filter({hasText:'prueba@example.com'}).waitFor();assert.equal(await visible('cuentaPanel'),true);assert.equal(await visible('lista'),false);assert.equal(await visible('controles'),false);
  await page.locator('#navInicio').click();await loaded();assert.equal(await visible('inicioPanel'),true);assert.equal(await page.locator('#selTema').inputValue(),'');assert.equal(await visible('cuentaPanel'),false);
  novedadesVacias=false;await page.locator('#btnRecargar').click();await page.locator('#inicioNovedades button').filter({hasText:'42'}).waitFor();await page.locator('#inicioNovedades button').click();await loaded();assert.equal(await visible('novedadesCab'),true);assert.equal(await page.locator('#lista article').count(),1);
  await page.locator('#abrirGuia').click();assert.equal(await visible('bienvenida'),true);assert.equal(await visible('lista'),false);assert.equal(await page.locator('#guiaProgreso').textContent(),'Paso 1 de 5');await page.locator('#guiaDestino').click();await loaded();assert.equal(await visible('controles'),true);assert.equal(await visible('bienvenida'),false);
+ if(width===390){
+  let solicitudColgada;
+  await page.route('**/api/documentos?**',async route=>{solicitudColgada=route;});
+  await page.locator('#navConsultar').click();
+  await page.locator('#lista .estado-error').waitFor({state:'visible',timeout:20000});
+  assert.match(await page.locator('#lista').innerText(),/tardó demasiado/);
+  assert.equal(await page.locator('#lista').getAttribute('aria-busy'),'false');
+  assert.equal(await page.locator('#btnRecargar').isEnabled(),true);
+  assert.equal(await visible('cargaGeometrica'),false);
+  await page.unroute('**/api/documentos?**');
+  if(solicitudColgada)await solicitudColgada.abort().catch(()=>{});
+  await page.locator('[data-retry-load]').click();await loaded();
+  assert.equal(await page.locator('#lista article').count(),1);
+ }
  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,'Horizontal overflow '+width);
  await page.reload();await page.locator('#inicioPanel').waitFor({state:'visible'});assert.equal(await visible('bienvenida'),false);await page.locator('#navExplorar').click();assert.equal(await page.locator('.tema-personal').count(),1);assert.equal(await page.locator('[data-explora-tema="iva"]').count(),1);
  sinAcceso=true;await page.reload();await page.locator('#cuentaPanel').waitFor({state:'visible'});assert.equal(await visible('inicioPanel'),false);assert.equal(await visible('lista'),false);await page.locator('#navExplorar').click();assert.equal(await visible('explorar'),false);
  await page.evaluate(()=>window.euclidianAuthExpirada());assert.equal(await visible('inicioPanel'),false);assert.equal(await visible('lista'),false);assert.equal(await visible('puerta'),true);assert.equal(await page.locator('#inicioDocumentos').textContent(),'');
  if(width===390){sinAcceso=false;await page.evaluate(()=>{localStorage.removeItem('euclidian_temas_seleccionados_v2');localStorage.setItem('euclidian_temas_seguidos',JSON.stringify(['Retención','IVA']));});await page.reload();await page.locator('#inicioPanel').waitFor({state:'visible'});await page.locator('#navExplorar').click();assert.equal(await page.locator('.tema-personal').count(),2);assert.equal(await page.locator('[data-explora-tema="retencion"]').count(),1);}
+ if(width===390){
+  let authRequests=0;
+  await page.route('**/api/auth',async route=>{authRequests++;await route.abort();});
+  await page.evaluate(()=>{localStorage.setItem('euclidian_access_token','vencido');localStorage.setItem('euclidian_refresh_token','viejo');localStorage.setItem('euclidian_expires_at','1');});
+  const interna=page.waitForRequest(r=>r.url().includes('/api/documentos?')&&!r.url().includes('resumen=1'));
+  await page.evaluate(()=>window.euclidianEntrarInterno('clave-de-prueba'));
+  assert.equal((await interna).headers()['x-clave'],'clave-de-prueba');
+  assert.equal(authRequests,0,'La clave interna no debe esperar una renovación de cuenta');
+  await page.locator('#navCuenta').click();assert.equal(await page.locator('#cuentaEmail').textContent(),'Acceso interno');
+  await page.evaluate(()=>window.euclidianAuthExpirada());assert.equal(await visible('cargaGeometrica'),false);
+ }
  assert.deepEqual(errors,[]);console.log(`OK ${width}px: vistas excluyentes, guía, documentos, búsquedas, novedades vacías/con datos, temas, cuenta, logout y sin desbordamiento`);await browser.close();
 }
 })().catch(e=>{console.error(e);process.exit(1)});

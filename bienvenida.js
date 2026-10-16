@@ -3,9 +3,9 @@
   const pasos=[
     ['Consultar','Encuentra el documento que necesitas','En Consultar, escribe un número, una palabra o un tema. Usa los filtros de año y tema para acotar los resultados.','Ir a Consultar','navConsultar'],
     ['Novedades','Comprueba qué se publicó recientemente','Novedades reúne publicaciones de los últimos 14 días con fecha y fuente comprobables. Abre esta sección para verlas sin mezclar los filtros de tu búsqueda.','Ver novedades','navNovedades'],
-    ['Explorar','Entra por tu área de trabajo','En Explorar, añade temas desde el desplegable. Solo verás los que elijas, guardados en este navegador; puedes abrir sus documentos o quitarlos.','Explorar temas','navExplorar'],
-    ['Fichas','Lee la ficha y comprueba la fuente','Cada ficha separa descripción, vigencia y fuente DIAN. Abre sus detalles para revisar fechas y relaciones. Fuente contrastada no significa revisión humana; una ficha documental sin aprobación no ofrece conclusiones verificadas.','Ver documentos','navConsultar'],
-    ['Cuenta','Gestiona tu acceso','En Cuenta puedes ver tu suscripción, actualizar tu perfil o cerrar sesión. Si el cobro no está habilitado, crear una cuenta no activa el acceso. EUCLIDIAN apoya tu criterio profesional.','Abrir Cuenta','navCuenta']
+    ['Explorar','Entra por tu área de trabajo','En Explorar, añade temas desde el desplegable. Solo verás los que elijas, guardados en este navegador; puedes abrir sus documentos o quitarlos. Esta selección no activa avisos ni se sincroniza entre dispositivos.','Explorar temas','navExplorar'],
+    ['Fichas','Lee la ficha y comprueba la fuente','Cada resultado muestra su descripción, sus fechas y el estado de vigencia. Fuente contrastada significa que se cotejó el documento; enlace disponible solo indica que puedes abrirlo. En Ver detalles encontrarás identificación, relaciones y procedencia. Si solo hay datos de catálogo, consulta el original antes de aplicar un criterio.','Ver documentos','navConsultar'],
+    ['Cuenta','Gestiona tu acceso','En Cuenta puedes ver tu suscripción, actualizar tu perfil o cerrar sesión. La consulta requiere una suscripción activa; crear una cuenta por sí solo no la activa. EUCLIDIAN apoya tu criterio profesional.','Abrir Cuenta','navCuenta']
   ];
   const clave='euclidian_guia_inicio_v1';let paso=0,iniciada=false;
   const el=id=>document.getElementById(id);
