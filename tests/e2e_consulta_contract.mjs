@@ -18,7 +18,7 @@ const usageSql=fs.readFileSync('sql/medicion_uso_consultas_euclidian.sql','utf8'
 
 const checks=[
  ['SEO portada indexable',landing.includes('name="robots" content="index,follow"')&&landing.includes('name="description"')&&landing.includes('/app.html')],
- ['SEO demuestra valor sin prueba abierta',!/prueba gratuita|pruébalo gratis/i.test(landing)&&landing.includes('Fuente oficial')&&landing.includes('Vigencia visible')],
+ ['SEO demuestra valor sin prueba abierta',!/prueba gratuita|pruébalo gratis/i.test(landing)&&landing.includes('fuente oficial')&&landing.includes('Vigencia')&&landing.includes('Por confirmar')],
  ['SEO responsive',landingCss.includes('@media(max-width:620px)')&&landingCss.includes('prefers-reduced-motion')],
  ['entrada de consulta',html.includes('id="consulta"')&&html.includes('id="formBuscar"')],
  ['API fail-closed',api.includes('falta_configuracion')&&api.includes('autorizarConsulta(req)')],

@@ -249,7 +249,7 @@ document.getElementById('cuentaRecuperar')?.addEventListener('click',()=>{
 document.getElementById('cerrarCuenta')?.addEventListener('click',()=>{document.getElementById('cuentaPanel').hidden=true;window.euclidianCambiarVista?.('inicio');});
 document.getElementById('cuentaGestionarPago')?.addEventListener('click',e=>authCobro({action:'portal'},e.currentTarget));
 document.getElementById('cuentaActualizar')?.addEventListener('click',()=>window.cargar?.().catch(()=>{}));
-authRecuperacionDesdeHash();
+if(!authRecuperacionDesdeHash()&&new URLSearchParams(location.search).get('registro')==='1')authCambiarTab(true);
 
 document.getElementById('perfilForm')?.addEventListener('submit',async e=>{
   e.preventDefault();const btn=e.submitter,estado=document.getElementById('perfilEstado');
