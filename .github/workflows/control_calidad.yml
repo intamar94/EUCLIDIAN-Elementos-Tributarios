@@ -14,6 +14,7 @@ on:
       - 'app.html'
       - 'landing.css'
       - 'bandeja.js'
+      - 'portada.js'
       - 'auth.js'
       - 'lib/**'
       - 'package.json'
@@ -52,6 +53,7 @@ jobs:
       - name: Verificar sintaxis JavaScript de interfaz y Auth
         run: |
           node --check bandeja.js
+          node --check portada.js
           node --check auth.js
           node --check bloques.js
           node --check api/auth.js
@@ -62,6 +64,7 @@ jobs:
         run: |
           node tests/e2e_consulta_contract.mjs
           node tests/extracto_literal_contract.mjs
+          node tests/catalogo_resiliencia_contract.mjs
           node tests/retired_routes_contract.mjs
       - name: Contrato determinista de Auth y entitlement
         run: |

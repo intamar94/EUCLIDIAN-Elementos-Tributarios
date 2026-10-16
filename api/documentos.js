@@ -64,6 +64,9 @@ export default async function handler(req,res){
   if(!doc&&tema)filtro+=`&temas=cs.{${encodeURIComponent(tema)}}`;
   if(!doc&&q){const termino=q.replace(/[(),]/g,' ').replace(/[*]/g,' ').trim();if(/^DIAN-[A-Z_]+-\d+-(?:19|20)\d{2}$/i.test(termino)){filtro+=`&numero_resolucion=eq.${encodeURIComponent(termino)}`;}else if(termino){const sigla=/^[A-ZÁÉÍÓÚÜÑ]{2,8}$/u.test(termino);const busqueda=sigla?`(contenido.plfts(spanish).${termino},descripcion_limpia.plfts(spanish).${termino})`:`(numero_resolucion.ilike.*${termino}*,titulo.ilike.*${termino}*,contenido.ilike.*${termino}*,descripcion_limpia.ilike.*${termino}*)`;filtro+=`&or=${encodeURIComponent(busqueda)}`;}}
   const primera=doc?0:(pagina-1)*POR_PAGINA;
+  const controller=new AbortController();
+  const timer=setTimeout(()=>controller.abort(),12000);
+  const leer=(url,options={})=>fetch(url,{...options,signal:controller.signal});
   try{
     const novedades=!doc&&estado==='nuevos';
     const lote=novedades?500:POR_PAGINA;
@@ -73,8 +76,13 @@ export default async function handler(req,res){
     // total y la paginación sean exactos, la vista de novedades recorre todos
     // los candidatos del intervalo antes de elegir la página solicitada.
     for(let offset=inicio;;offset+=lote){
-      const rDocs=await fetch(`${SUPABASE_URL}/rest/v1/v_bandeja?select=${CAMPOS}&${filtro}&order=${orden}`,{headers:{...cabeceras,Prefer:'count=exact',Range:`${offset}-${offset+lote-1}`}});
-      if(!rDocs.ok){const detalle=await rDocs.text();return res.status(502).json({error:'supabase',detalle:detalle.slice(0,300)});}
+      const rDocs=await leer(`${SUPABASE_URL}/rest/v1/v_bandeja?select=${CAMPOS}&${filtro}&order=${orden}`,{headers:{...cabeceras,Prefer:'count=exact',Range:`${offset}-${offset+lote-1}`}});
+      if(!rDocs.ok){
+        const fallo=await rDocs.json().catch(()=>({}));
+        const lento=fallo.code==='57014';
+        console.error('catalogo_documentos',{status:rDocs.status,codigo:fallo.code||'sin_codigo'});
+        return res.status(502).json({error:lento?'consulta_lenta':'biblioteca_no_disponible',mensaje:lento?'La biblioteca tardó demasiado en responder. Inténtalo de nuevo.':'No pudimos abrir la biblioteca. Inténtalo de nuevo.'});
+      }
       const grupo=await rDocs.json();
       if(offset===inicio){const rango=rDocs.headers.get('content-range')||'*/0';total=parseInt(rango.split('/')[1],10)||0;}
       documentos.push(...grupo);
@@ -87,7 +95,7 @@ export default async function handler(req,res){
       const ids=documentos.map(d=>d.id).filter(Boolean);
       for(let i=0;i<ids.length;i+=50){
         const inFilter=`in.(${ids.slice(i,i+50).join(',')})`;
-        const rTexto=await fetch(`${SUPABASE_URL}/rest/v1/documentos_tributarios?select=id,texto_completo,notas_verificacion,estado_fuente_verificacion,fuente_verificada_en,hash_contenido&id=${encodeURIComponent(inFilter)}`,{headers:cabeceras});
+        const rTexto=await leer(`${SUPABASE_URL}/rest/v1/documentos_tributarios?select=id,texto_completo,notas_verificacion,estado_fuente_verificacion,fuente_verificada_en,hash_contenido&id=${encodeURIComponent(inFilter)}`,{headers:cabeceras});
         if(!rTexto.ok)return res.status(502).json({error:'evidencia_no_disponible'});
         if(rTexto.ok)for(const x of await rTexto.json())porTexto.set(x.id,x);
       }
@@ -98,7 +106,7 @@ export default async function handler(req,res){
         for(const d of boletines)d.referencias_boletin=[];
         for(let i=0;i<boletines.length;i+=50){
           const inFilter=`in.(${boletines.slice(i,i+50).map(d=>d.id).join(',')})`;
-          const rRefs=await fetch(`${SUPABASE_URL}/rest/v1/boletin_referencias?select=boletin_id,pagina,tipo,referencia,url_oficial,pdf_hash&boletin_id=${encodeURIComponent(inFilter)}&order=pagina.asc`,{headers:cabeceras});
+          const rRefs=await leer(`${SUPABASE_URL}/rest/v1/boletin_referencias?select=boletin_id,pagina,tipo,referencia,url_oficial,pdf_hash&boletin_id=${encodeURIComponent(inFilter)}&order=pagina.asc`,{headers:cabeceras});
           if(!rRefs.ok)return res.status(502).json({error:'referencias_no_disponibles'});
           for(const ref of await rRefs.json()){
             const boletin=porBoletin.get(ref.boletin_id);
@@ -110,7 +118,7 @@ export default async function handler(req,res){
       const evaluaciones=new Map();
       for(let i=0;i<ids.length;i+=50){
         const inFilter=`in.(${ids.slice(i,i+50).join(',')})`;
-        const rEvaluaciones=await fetch(`${SUPABASE_URL}/rest/v1/revisor_fiscal_euclidian_evaluaciones?select=documento_id,resultado&documento_id=${encodeURIComponent(inFilter)}`,{headers:cabeceras});
+        const rEvaluaciones=await leer(`${SUPABASE_URL}/rest/v1/revisor_fiscal_euclidian_evaluaciones?select=documento_id,resultado&documento_id=${encodeURIComponent(inFilter)}`,{headers:cabeceras});
         if(!rEvaluaciones.ok)return res.status(502).json({error:'evaluacion_no_disponible'});
         for(const x of await rEvaluaciones.json())evaluaciones.set(x.documento_id,x.resultado);
       }
@@ -145,7 +153,7 @@ export default async function handler(req,res){
       // el estándar de evidencia de la biblioteca.
       if(novedades){const elegibles=documentos.filter(d=>d.es_nuevo&&String(d.texto_completo||'').trim().length>=200&&String(d.enlace_oficial||'').startsWith('https://normograma.dian.gov.co/dian/compilacion/'));elegibles.sort((a,b)=>fechaNovedad(b).localeCompare(fechaNovedad(a))||String(b.numero_resolucion||'').localeCompare(String(a.numero_resolucion||'')));total=elegibles.length;documentos.splice(0,documentos.length,...elegibles.slice(primera,primera+POR_PAGINA));}
     }
-    const rMeta=await fetch(`${SUPABASE_URL}/rest/v1/rpc/metadatos_catalogo_cliente`,{method:'POST',headers:{...cabeceras,'Content-Type':'application/json'},body:JSON.stringify({p_periodo:doc?'todo':periodo})});
+    const rMeta=await leer(`${SUPABASE_URL}/rest/v1/rpc/metadatos_catalogo_cliente`,{method:'POST',headers:{...cabeceras,'Content-Type':'application/json'},body:JSON.stringify({p_periodo:doc?'todo':periodo})});
     if(!rMeta.ok)return res.status(502).json({error:'metadatos_no_disponibles'});
     const meta=await rMeta.json();
     // El resumen de Inicio no consume una consulta adicional del cliente.
@@ -154,5 +162,9 @@ export default async function handler(req,res){
       await registrarUsoConsulta(acceso.user.id,{latencia_ms:Date.now()-started,resultados:total,estado:total?'ok':'sin_resultados'});
     }
     res.setHeader('Cache-Control','no-store'); return res.status(200).json({documentos,total,pagina:doc?1:pagina,porPagina:POR_PAGINA,paginas:Math.max(1,Math.ceil(total/POR_PAGINA)),temas:meta.temas||[],periodo,anios:Array.isArray(meta.anios)?meta.anios:[],actualizado:meta.actualizado||null});
-  }catch(e){return res.status(500).json({error:'fallo_lectura',detalle:String(e).slice(0,200)});}
+  }catch(e){
+    const lento=controller.signal.aborted;
+    console.error('catalogo_lectura',{tipo:lento?'timeout':e.name||'Error'});
+    return res.status(lento?504:502).json({error:lento?'consulta_lenta':'fallo_lectura',mensaje:lento?'La biblioteca tardó demasiado en responder. Inténtalo de nuevo.':'No pudimos cargar los documentos. Inténtalo de nuevo.'});
+  }finally{clearTimeout(timer);}
 }

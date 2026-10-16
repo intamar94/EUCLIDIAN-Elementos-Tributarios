@@ -174,7 +174,7 @@ async function cargar(autenticar=false){
       mostrarVista('cuenta');await window.euclidianAuthSinSuscripcion?.(data);
       return data;
     }
-    if(!r.ok)throw new Error(data.detalle||data.error||'No se pudo leer la base.');
+    if(!r.ok)throw new Error(data.mensaje||'No pudimos cargar la biblioteca. Inténtalo de nuevo.');
     if(CLAVE&&!token)sessionStorage.setItem('euclidian_clave',CLAVE);
     document.getElementById('puerta').hidden=true;if(mal)mal.textContent='';
     document.getElementById('cab').hidden=false;

@@ -29,6 +29,14 @@ async function call({key='ci-euclidian-local',query={}}={}){
 }
 
 {
+  const start=Date.now();
+  const res=await call({query:{periodo:'todo',estado:'todos',orden:'recientes',pagina:'1'}});
+  assert.equal(res.code,200,'La entrada sin filtros debe cargar el catálogo real');
+  assert.equal(res.body.documentos.length,25);
+  console.log(`OK - entrada real sin filtros: ${res.body.documentos.length} documentos en ${Date.now()-start} ms`);
+}
+
+{
   const res=await call({query:{periodo:'todo',estado:'todos',q:'IVA',pagina:'1'}});
   assert.equal(res.code,200,`Consulta IVA devolvió HTTP ${res.code}`);
   assert.ok(Array.isArray(res.body?.documentos)&&res.body.documentos.length>0,'Consulta IVA sin resultados');
@@ -78,4 +86,4 @@ async function call({key='ci-euclidian-local',query={}}={}){
   console.log(`OK - orden real de publicación: ${latest.numero_resolucion}, ${latest.fecha_orden_documental}`);
 }
 
-console.log('E2E handler documentos: 5/5 escenarios OK');
+console.log('E2E handler documentos: 6/6 escenarios OK');

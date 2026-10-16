@@ -197,8 +197,8 @@ article:after{content:"";position:absolute;width:54px;height:54px;right:-29px;to
 #puerta .auth-caja>.ilustracion{display:block;width:100%;height:176px;object-fit:cover;object-position:center 40%;margin:0;border:0;border-bottom:1px solid #d7d3c9}
 .auth-identidad{position:relative;z-index:3;padding:20px 26px 13px}.auth-identidad .marca{font-size:34px;text-align:left;margin:0}.auth-identidad .sub{display:block;text-align:left;margin-top:2px}
 .auth-tabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin:0 26px 16px;padding:4px;border:1px solid #d6d7d0;border-radius:10px;background:#eeece4}
-.auth-tabs button{min-height:40px;border:0;border-radius:7px;background:transparent;color:#667168;font:600 12px 'IBM Plex Sans',sans-serif;cursor:pointer}
-.auth-tabs button[aria-selected="true"]{background:#fffefa;color:#20372a;box-shadow:0 1px 4px rgba(28,38,31,.08)}
+#puerta .auth-tabs button{min-height:40px;border:0;border-radius:7px;background:transparent;color:#667168;font:600 12px 'IBM Plex Sans',sans-serif;cursor:pointer}
+#puerta .auth-tabs button[aria-selected="true"]{background:#fffefa;color:#20372a;box-shadow:0 1px 4px rgba(28,38,31,.08)}
 #puerta .auth-form{display:grid;width:auto;max-width:none;gap:7px;margin:0;padding:0 26px 22px}
 #puerta .auth-form label{margin:3px 0 0;color:#536158;font:600 12px 'IBM Plex Sans',sans-serif}
 #puerta .auth-form input{width:100%;min-height:46px;padding:10px 12px;border:1px solid #c5ccc3;border-radius:7px;background:#fffefa;color:#17211c;font:14px 'IBM Plex Sans',sans-serif}
