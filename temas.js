@@ -27,7 +27,8 @@ const ETIQUETAS = {
   economia_naranja:'Economía naranja', formularios:'Formularios y recibos',
   calendario:'Calendario tributario', uvt:'UVT', interno_dian:'Interno de la DIAN',
 };
-function nombreTema(t){ return ETIQUETAS[t] || t.replace(/_/g,' '); }
+const PUBLICACIONES={boletin_actualidad_juridica:'Boletín de actualidad jurídica',boletin_aduanero_historico:'Boletín aduanero histórico',boletin_tributario_historico:'Boletín tributario histórico',doctriflash:'Doctriflash'};
+function nombreTema(t){ return ETIQUETAS[t] || PUBLICACIONES[t] || t.replace(/_/g,' '); }
 
 // Los canales de publicación no son áreas de trabajo.
 function esTemaDeTrabajo(t){return typeof t==='string'&&!t.startsWith('dian:')&&!/^(?:boletin|boletines|doctriflash)(?:_|$)/i.test(t);}
