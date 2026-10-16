@@ -8,6 +8,7 @@ const api=fs.readFileSync('api/documentos.js','utf8');
 const nav=fs.readFileSync('bandeja.js','utf8');
 const blocks=fs.readFileSync('bloques.js','utf8');
 const cards=fs.readFileSync('fichas.js','utf8');
+const fichaCss=fs.readFileSync('consulta.css','utf8');
 const auth=fs.readFileSync('auth.js','utf8');
 const authApi=fs.readFileSync('api/auth.js','utf8');
 const sessionApi=fs.readFileSync('api/session.js','utf8');
@@ -37,6 +38,9 @@ const checks=[
  ['P3 exploración funcional',html.includes('explorarTemas')&&nav.includes('renderExplorar(data)')],
  ['P3 acciones de ficha',blocks.includes('ficha-acciones-lectura')&&blocks.includes('data-copy-ref')],
  ['P3 estado esencial legible',blocks.includes('bloqueEstadoClave')&&blocks.includes('Estado esencial del documento')],
+ ['Estados separados de controles',blocks.includes('estado-vigencia')&&blocks.includes('estado-evidencia')&&fichaCss.includes('.estado-clave-item.estado-vigencia.pendiente')&&fichaCss.includes('.estado-clave-item.estado-evidencia.ok')],
+ ['Acciones principal y secundaria diferentes',fichaCss.includes('.accion-documento.primaria')&&fichaCss.includes('.accion-documento.secundaria')&&fichaCss.includes('.ficha-acciones-lectura .guardar-documento')],
+ ['Acordeón de detalles reconocible',fichaCss.includes('.detalle-resultado>summary::after')&&fichaCss.includes('.detalle-resultado[open]>summary::after')],
  ['P3 historia normativa',blocks.includes('relaciones-vivas')&&blocks.includes('timeline-relaciones')],
  ['P3 estados recuperables',nav.includes('vistaVacia')&&nav.includes('vistaError')&&nav.includes('data-retry-load')],
  ['P3 contexto de consulta',nav.includes('describirConsulta(data)')],
