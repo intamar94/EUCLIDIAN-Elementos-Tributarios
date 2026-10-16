@@ -1,7 +1,7 @@
 # SEO y oferta de EUCLIDIAN
 
 ## Oferta propuesta, no cobro activo
-29.900 COP/mes, cuenta individual. No se modifica Stripe ni el entitlement. Confirmar costos reales, impuestos aplicables, límite de consultas, renovación y cancelación antes de abrir la venta. No prometer consultas ilimitadas sin un plan configurado. La portada distingue propuesta y contratación disponible.
+Tarifa regular aprobada: 49.900 COP/mes por usuario. Tarifa para primeros suscriptores: 29.900 COP/mes. Cupos, duración y elegibilidad pendientes: no inventar condiciones. No se modifica Stripe ni el entitlement. Confirmar costos reales, impuestos aplicables, límite de consultas, renovación y cancelación antes de abrir la venta. No prometer consultas ilimitadas sin un plan configurado. La portada distingue propuesta y contratación disponible.
 
 ## Search Console
 Crear o usar una propiedad de prefijo URL para https://euclidian-elementos-tributarios.vercel.app/. Verificar con el archivo HTML proporcionado por Google (conservar su nombre y contenido exactos), o con la etiqueta proporcionada en el head de index.html. No inventar identificadores. Enviar /sitemap.xml tras verificar. app.html conserva noindex; no bloquear su rastreo en robots, para que Google pueda leer esa directiva.

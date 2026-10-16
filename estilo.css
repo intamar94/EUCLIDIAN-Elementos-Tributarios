@@ -284,3 +284,14 @@ a:hover{text-decoration-color:var(--tinta)}
 button,a,input,select,summary{touch-action:manipulation}
 button:focus-visible,a:focus-visible,summary:focus-visible{outline:3px solid #86433a;outline-offset:4px}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+/* Mesa de consulta: accesos locales compactos. */
+.guardados-panel{margin-top:2rem;padding-top:1.5rem;border-top:1px solid #cbd2c9}
+.guardados-panel h3{font-family:Spectral,serif;font-size:1.6rem;margin:0 0 .5rem}
+.guardados-panel>p{color:#59665d;line-height:1.6}
+.guardado-fila{display:flex;gap:.5rem;align-items:stretch;margin:.6rem 0;border:1px solid #cbd2c9;border-radius:12px;background:#fffefa;overflow:hidden}
+.guardado-fila button{min-height:48px;border:0;background:transparent;color:#203b2b;padding:.8rem 1rem;font:inherit;text-align:left;cursor:pointer}
+.guardado-fila button:first-child{flex:1;min-width:0;overflow-wrap:anywhere}
+.guardado-fila button:last-child{font-size:.85rem;text-decoration:underline}
+.guardar-documento{grid-column:1/-1}
+.guardar-documento[aria-pressed="true"]{background:#e2ebe4}

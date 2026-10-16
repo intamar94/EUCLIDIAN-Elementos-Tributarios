@@ -127,7 +127,7 @@ function renderPlanesCuenta(payload,access){
     cont.append(art);
   }
   const nota=document.getElementById('suscripcionNota');
-  if(nota)nota.textContent=payload?.billing_enabled?'Suscripción mensual con renovación automática. Podrás gestionar la cancelación desde tu cuenta. El acceso se activa al confirmar el pago.':'La contratación en línea aún no está disponible. Precio propuesto para Colombia: $29.900 COP al mes por usuario. Antes de contratar se confirmarán impuestos aplicables, consultas incluidas, renovación y cancelación. No se realizará ningún cobro.';
+  if(nota)nota.textContent=payload?.billing_enabled?'Suscripción mensual con renovación automática. Podrás gestionar la cancelación desde tu cuenta. El acceso se activa al confirmar el pago.':'La contratación en línea aún no está disponible. Tarifa regular: $49.900 COP al mes por usuario. Primeros suscriptores: $29.900 COP al mes; condiciones y duración pendientes de publicación. Antes de contratar se confirmarán impuestos aplicables, consultas incluidas, renovación y cancelación. No se realizará ningún cobro.';
 }
 async function authCobro(body,boton){
   if(boton)boton.disabled=true;

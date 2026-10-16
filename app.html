@@ -104,7 +104,7 @@
 
 <section class="explorar marco" hidden id="explorar" aria-labelledby="explorarTitulo">
   <div class="explorar-cabecera">
-    <div class="titulo-consulta"><span class="seccion-numero" aria-hidden="true">01</span><div><span class="seccion-kicker">EXPLORAR</span><h2 id="explorarTitulo">Explorar por tema</h2><p>Añade los temas que necesitas y abre sus documentos.</p></div></div>
+    <div class="titulo-consulta"><span class="seccion-numero" aria-hidden="true">01</span><div><span class="seccion-kicker">EXPLORAR</span><h2 id="explorarTitulo">Tu mesa de consulta</h2><p>Tus temas y los documentos a los que quieres volver.</p></div></div>
 
   </div>
   <div class="selector-temas">
@@ -114,6 +114,7 @@
   </div>
   <div id="estadoTemas" class="estado-temas solo-lectores" role="status" aria-live="polite"></div>
   <div class="explorar-temas temas-personales" id="explorarTemas" aria-label="Tus temas seleccionados"></div>
+  <section class="guardados-panel" aria-labelledby="guardadosTitulo"><h3 id="guardadosTitulo">Documentos guardados</h3><p>Accesos guardados en este navegador, visibles para quien lo utilice. Al abrirlos se consulta la ficha actual; no se almacena una copia del documento.</p><p id="guardadosEstado" role="status" aria-live="polite"></p><div id="documentosGuardados"></div></section>
 </section>
 
 <section class="cuenta-panel marco" hidden id="cuentaPanel" aria-labelledby="cuentaTitulo">
@@ -175,6 +176,7 @@
 
 <script src="/temas.js" defer></script>
 <script src="/fichas.js" defer></script>
+<script src="/guardados.js" defer></script>
 <script src="/bloques.js" defer></script>
 <script src="/auth.js" defer></script>
 <script src="/bienvenida.js" defer></script>

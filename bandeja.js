@@ -106,6 +106,7 @@ function mostrarVista(vista){
   window.scrollTo({top:0,behavior:'instant'});
 }
 window.euclidianCambiarVista=mostrarVista;
+window.euclidianAbrirGuardado=id=>{if(!accesoConsulta)return;reiniciarFiltros();F.doc=id;mostrarVista('consultar');cargar().catch(()=>{});};
 window.euclidianRestablecerVista=()=>{generacionCarga++;ultimaRespuesta=null;catalogoTemas=[];accesoConsulta=false;vistaActual='inicio';window.euclidianVistaActual='inicio';liberarCarga();};
 function abrirNovedades(){reiniciarFiltros();F.estado='nuevos';document.getElementById('selEstado').value='nuevos';mostrarVista('novedades');return cargar().catch(()=>{});}
 function abrirConsulta(){dejarFicha();if(F.estado==='nuevos')reiniciarFiltros();mostrarVista('consultar');return cargar().catch(()=>{});}

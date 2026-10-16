@@ -1,0 +1,21 @@
+import assert from 'node:assert/strict';
+import vm from 'node:vm';
+import {readFileSync} from 'node:fs';
+const source=readFileSync(new URL('../guardados.js',import.meta.url),'utf8');
+const id='12345678-abcd-1234-abcd-123456789012';
+let stored='[]', click, fail=false, opened;
+const list={innerHTML:''},status={textContent:''};
+const context={localStorage:{getItem:()=>stored,setItem:(k,v)=>{if(fail)throw Error('quota');stored=v;}},window:{addEventListener(){},euclidianAbrirGuardado:x=>opened=x},document:{getElementById:id=>id==='documentosGuardados'?list:status,querySelectorAll:()=>[],querySelector:()=>null,addEventListener:(type,fn)=>click=fn},esc:x=>String(x).replaceAll('<','&lt;').replaceAll('"','&quot;'),tituloFicha:d=>d.titulo};
+vm.runInNewContext(source,context);
+const button={dataset:{guardarDoc:id,titulo:'<documento>'},textContent:''};
+function press(b,open=false){click({target:{closest:s=>open?s==='[data-abrir-guardado]'?b:null:s.includes('data-quitar-guardado')?b:null}});}
+press(button);
+assert.equal(JSON.parse(stored).length,1);
+assert.match(list.innerHTML,/&lt;documento>/);
+assert.match(context.window.euclidianBotonGuardar({id,titulo:'Documento'}),/aria-pressed="true"/);
+press({dataset:{abrirGuardado:id}},true);assert.equal(opened,id);
+press(button);assert.deepEqual(JSON.parse(stored),[]);
+fail=true;press(button);assert.deepEqual(JSON.parse(stored),[]);assert.match(button.textContent,/No se pudo/);
+assert.equal(context.window.euclidianBotonGuardar({id:'bad',titulo:'bad'}),'');
+stored='{broken';vm.runInNewContext(source,context);assert.match(list.innerHTML,/Todavía no/);
+console.log('Guardados: persistencia, retirada, apertura actual, escape, fallo de almacenamiento y datos inválidos OK');
