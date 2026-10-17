@@ -39,12 +39,23 @@ function fechaDePlazo(texto){
   if(!m) return null;
   const mes = MESNUM[m[2].toLowerCase()];
   if(!mes) return null;
-  const f = new Date(+m[3], mes-1, +m[1]);
-  return isNaN(f) ? null : f;
+  // Construir en UTC impide que JavaScript convierta, por ejemplo, 31 de febrero en marzo.
+  const anio=Number(m[3]), dia=Number(m[1]);
+  const f=new Date(Date.UTC(anio,mes-1,dia));
+  if(f.getUTCFullYear()!==anio||f.getUTCMonth()!==mes-1||f.getUTCDate()!==dia)return null;
+  return f;
 }
 function diasHasta(f){
-  const hoy = new Date(); hoy.setHours(0,0,0,0);
-  return Math.round((f - hoy) / 86400000);
+  // La plataforma informa sobre la normativa colombiana: los días civiles
+  // se calculan en America/Bogota, no según la zona del ordenador del visitante.
+  if(!(f instanceof Date)||Number.isNaN(f.getTime()))return null;
+  const partes=new Intl.DateTimeFormat('en-US',{
+    timeZone:'America/Bogota',year:'numeric',month:'2-digit',day:'2-digit'
+  }).formatToParts(new Date());
+  const valor=tipo=>Number(partes.find(p=>p.type===tipo)?.value);
+  const hoy=Date.UTC(valor('year'),valor('month')-1,valor('day'));
+  const plazo=Date.UTC(f.getUTCFullYear(),f.getUTCMonth(),f.getUTCDate());
+  return Math.round((plazo-hoy)/86400000);
 }
 
 /* La fecha principal de la ficha es la fecha que la DIAN declara como
