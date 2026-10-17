@@ -1,28 +1,64 @@
-/* Regression: legal audit must never silently approve missing evidence. */
+/* LEGAL.ia: reusable tests. No identity values, secrets, network calls or public deployments. */
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import path from 'node:path';
 import {spawnSync} from 'node:child_process';
+const read=f=>JSON.parse(fs.readFileSync(f,'utf8'));
+const cmd=(script,args=[])=>spawnSync(process.execPath,[script,...args],{encoding:'utf8'});
 const root='LEGALIA/';
-const c=JSON.parse(fs.readFileSync(root+'empresa.template.json','utf8'));
-const p=JSON.parse(fs.readFileSync(root+'proyectos/euclidian.json','utf8'));
-assert.equal(c.trade_registration.status,'PENDING','Gewerbe must remain pending until official evidence');
-assert.equal(p.features.payment_checkout_live,false,'Checkout must remain off until approved');
-assert.equal(c.legal_identity.address_value,'NOT_STORED_IN_PUBLIC_REPOSITORY','Never leak address in public repository');
-for(const path of ['plantillas/IMPRESSUM.de.muster.md','plantillas/DATENSCHUTZ.de.muster.md']){
- const s=fs.readFileSync(root+path,'utf8');
- assert.match(s,/ENTWURF, NICHT VERÖFFENTLICHEN/,'Templates must remain visibly unapproved');
+const company=read(root+'empresa.template.json');
+const schema=read(root+'plantillas/project.template.json');
+assert.equal(company.legal_identity.address_value,'NOT_STORED_IN_PUBLIC_REPOSITORY');
+assert.equal(schema.human_approval.status,'REVIEW','New products must not be preapproved');
+assert.equal(schema.classification_reviewed,false,'New products require human review of feature inventory');
+assert.equal(schema.risk_inventory_confirmed,false);
+for(const template of [
+  'plantillas/IMPRESSUM.de.muster.md',
+  'plantillas/DATENSCHUTZ.de.muster.md',
+  'plantillas/DATENSCHUTZ-general.de.entwurf.md',
+  'plantillas/AGB-SaaS.de.entwurf.md',
+  'plantillas/AGB-Shop.de.entwurf.md',
+  'plantillas/WIDERRUF-KUENDIGUNG.de.entwurf.md',
+  'plantillas/COOKIE-CONSENT.de.entwurf.md'
+]) {
+ const text=fs.readFileSync(root+template,'utf8');
+ assert.match(text,/ENTWURF/,'Every public legal template must be marked as draft: '+template);
 }
-const cmd=(script,args)=>spawnSync(process.execPath,[script,...args],{encoding:'utf8'});
-const audit=cmd('scripts/legal-ia-gate.mjs',['--mode','audit','--json']);
-assert.equal(audit.status,0,'Read-only audit should not block development');
-const data=JSON.parse(audit.stdout);
-assert.equal(data.status,'REVIEW');
-assert.ok(data.pending>0,'Missing evidence must remain flagged');
-const release=cmd('scripts/legal-ia-gate.mjs',['--mode','release','--json']);
-assert.equal(release.status,1,'Release must fail closed');
-const staticAudit=cmd('scripts/legal-ia-static-audit.mjs',['--json']);
-assert.equal(staticAudit.status,0);
-const staticData=JSON.parse(staticAudit.stdout);
-assert.ok(staticData.checks.some(x=>x.id==='impressum'&&x.status==='REVIEW'),'Missing Impressum must be detected');
-assert.ok(staticData.checks.some(x=>x.id==='datenschutz'&&x.status==='REVIEW'),'Missing Datenschutz must be detected');
-console.log('LEGAL.ia: public metadata safe; audit/release and static checks OK');
+const all=cmd('scripts/legal-ia-gate.mjs',['--mode','audit','--all','--json']);
+assert.equal(all.status,0,'Portfolio read-only audit should never block development');
+const portfolio=JSON.parse(all.stdout);
+assert.ok(portfolio.reports.some(p=>p.slug==='euclidian'));
+assert.ok(portfolio.reports.some(p=>p.slug==='zweitierras'));
+for(const report of portfolio.reports){
+ assert.ok(['REVIEW','REJECTED','READY_FOR_HUMAN_RELEASE_DECISION'].includes(report.status));
+ assert.ok(report.checks.some(c=>c.id==='operator.identity'));
+ assert.ok(report.checks.some(c=>c.id==='project.classification'));
+}
+const check=cmd('scripts/legal-ia-static-audit.mjs',['--json']);
+assert.equal(check.status,0,'Static inventory should remain nonblocking');
+const parsed=JSON.parse(check.stdout);
+assert.ok(parsed.checks.some(c=>c.id==='impressum'));
+assert.ok(parsed.checks.some(c=>c.id==='datenschutz'));
+// Ensure a new website can be registered without accidentally going live.
+const slug='test-legal-'+process.pid;
+const filepath=path.join(root,'proyectos',slug+'.json');
+try{
+ const init=cmd('scripts/legal-ia-new-project.mjs',[slug,'Proyecto de prueba','--type','marketplace','--markets','DE,CO','--risks','customer_funds_held,user_accounts']);
+ assert.equal(init.status,0,'Template initializer must create a new valid dossier: '+init.stderr);
+ const dossier=read(filepath);
+ assert.equal(dossier.classification_reviewed,false);
+ assert.equal(dossier.features.customer_funds_held,true);
+ assert.ok(Object.hasOwn(dossier.controls,'payments_regulated'));
+ const audit=cmd('scripts/legal-ia-gate.mjs',['--mode','audit','--project',slug,'--json']);
+ assert.equal(audit.status,0);
+ const data=JSON.parse(audit.stdout);
+ assert.equal(data.status,'REVIEW','Unverified project must not be approved');
+ assert.ok(data.checks.some(c=>c.id==='control.payments_regulated'),'Risk-based guard was not applied');
+ assert.ok(data.checks.some(c=>c.id==='control.marketplace_roles'),'Sector guard was not applied');
+ assert.ok(data.checks.some(c=>c.id==='control.account_legal'),'Account guard was not applied');
+ const release=cmd('scripts/legal-ia-gate.mjs',['--mode','release','--project',slug,'--json']);
+ assert.equal(release.status,1,'Release must fail closed');
+ const same=cmd('scripts/legal-ia-new-project.mjs',[slug,'Duplicate']);
+ assert.notEqual(same.status,0,'A second initializer must not overwrite an existing project dossier');
+}finally{try{fs.unlinkSync(filepath)}catch{}}
+console.log('LEGAL.ia: portfolio, country/sector flags, evidence guard and fail-closed checks OK');
