@@ -32,6 +32,10 @@ export default async function handler(req,res){
   if(req.method!=='POST')return res.status(405).json({error:'method_not_allowed'});
   if(!SUPABASE_URL||!PUBLISHABLE_KEY)return res.status(503).json({error:'auth_no_configurado'});
   const action=String(req.body?.action||'');
+  // LEGAL.ia: deny sign-up before accessing Supabase, even on direct API requests.
+  if(action==='signup'&&process.env.EUCLIDIAN_SIGNUP_ENABLED!=='true'){
+    return res.status(403).json({error:'registro_cerrado',message:'El registro de nuevos usuarios está temporalmente cerrado.'});
+  }
   try{
     if(action==='signup'||action==='signin'){
       const email=String(req.body?.email||'').trim().toLowerCase();
