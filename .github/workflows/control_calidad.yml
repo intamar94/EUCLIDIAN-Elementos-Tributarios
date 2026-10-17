@@ -84,6 +84,12 @@ jobs:
         run: |
           node tests/payment_events_contract.mjs
           node tests/billing_flow_contract.mjs
+      - name: Rutas legales y dominio EuclidianET
+        run: |
+          node --check lib/legal-public.js
+          node --check api/impressum.js
+          node --check api/datenschutz.js
+          node tests/legal_public_contract.mjs
       - name: Regresiones Python de fuente y fechas
         run: python -m unittest discover -s tests -p 'test_*.py'
       - name: Regresión comercial y ownership
