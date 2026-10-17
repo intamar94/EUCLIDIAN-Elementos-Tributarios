@@ -16,6 +16,9 @@ on:
       - 'identidad-publica.css'
       - 'identidad-euclidian.css'
       - 'heroes-euclidian-responsive.css'
+      - 'animaciones-euclidian.css'
+      - 'animaciones-euclidian.js'
+      - 'assets/**'
       - 'hero-publico-responsive.css'
       - 'icono-euclidian.svg'
       - 'geometria-euclidian.svg'
@@ -90,6 +93,8 @@ jobs:
         run: node tests/identidad_visual_contract.mjs
       - name: Contrato heroes adaptativos y tamaños de escenas
         run: node tests/heroes_responsive_contract.mjs
+      - name: Contrato de imágenes y vídeo HD
+        run: node tests/hd_assets_contract.mjs
       - name: Contrato readiness y observabilidad
         run: node tests/health_readiness_contract.mjs
       - name: Eval de consultas contra datos reales
