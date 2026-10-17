@@ -1,0 +1,202 @@
+/* EUCLIDIAN · Héroes editoriales de escala real
+   La escena deja de ser una miniatura y obtiene una columna visual propia.
+   Solo afecta a la zona autenticada: no modifica #puerta ni su ilustración. */
+:root{--eu-escena: minmax(290px,.92fr)}
+.inicio-cab,.novedades-cab,.bienvenida-cab,
+.explorar-cabecera,.cuenta-cabecera,.controles>.titulo-consulta{
+  box-shadow:0 12px 34px rgba(25,48,35,.075);
+  border-radius:17px;overflow:hidden
+}
+.inicio-cab,.novedades-cab,.bienvenida-cab{
+  display:grid;grid-template-columns:minmax(0,1fr) var(--eu-escena);
+  column-gap:clamp(22px,3vw,44px);row-gap:9px;
+  align-items:center;align-content:center;
+  min-height:270px;padding:23px 25px 28px;margin-bottom:22px
+}
+.inicio-cab,.novedades-cab{margin-top:16px}
+.inicio-cab>*,.novedades-cab>*,.bienvenida-cab>*{
+  min-width:0;max-width:100%!important
+}
+.inicio-cab>.seccion-kicker,.novedades-cab>.seccion-kicker{
+  grid-column:1;grid-row:1;align-self:end
+}
+.inicio-cab>h1,.novedades-cab>h1{
+  grid-column:1;grid-row:2;margin:4px 0 1px;
+  max-width:100%;font-size:clamp(29px,3.2vw,40px)
+}
+.inicio-cab>p,.novedades-cab>p{
+  grid-column:1;grid-row:3;max-width:100%;font-size:15px;line-height:1.55
+}
+.inicio-cab>.eu-frase,.novedades-cab>.eu-frase{
+  grid-column:1;grid-row:4;max-width:100%;align-self:start
+}
+/* Los héroes con selector o botón mantienen sus controles accesibles */
+.explorar-cabecera,.cuenta-cabecera{
+  display:block;padding:0!important;min-height:0
+}
+.explorar-cabecera>.titulo-consulta,.cuenta-cabecera>.titulo-consulta,
+.controles>.titulo-consulta{
+  display:grid;grid-template-columns:34px minmax(0,1fr) var(--eu-escena);
+  align-items:center;gap:12px 16px;
+  width:100%;max-width:none!important;min-height:270px;
+  padding:22px 25px 28px!important;margin:0;
+  border:0;border-radius:0;box-shadow:none;
+}
+.controles>.titulo-consulta{border:1px solid #d6dbd1;border-top:3px solid var(--eu-pino);border-radius:17px}
+.explorar-cabecera>.titulo-consulta>.seccion-numero,
+.cuenta-cabecera>.titulo-consulta>.seccion-numero,
+.controles>.titulo-consulta>.seccion-numero{
+  grid-column:1;grid-row:1;align-self:start;margin-top:3px
+}
+.explorar-cabecera>.titulo-consulta>div,
+.cuenta-cabecera>.titulo-consulta>div,
+.controles>.titulo-consulta>div{
+  grid-column:2;grid-row:1;max-width:100%!important;min-width:0
+}
+.explorar-cabecera h2,.cuenta-cabecera h2,.controles>.titulo-consulta h2{
+  font-size:clamp(29px,3vw,39px);margin:7px 0 7px;max-width:100%!important
+}
+.explorar-cabecera .eu-frase,.cuenta-cabecera .eu-frase,
+.controles>.titulo-consulta .eu-frase{max-width:100%!important}
+.cuenta-cabecera>#cerrarCuenta{
+  display:block;position:relative;z-index:4;
+  margin:0 20px 15px auto;min-height:38px
+}
+.bienvenida-cab>div{grid-column:1;grid-row:1;max-width:100%!important}
+.bienvenida-cab>button{
+  grid-column:1;grid-row:2;justify-self:start;
+  max-width:max-content;min-height:44px;align-self:start;margin:4px 0 0
+}
+/* Animación = panel gráfico real, sin sticker ni cuadro pegado en una esquina. */
+.inicio-cab>.eu-gif,.novedades-cab>.eu-gif,
+.bienvenida-cab>.eu-gif,
+.explorar-cabecera>.titulo-consulta>.eu-gif,
+.cuenta-cabecera>.titulo-consulta>.eu-gif,
+.controles>.titulo-consulta>.eu-gif{
+  position:relative!important;right:auto!important;bottom:auto!important;
+  grid-column:2;grid-row:1/5;align-self:stretch;
+  display:block;width:100%!important;max-width:none!important;
+  min-width:0;min-height:0;height:auto;
+  margin:0;padding:0;
+  border:1px solid #c7cfc1;border-radius:14px;
+  background:#e8e6db;overflow:hidden;
+  box-shadow:0 14px 28px rgba(21,45,30,.13);
+  isolation:isolate;pointer-events:none
+}
+.explorar-cabecera>.titulo-consulta>.eu-gif,
+.cuenta-cabecera>.titulo-consulta>.eu-gif,
+.controles>.titulo-consulta>.eu-gif{grid-column:3;grid-row:1}
+.inicio-cab>.eu-gif img,.novedades-cab>.eu-gif img,
+.bienvenida-cab>.eu-gif img,
+.titulo-consulta>.eu-gif img{
+  display:block;width:100%;height:100%;min-height:195px;
+  aspect-ratio:16/9;object-fit:cover;object-position:center;
+  border:0;border-radius:0;filter:none
+}
+.eu-gif[data-caption]::after{
+  content:attr(data-caption);
+  position:absolute;left:0;right:0;bottom:0;z-index:1;
+  padding:8px 14px 9px;
+  background:linear-gradient(0deg,rgba(28,52,39,.9),rgba(28,52,39,.68));
+  color:#fffdf6;font:500 11px/1.3 'IBM Plex Mono',monospace;
+  letter-spacing:.06em
+}
+.inicio-cab::before,.novedades-cab::before,
+.explorar-cabecera::before,.cuenta-cabecera::before,
+.controles>.titulo-consulta::before,.bienvenida-cab::before{
+  width:25%;opacity:.18;animation:none!important
+}
+.inicio-cab::after,.novedades-cab::after,
+.explorar-cabecera::after,.cuenta-cabecera::after,
+.controles>.titulo-consulta::after,.bienvenida-cab::after{display:none}
+.inicio-cab .eu-frase,.novedades-cab .eu-frase{font-size:15px}
+.inicio-documento,.tema-personal,.cuenta-dato{
+  transition:box-shadow .18s ease,border-color .18s ease
+}
+.inicio-documento:hover,.tema-personal:hover{box-shadow:0 15px 28px rgba(31,59,41,.095)}
+/* Desktop estrecho / tablet: espacio de lectura antes que texto comprimido. */
+@media(max-width:1000px){
+ :root{--eu-escena:minmax(250px,.88fr)}
+ .inicio-cab,.novedades-cab,.bienvenida-cab{
+   gap:8px 20px;padding:20px 22px 25px
+ }
+ .titulo-consulta>.eu-gif img{min-height:175px}
+ .explorar-cabecera>.titulo-consulta,.cuenta-cabecera>.titulo-consulta,
+ .controles>.titulo-consulta{gap:12px;padding:20px 22px 25px!important}
+}
+@media(max-width:760px){
+ /* La escena ocupa toda la anchura y precede siempre al argumento. */
+ .inicio-cab,.novedades-cab,.bienvenida-cab{
+  grid-template-columns:1fr;grid-template-rows:auto;
+  row-gap:9px;min-height:0;padding:12px 13px 21px
+ }
+ .inicio-cab>.eu-gif,.novedades-cab>.eu-gif,.bienvenida-cab>.eu-gif{
+   grid-column:1;grid-row:1;min-height:0;align-self:auto
+ }
+ .inicio-cab>.seccion-kicker,.novedades-cab>.seccion-kicker{
+   grid-column:1;grid-row:2;margin-top:8px
+ }
+ .inicio-cab>h1,.novedades-cab>h1{
+  grid-column:1;grid-row:3;
+  font-size:clamp(27px,6.6vw,35px);margin:2px 0 3px;max-width:100%
+ }
+ .inicio-cab>p,.novedades-cab>p{
+  grid-column:1;grid-row:4;max-width:100%;font-size:15px;line-height:1.5
+ }
+ .inicio-cab>.eu-frase,.novedades-cab>.eu-frase{
+  grid-column:1;grid-row:5;max-width:100%;font-size:14px;margin-top:5px
+ }
+ .explorar-cabecera>.titulo-consulta,.cuenta-cabecera>.titulo-consulta,
+ .controles>.titulo-consulta{
+  grid-template-columns:30px minmax(0,1fr);gap:10px 10px;
+  min-height:0;padding:12px 13px 20px!important
+ }
+ .explorar-cabecera>.titulo-consulta>.eu-gif,
+ .cuenta-cabecera>.titulo-consulta>.eu-gif,
+ .controles>.titulo-consulta>.eu-gif{
+   grid-column:1/-1;grid-row:1;align-self:auto
+ }
+ .explorar-cabecera>.titulo-consulta>.seccion-numero,
+ .cuenta-cabecera>.titulo-consulta>.seccion-numero,
+ .controles>.titulo-consulta>.seccion-numero{
+  grid-column:1;grid-row:2;margin-top:9px
+ }
+ .explorar-cabecera>.titulo-consulta>div,
+ .cuenta-cabecera>.titulo-consulta>div,
+ .controles>.titulo-consulta>div{grid-column:2;grid-row:2}
+ .explorar-cabecera h2,.cuenta-cabecera h2,
+ .controles>.titulo-consulta h2{
+  max-width:100%!important;font-size:clamp(25px,6.4vw,33px);margin:5px 0 7px
+ }
+ .explorar-cabecera .eu-frase,.cuenta-cabecera .eu-frase,
+ .controles>.titulo-consulta .eu-frase{max-width:100%!important;font-size:13px}
+ .inicio-cab>.eu-gif,.novedades-cab>.eu-gif,.bienvenida-cab>.eu-gif,
+ .titulo-consulta>.eu-gif{border-radius:10px}
+ .inicio-cab>.eu-gif img,.novedades-cab>.eu-gif img,.bienvenida-cab>.eu-gif img,
+ .titulo-consulta>.eu-gif img{
+   height:auto;min-height:0;aspect-ratio:16/9;
+   max-height:260px;object-fit:cover
+ }
+ .bienvenida-cab>div{grid-column:1;grid-row:2;max-width:100%!important}
+ .bienvenida-cab>button{grid-column:1;grid-row:3;justify-self:start;margin-top:5px}
+ .bienvenida-cab h1{max-width:100%!important}
+ .bienvenida-cab p{max-width:100%!important}
+ .cuenta-cabecera>#cerrarCuenta{margin:3px 14px 12px auto}
+ .inicio-panel{padding-top:12px}
+ .novedades-cab.marco{margin:12px auto 20px}
+ .explorar{margin-top:12px}
+ .cuenta-panel{padding:12px}
+ .eu-gif[data-caption]::after{padding:7px 12px;font-size:10px}
+}
+@media(max-width:390px){
+ .inicio-cab,.novedades-cab,.bienvenida-cab{padding:10px 11px 18px}
+ .explorar-cabecera>.titulo-consulta,.cuenta-cabecera>.titulo-consulta,
+ .controles>.titulo-consulta{padding:10px 11px 18px!important}
+ .inicio-cab>h1,.novedades-cab>h1{font-size:27px}
+ .explorar-cabecera h2,.cuenta-cabecera h2,
+ .controles>.titulo-consulta h2{font-size:25px}
+ .eu-frase{font-size:12.5px}
+}
+@media(prefers-reduced-motion:reduce){
+ .inicio-documento,.tema-personal,.cuenta-dato{transition:none}
+}

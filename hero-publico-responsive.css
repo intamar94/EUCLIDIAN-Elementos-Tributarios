@@ -1,0 +1,39 @@
+/* Portada: la ilustración original abre la experiencia y la animación
+   forma parte de la composición, no es un sticker diminuto. */
+.hero{align-items:stretch;gap:clamp(23px,3vw,42px)}
+.hero-visual{order:-1;position:relative;width:100%;height:clamp(310px,37vw,480px);
+  min-height:0;max-height:none;overflow:hidden}
+.hero-visual>img{display:block;width:100%;height:100%;max-height:none;object-fit:cover}
+.hero-visual .eu-hero-gif{
+  position:absolute;z-index:5;right:clamp(13px,2.4vw,30px);bottom:65px;
+  width:clamp(220px,36%,420px);max-width:none;padding:6px;
+  border:2px solid #fffaf0;border-radius:13px;background:#f7f1e6;
+  box-shadow:0 15px 35px rgba(28,49,36,.22)
+}
+.hero-visual .eu-hero-gif img{
+  display:block;width:100%;height:auto;aspect-ratio:16/9;object-fit:cover;
+  border-radius:7px;filter:none
+}
+.hero-visual figcaption{min-height:48px;padding:14px 18px}
+@media(max-width:900px){
+  .hero-visual{height:clamp(300px,43vw,420px)}
+  .hero-visual .eu-hero-gif{width:clamp(190px,41%,350px)}
+}
+@media(max-width:620px){
+  .hero{gap:17px;padding-top:12px}
+  .hero-visual{width:100%;height:auto;aspect-ratio:1.35;min-height:0;
+    border-radius:13px}
+  .hero-visual>img{height:100%;object-position:center 44%}
+  .hero-visual .eu-hero-gif{
+    right:9px;bottom:50px;width:53%;min-width:0;max-width:225px;
+    border-width:1px;border-radius:9px;padding:3px
+  }
+  .hero-visual .eu-hero-gif img{border-radius:5px}
+  .hero-visual figcaption{padding:12px 13px;min-height:45px;font-size:10.5px}
+  .hero-copy{padding:0 2px}
+}
+@media(max-width:390px){
+  .hero-visual{aspect-ratio:1.27}
+  .hero-visual .eu-hero-gif{width:54%;right:7px}
+}
+@media(prefers-reduced-motion:reduce){.hero-visual .geo{animation:none!important}}
