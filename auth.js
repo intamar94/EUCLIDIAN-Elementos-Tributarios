@@ -224,23 +224,9 @@ document.getElementById('authLoginForm')?.addEventListener('submit',async e=>{
   }catch(err){authStatus(err.message||'No se pudo iniciar sesión.','error');}
   finally{btn.disabled=false;}
 });
-document.getElementById('authRegisterForm')?.addEventListener('submit',async e=>{
-  e.preventDefault();authStatus('El registro de nuevas cuentas está cerrado por ahora.','aviso');return;
-  /* Registro deshabilitado: el servidor también rechaza signup.
-  const btn=e.submitter;btn.disabled=true;authStatus('Creando tu cuenta…');
-  try{
-    const email=document.getElementById('authRegisterEmail').value.trim();
-    const password=document.getElementById('authRegisterPassword').value;
-    const {r,data}=await authPost({action:'signup',email,password});
-    if(!r.ok)throw new Error(data.message||'No se pudo crear la cuenta.');
-    if(data.access_token){
-      authGuardar(data);authOcultarPuerta();await window.cargar?.();
-    }else{
-      authStatus('Cuenta creada. Revisa tu correo y confirma el acceso para continuar.','ok');
-    }
-  }catch(err){authStatus(err.message||'No se pudo crear la cuenta.','error');}
-  finally{btn.disabled=false;}
-  */
+document.getElementById('authRegisterForm')?.addEventListener('submit',e=>{
+  e.preventDefault();
+  authStatus('El registro de nuevas cuentas está cerrado por ahora.','aviso');
 });
 document.getElementById('authRecover')?.addEventListener('click',async()=>{
   const email=document.getElementById('authEmail').value.trim();
