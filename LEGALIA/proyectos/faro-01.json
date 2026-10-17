@@ -1,0 +1,10 @@
+{
+ "schema_version":"1.0","project":"FARO-01 — ayuda cotidiana (futuro)",
+ "parent_company":"Faro de Intamar","operator_jurisdiction":"DE",
+ "stage":"PLANNING","target_market":["DE"],
+ "features":{"user_accounts":true,"payment_checkout_live":false,"recurring_b2c_sales_live":false,"customer_funds_held":true,"marketplace_helpers":true},
+ "business_model":["mandados puntuales con Helfer-Vergütung","Abo recurrente"],
+ "controls":{"regulated_payments_external_legal_opinion":"REVIEW","worker_status_insurance_tax":"REVIEW","data_protection_for_vulnerable_users":"REVIEW","customer_contracts":"REVIEW","cancellation_and_penalties":"REVIEW","payments_with_licensed_psp":"REVIEW"},
+ "human_approval":{"status":"REVIEW","reviewer":null,"date":null,"evidence":null},
+ "notes":"No activar recarga de saldo libre FARO, pagos ni captación de Helfer hasta contar con análisis jurídico regulatorio y de contratación."
+}
