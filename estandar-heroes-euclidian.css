@@ -1,0 +1,241 @@
+/* EUCLIDIAN · Norma visual única para los seis encabezados.
+   La entrada (#puerta) y sus imágenes permanecen intactas. */
+:root{
+  --eu-hero-gutter:clamp(12px,2.2vw,28px);
+  --eu-hero-radius:18px;
+  --eu-hero-espacio:24px;
+  --eu-hero-mate:#f2eee5;
+  --eu-hero-borde:#d2d9d0;
+  --eu-hero-oscuro:#244334;
+}
+#inicioPanel.marco,#novedadesCab.marco,#explorar.marco,
+#cuentaPanel.marco,#controles.marco,#bienvenida.marco{
+  width:100%;
+  max-width:var(--ancho,1280px);
+  padding-left:var(--eu-hero-gutter)!important;
+  padding-right:var(--eu-hero-gutter)!important;
+  box-sizing:border-box;
+}
+/* No añadir un segundo marco alrededor del encabezado: tanto Cuenta
+   como Explorar deben comenzar en la misma línea que Inicio. */
+#explorar.explorar,#cuentaPanel.cuenta-panel,#bienvenida.bienvenida{
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+  margin-top:0!important;
+  padding-top:16px!important;
+}
+#inicioPanel.inicio-panel{padding-top:16px!important}
+#novedadesCab.novedades-cab{margin:16px auto var(--eu-hero-espacio)!important}
+#controles.controles{padding-top:16px!important}
+.inicio-cab,.novedades-cab,.bienvenida-cab,
+.explorar-cabecera,.cuenta-cabecera,.controles>.titulo-consulta{
+  box-sizing:border-box;
+  width:100%;
+  min-height:0!important;
+  margin:0 0 var(--eu-hero-espacio)!important;
+  padding:clamp(15px,2.2vw,26px)!important;
+  border:1px solid var(--eu-hero-borde)!important;
+  border-top:3px solid var(--eu-hero-oscuro)!important;
+  border-radius:var(--eu-hero-radius)!important;
+  background:linear-gradient(120deg,rgba(251,249,242,.98),rgba(235,243,234,.9))!important;
+  box-shadow:0 9px 28px rgba(31,52,36,.07)!important;
+  overflow:hidden;
+  isolation:isolate;
+}
+.explorar-cabecera,.cuenta-cabecera{display:block}
+.explorar-cabecera>.titulo-consulta,.cuenta-cabecera>.titulo-consulta{
+  margin:0!important;padding:0!important;border:0!important;
+  border-radius:0!important;background:transparent!important;box-shadow:none!important;
+}
+/* Retirar las construcciones duplicadas sobre el contenido sin eliminar
+   el carácter editorial: los elementos viven en la ilustración. */
+.inicio-cab::before,.novedades-cab::before,.bienvenida-cab::before,
+.explorar-cabecera::before,.cuenta-cabecera::before,
+.controles>.titulo-consulta::before{opacity:.10!important;animation:none!important}
+.inicio-cab::after,.novedades-cab::after,.bienvenida-cab::after,
+.explorar-cabecera::after,.cuenta-cabecera::after,
+.controles>.titulo-consulta::after{display:none!important}
+.inicio-cab,.novedades-cab,.bienvenida-cab{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(0,.92fr);
+  grid-template-rows:auto auto auto auto;
+  column-gap:clamp(18px,3vw,38px);
+  row-gap:9px;
+  align-items:center;
+}
+.inicio-cab>.seccion-kicker,.novedades-cab>.seccion-kicker{grid-column:1;grid-row:1}
+.inicio-cab>h1,.novedades-cab>h1{grid-column:1;grid-row:2}
+.inicio-cab>p,.novedades-cab>p{grid-column:1;grid-row:3}
+.inicio-cab>.eu-frase,.novedades-cab>.eu-frase{grid-column:1;grid-row:4}
+.inicio-cab>.eu-gif,.novedades-cab>.eu-gif,.bienvenida-cab>.eu-gif{
+  grid-column:2;grid-row:1/5;
+}
+.bienvenida-cab>div{grid-column:1;grid-row:1;max-width:100%!important}
+.bienvenida-cab>button{grid-column:1;grid-row:2;justify-self:start}
+.explorar-cabecera>.titulo-consulta,.cuenta-cabecera>.titulo-consulta,
+.controles>.titulo-consulta{
+  display:grid;grid-template-columns:34px minmax(0,1fr) minmax(0,.92fr);
+  gap:12px 15px;align-items:center;
+}
+.explorar-cabecera>.titulo-consulta>.seccion-numero,
+.cuenta-cabecera>.titulo-consulta>.seccion-numero,
+.controles>.titulo-consulta>.seccion-numero{
+  grid-column:1;grid-row:1;align-self:start;
+}
+.explorar-cabecera>.titulo-consulta>div:not(.eu-gif),
+.cuenta-cabecera>.titulo-consulta>div:not(.eu-gif),
+.controles>.titulo-consulta>div:not(.eu-gif){
+  grid-column:2;grid-row:1;min-width:0;max-width:100%!important
+}
+.explorar-cabecera>.titulo-consulta>.eu-gif,
+.cuenta-cabecera>.titulo-consulta>.eu-gif,
+.controles>.titulo-consulta>.eu-gif{grid-column:3;grid-row:1}
+.cuenta-cabecera>#cerrarCuenta{
+  display:flex;align-items:center;min-height:44px;
+  justify-content:flex-end;margin:0 0 0 auto;padding:10px 2px;
+  position:relative;z-index:3;
+}
+.inicio-cab h1,.novedades-cab h1,.bienvenida-cab h1,
+.explorar-cabecera h2,.cuenta-cabecera h2,.controles>.titulo-consulta h2{
+  font-family:'Spectral',Georgia,serif;
+  font-size:clamp(27px,3vw,38px);
+  line-height:1.16;letter-spacing:-.023em;
+  margin:5px 0 8px!important;
+  max-width:100%!important;
+  color:var(--eu-hero-oscuro);
+}
+.inicio-cab p,.novedades-cab p,.bienvenida-cab p,
+.explorar-cabecera p,.cuenta-cabecera p,.controles>.titulo-consulta p{
+  color:#506355;
+  font-size:clamp(14px,1.35vw,16px);
+  line-height:1.55;max-width:100%!important;
+}
+.inicio-cab .eu-frase,.novedades-cab .eu-frase,.bienvenida-cab .eu-frase,
+.explorar-cabecera .eu-frase,.cuenta-cabecera .eu-frase,
+.controles>.titulo-consulta .eu-frase{
+  display:flex;align-items:flex-start;gap:9px;max-width:100%!important;
+  color:#876b57;font-size:clamp(13px,1.3vw,15px);line-height:1.45;
+  margin:11px 0 0;
+}
+/* Imagen, vídeo y rótulo siempre dentro del mismo cuadro 16:9. */
+.inicio-cab>.eu-gif,.novedades-cab>.eu-gif,.bienvenida-cab>.eu-gif,
+.explorar-cabecera>.titulo-consulta>.eu-gif,
+.cuenta-cabecera>.titulo-consulta>.eu-gif,
+.controles>.titulo-consulta>.eu-gif{
+  box-sizing:border-box;position:relative!important;
+  inset:auto!important;
+  display:block;width:100%!important;min-width:0;
+  height:auto!important;aspect-ratio:16/9;
+  max-height:none!important;
+  align-self:center;
+  margin:0!important;padding:0!important;
+  border:1px solid #cdd5c9!important;border-radius:14px!important;
+  background:var(--eu-hero-mate)!important;
+  overflow:hidden!important;
+  box-shadow:0 7px 18px rgba(26,47,31,.10)!important;
+}
+.eu-gif>.eu-still,.eu-gif>.eu-still img,
+.eu-gif>.eu-video{
+  display:block;width:100%;height:100%;
+  min-height:0!important;max-height:none!important;
+  object-fit:cover!important;object-position:center!important;
+  border:0!important;border-radius:0!important;
+  background:transparent!important;
+}
+.eu-gif>.eu-still{aspect-ratio:16/9}
+.eu-gif>.eu-still img{aspect-ratio:16/9}
+.eu-gif>.eu-video{position:absolute!important;inset:0!important;z-index:1}
+.eu-gif.eu-imagen{background:var(--eu-hero-mate)}
+.eu-gif[data-caption]::after{
+  content:attr(data-caption);
+  position:absolute;left:0;bottom:0;right:0;z-index:3;
+  padding:10px 14px 11px;min-height:34px;
+  box-sizing:border-box;
+  background:linear-gradient(to top,rgba(23,45,33,.83),rgba(23,45,33,.55));
+  color:#fffdf7;
+  font:500 11px/1.35 'IBM Plex Mono',monospace;
+  letter-spacing:.06em;
+}
+/* Mismo ritmo de entrada para todos los módulos que siguen al hero */
+#inicioNovedades,.selector-temas,.cuenta-grid,#barra,.guia-indice{
+  scroll-margin-top:20px;
+}
+#explorar .selector-temas{margin-top:0}
+#cuentaPanel .cuenta-grid{margin-top:0}
+@media(max-width:760px){
+  :root{--eu-hero-gutter:12px;--eu-hero-radius:17px;--eu-hero-espacio:23px}
+  #inicioPanel.inicio-panel,#controles.controles,#explorar.explorar,
+  #cuentaPanel.cuenta-panel,#bienvenida.bienvenida{padding-top:12px!important}
+  #novedadesCab.novedades-cab{width:calc(100% - 24px)!important;
+    padding:14px!important;margin:12px auto var(--eu-hero-espacio)!important}
+  .inicio-cab,.novedades-cab,.bienvenida-cab,
+  .explorar-cabecera,.cuenta-cabecera,.controles>.titulo-consulta{
+    padding:14px!important;margin:0 0 var(--eu-hero-espacio)!important;
+    border-radius:var(--eu-hero-radius)!important;
+  }
+  .inicio-cab,.novedades-cab,.bienvenida-cab{
+    grid-template-columns:1fr;grid-template-rows:auto;
+    gap:9px;align-items:start
+  }
+  .inicio-cab>.eu-gif,.novedades-cab>.eu-gif,.bienvenida-cab>.eu-gif{
+    grid-column:1;grid-row:1;
+  }
+  .inicio-cab>.seccion-kicker,.novedades-cab>.seccion-kicker{
+    grid-column:1;grid-row:2;margin-top:9px
+  }
+  .inicio-cab>h1,.novedades-cab>h1{grid-column:1;grid-row:3}
+  .inicio-cab>p,.novedades-cab>p{grid-column:1;grid-row:4}
+  .inicio-cab>.eu-frase,.novedades-cab>.eu-frase{
+    grid-column:1;grid-row:5
+  }
+  .bienvenida-cab>div{grid-column:1;grid-row:2}
+  .bienvenida-cab>button{grid-column:1;grid-row:3}
+  .explorar-cabecera>.titulo-consulta,.cuenta-cabecera>.titulo-consulta,
+  .controles>.titulo-consulta{
+    grid-template-columns:34px minmax(0,1fr);
+    gap:11px 11px;
+    padding:0!important;
+  }
+  .explorar-cabecera>.titulo-consulta>.eu-gif,
+  .cuenta-cabecera>.titulo-consulta>.eu-gif,
+  .controles>.titulo-consulta>.eu-gif{
+    grid-column:1/-1;grid-row:1;
+  }
+  .explorar-cabecera>.titulo-consulta>.seccion-numero,
+  .cuenta-cabecera>.titulo-consulta>.seccion-numero,
+  .controles>.titulo-consulta>.seccion-numero{
+    grid-column:1;grid-row:2;margin-top:10px
+  }
+  .explorar-cabecera>.titulo-consulta>div:not(.eu-gif),
+  .cuenta-cabecera>.titulo-consulta>div:not(.eu-gif),
+  .controles>.titulo-consulta>div:not(.eu-gif){
+    grid-column:2;grid-row:2
+  }
+  .inicio-cab h1,.novedades-cab h1,.bienvenida-cab h1,
+  .explorar-cabecera h2,.cuenta-cabecera h2,
+  .controles>.titulo-consulta h2{
+    font-size:clamp(26px,6.4vw,34px);line-height:1.13;
+  }
+  .inicio-cab p,.novedades-cab p,.bienvenida-cab p,
+  .explorar-cabecera p,.cuenta-cabecera p,.controles>.titulo-consulta p{
+    font-size:14px;line-height:1.5
+  }
+  .inicio-cab .eu-frase,.novedades-cab .eu-frase,.bienvenida-cab .eu-frase,
+  .explorar-cabecera .eu-frase,.cuenta-cabecera .eu-frase,
+  .controles>.titulo-consulta .eu-frase{font-size:13px}
+  .eu-gif[data-caption]::after{padding:9px 12px;min-height:33px;font-size:10px}
+  #explorar.explorar,#cuentaPanel.cuenta-panel{padding-bottom:20px!important}
+  .cuenta-cabecera>#cerrarCuenta{min-height:44px;margin-top:3px}
+}
+@media(max-width:390px){
+  .inicio-cab,.novedades-cab,.bienvenida-cab,
+  .explorar-cabecera,.cuenta-cabecera,.controles>.titulo-consulta{
+    padding:11px!important;
+  }
+  #novedadesCab.novedades-cab{padding:11px!important}
+}
+@media(prefers-reduced-motion:reduce){
+  .eu-gif,.eu-gif *{transition:none!important;animation:none!important}
+  .eu-gif .eu-video{display:none!important}
+}
