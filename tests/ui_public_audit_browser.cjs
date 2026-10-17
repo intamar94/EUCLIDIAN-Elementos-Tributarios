@@ -21,7 +21,18 @@ const assert=require('node:assert/strict');
       const ib=await imagen.boundingBox(),cb=await copy.boundingBox();
       assert.ok(ib&&cb&&ib.y < cb.y,'Hero debe abrir con imagen '+width);
       assert.ok(await imagen.evaluate(el=>el.complete&&el.naturalWidth>=1000),'Imagen original nítida '+width);
-      assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>window.innerWidth),false,'Sin desbordamiento portada '+width);
+      const desborde=await page.evaluate(()=>{
+        const margen=window.innerWidth;
+        return {ancho:document.documentElement.scrollWidth,ventana:margen,
+          elementos:[...document.querySelectorAll('body *')]
+            .map(el=>({el,rect:el.getBoundingClientRect()}))
+            .filter(x=>x.rect.right>margen+1&&x.rect.width>0)
+            .sort((a,b)=>b.rect.right-a.rect.right).slice(0,12)
+            .map(x=>({tag:x.el.tagName,clase:x.el.className?.baseVal||x.el.className,
+              derecha:Math.round(x.rect.right),ancho:Math.round(x.rect.width)}))};
+      });
+      if(desborde.ancho>width)console.log('Diagnóstico de desbordamiento '+width,JSON.stringify(desborde));
+      assert.ok(desborde.ancho<=width,'Sin desbordamiento portada '+width);
       assert.equal(await page.locator('meta[name="robots"]').getAttribute('content'),'index,follow');
       const canonical=await page.locator('link[rel="canonical"]').getAttribute('href');
       assert.ok(canonical?.startsWith('https://'));
