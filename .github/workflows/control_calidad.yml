@@ -113,7 +113,9 @@ jobs:
       - name: Regresión comercial y ownership
         run: node tests/commercial_access_contract.mjs
       - name: Contrato portada pública y SEO
-        run: node tests/public_landing_contract.mjs
+        run: |
+          node tests/public_landing_contract.mjs
+          node tests/seo_integral_contract.mjs
       - name: "Auditoría focalizada: accesibilidad, fechas y SEO"
         run: node tests/auditoria_integral_contract.mjs
       - name: "Auditoría real de navegador: portada, ingreso y recorridos"

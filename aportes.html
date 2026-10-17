@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#f3f0e8"><meta name="robots" content="noindex,nofollow">
-<title>Enviar un aporte | Mi cuenta EUCLIDIAN</title>
-<meta name="description" content="Aporta una corrección, documento faltante o sugerencia al equipo EUCLIDIAN durante una convocatoria abierta.">
+<title>SIGNA: aportes de la comunidad | Mi cuenta EUCLIDIAN</title>
+<meta name="description" content="SIGNA es el espacio de aportes de los usuarios de EUCLIDIAN. Convocatoria temporal, revisión de cada propuesta y acceso cerrado durante la preparación.">
 <link rel="icon" type="image/svg+xml" href="/icono-euclidian.svg">
 <link rel="stylesheet" href="/landing.css">
 <link rel="stylesheet" href="/informacion.css">
@@ -13,11 +13,12 @@
 <a class="skip" href="#contenido">Ir al formulario</a>
 <header class="top"><div class="wrap nav"><a class="brand" href="/">EUCL<em>i</em>DIAN<span>Elementos Tributarios</span></a><nav aria-label="Principal"><a href="/app.html">← Mi cuenta</a></nav></div></header>
 <main class="wrap informacion" id="contenido">
-<p class="eyebrow">EUCLIDIAN · PARTICIPA</p><h1>Tu aporte mejora la biblioteca.</h1>
+<p class="eyebrow">EUCLIDIAN · SIGNA</p><h1>SIGNA: tus aportes cuentan.</h1>
 <p class="introduccion">Ayúdanos a detectar errores, documentos faltantes o mejoras. Los reportes serán revisados; no se publican automáticamente ni son un canal para consultas jurídicas personales.</p>
 <section class="panel-informacion" aria-labelledby="formTitle">
-<h2 id="formTitle">Formulario de aportes</h2>
-<p id="ventanaEstado" role="status" aria-live="polite">Consultando el período de aportes…</p>
+<h2 id="formTitle">Formulario SIGNA</h2>
+<p class="signa-estado" id="signaCondiciones"><strong>SIGNA todavía no está disponible.</strong> El precio, el período de participación y las condiciones de acceso se comunicarán antes de abrirlo. No se realizan pagos ni se reciben formularios durante esta fase.</p>
+<p id="ventanaEstado" role="status" aria-live="polite">Comprobando la disponibilidad de SIGNA…</p>
 <p id="fechaLimite"></p>
 <form id="formAporte" hidden>
 <label for="tipo">Tipo de aporte</label>
@@ -38,7 +39,7 @@
 <p id="resultadoAporte" role="status" aria-live="polite"></p>
 </form>
 </section>
-<p class="pie-informacion">La participación está sujeta a un plazo comunicado en horario de Colombia. Durante la preparación legal y el cierre de cuentas, el formulario permanece deshabilitado. Para asuntos generales escribe a <a href="mailto:contacto@euclidianet.com">contacto@euclidianet.com</a>.</p>
+<p class="pie-informacion">SIGNA tendrá un período de participación limitado en horario de Colombia. Durante la preparación legal y el cierre de cuentas, el formulario permanece deshabilitado. Para asuntos generales escribe a <a href="mailto:contacto@euclidianet.com">contacto@euclidianet.com</a>.</p>
 </main>
 <footer class="wrap pie-informacion"><a href="/impressum">Impressum</a> · <a href="/datenschutz">Privacidad</a> · <a href="/">Inicio</a></footer>
 <script>
@@ -51,7 +52,7 @@
   const r=await fetch('/api/aportes',{cache:'no-store'});
   if(!r.ok)throw Error('Consulta no disponible');
   ventana=await r.json();
- }catch(_){estado.textContent='No se puede verificar la convocatoria. El formulario queda cerrado.';return;}
+ }catch(_){estado.textContent='No se puede verificar la convocatoria. SIGNA permanece cerrado.';return;}
  estado.textContent=ventana.mensaje||'Los aportes están cerrados.';
  if(ventana.inicio&&ventana.fin)limite.textContent='Período: '+renderFecha(ventana.inicio)+' al '+renderFecha(ventana.fin)+' (hora de Colombia).';
  if(!ventana.abierto)return;

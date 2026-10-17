@@ -34,3 +34,11 @@
 .guias-grid a{color:var(--green);text-underline-offset:3px}
 .guias-grid p{color:var(--muted);margin:0}
 @media(max-width:760px){.guias-grid{grid-template-columns:1fr}}
+
+/* SIGNA comparte el sistema de diseño de las tarjetas públicas, sin efectos invasivos. */
+.cuenta-aportes{background:#f5f5ed;border-color:#a5af9e;overflow-wrap:anywhere}
+.cuenta-aportes .signa-etiqueta{display:block;font:600 .75rem/1.5 'IBM Plex Mono',monospace;letter-spacing:.075em;color:#385d46;margin:0 0 8px}
+.cuenta-aportes .signa-estado,.informacion .signa-estado{background:#f0efe5;border-inline-start:3px solid #6b796c;padding:12px 15px;border-radius:3px;color:#293e32;font-size:.95rem;line-height:1.55}
+.informacion .signa-estado{margin-bottom:1.25rem}
+.informacion #ventanaEstado{overflow-wrap:anywhere}
+@media(max-width:620px){.cuenta-aportes{margin-inline:0;padding:20px 18px}.cuenta-aportes h3{font-size:clamp(1.3rem,6vw,1.65rem)}.informacion h1{overflow-wrap:anywhere}}
