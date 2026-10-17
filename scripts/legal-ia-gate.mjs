@@ -70,7 +70,9 @@ function checkProject(slug) {
     const html=root&&fs.existsSync(path.join(root,'index.html'))?fs.readFileSync(path.join(root,'index.html'),'utf8'):'';
     const app=root&&fs.existsSync(path.join(root,'app.html'))?fs.readFileSync(path.join(root,'app.html'),'utf8'):'';
     const linked=validRel&&[html,app].filter(Boolean).every(t=>t.includes('href="/'+rel+'"')||t.includes("href='/"+rel+"'"));
-    add('page.'+kind,Boolean(file&&fs.existsSync(file)&&linked&&entry.status==='APPROVED'&&safeText(entry.evidence)),
+    const legalBody=file&&fs.existsSync(file)?fs.readFileSync(file,'utf8'):'';
+    const hasPlaceholders=/\{\{[^}]+\}\}|ENTWURF|BORRADOR|NICHT VERÖFFENTLICHEN|NO PUBLICABLE/i.test(legalBody);
+    add('page.'+kind,Boolean(file&&fs.existsSync(file)&&linked&&!hasPlaceholders&&entry.status==='APPROVED'&&safeText(entry.evidence)),
       'Página '+kind+' aprobada, existente y enlazada en el sitio; referencia de aprobación registrada',kind==='impressum'?'DDG §5':'DSGVO arts. 12-14');
   }
   for(const k of ['privacy_mapping','processor_contracts_dpa','security_access','cookie_consent_audit','brand_and_asset_licensing'])
