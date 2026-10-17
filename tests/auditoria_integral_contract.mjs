@@ -23,6 +23,18 @@ assert.equal(fechas.diasHasta(fechas.fechaDePlazo('hasta el 16 de octubre de 202
 assert.equal(fechas.diasHasta(fechas.fechaDePlazo('hasta el 17 de octubre de 2026')),1);
 console.log('OK: fechas civiles reales y cómputo colombiano sin dependencia del huso del visitante');
 
+const serverSource=read('api/documentos.js')
+  .replace(/^import .+;$/gm,'')
+  .replace('export default async function handler','async function handler');
+const servidor={Date:FechaFija,Intl,process:{env:{}},AbortController,console,setTimeout,clearTimeout};
+vm.createContext(servidor);
+vm.runInContext(serverSource,servidor,{filename:'api/documentos.js'});
+assert.equal(servidor.fechaHoyColombia(),'2026-10-16');
+assert.equal(servidor.fechaCorteNovedades(),'2026-10-02');
+assert.equal(servidor.fechaReciente('2026-10-16'),true);
+assert.equal(servidor.fechaReciente('2026-10-17'),false,'Un día futuro en Bogotá no es novedad');
+console.log('OK: ventana API de novedades coherente con el calendario colombiano');
+
 // Ejecutar el JavaScript real de ingreso con un DOM mínimo y comprobar teclado.
 const elementos=new Map();
 function elemento(id){
