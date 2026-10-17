@@ -71,7 +71,7 @@ function ficha(d){
     ${marcaNueva||advertencia?`<div class="cintas">${marcaNueva}${advertencia}</div>`:''}
     <div class="fila-id">${glifo(d)}<span class="codigo codigo-texto" title="Referencia del catálogo EUCLIDIAN">${esc(d.numero_resolucion)}</span></div>
     <h2>${esc(tituloFicha(d))}</h2>${fechaPrincipal(d)}${resumenResultado(d)}
-    ${bloqueEstadoClave(d)}${bloqueAccionesLectura(d)}
+    ${bloqueEstadoClave(d)}${bloqueAccionesLectura(d)}${window.EuclidianPractico?.panel(d)||""}
     <details class="detalle-resultado"><summary>Ver detalles: contenido, vigencia y relaciones</summary>
       <p class="cobertura-nota">Un documento cotejado tiene respaldo documental; esto no determina su aplicación a tu caso. Un enlace disponible permite consultar el original, pero no acredita su cotejo.</p>
       <div class="cuerpo"><div class="principal">${bloqueContenido(d)}${bloqueRespuesta(d)}${bloqueAplicacion(d)}${bloqueVigencia(d)}${bloqueClasificacion(d)}${bloqueFuentes(d)}${bloqueFuentesFormales(d)}${bloqueIdentificacion(d)}</div>
