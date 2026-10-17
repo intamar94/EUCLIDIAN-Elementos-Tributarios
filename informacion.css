@@ -42,3 +42,16 @@
 .informacion .signa-estado{margin-bottom:1.25rem}
 .informacion #ventanaEstado{overflow-wrap:anywhere}
 @media(max-width:620px){.cuenta-aportes{margin-inline:0;padding:20px 18px}.cuenta-aportes h3{font-size:clamp(1.3rem,6vw,1.65rem)}.informacion h1{overflow-wrap:anywhere}}
+
+/* Navegación de guías, contacto y SIGNA: conserva el regreso en móvil. */
+.informacion-header .nav{min-width:0}
+.informacion-header .nav nav{min-width:0}
+@media(max-width:900px) and (min-width:621px){
+ .informacion-header .nav{flex-wrap:wrap;gap:10px 18px;padding-block:12px}
+ .informacion-header .nav nav{margin-left:0;flex-wrap:wrap;gap:10px 17px}
+}
+@media(max-width:620px){
+ .informacion-header .brand{font-size:clamp(18px,5.1vw,21px)}
+ .informacion-header .nav nav{margin-left:auto}
+ .informacion-header .nav nav a.login{display:inline-flex;align-items:center;white-space:nowrap}
+}

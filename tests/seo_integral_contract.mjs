@@ -33,6 +33,12 @@ for(const page of ['app.html','aportes.html']){
  assert.match(html,/<meta name="robots" content="noindex[,a-z]*">/);
  assert.ok(!s.includes(base+'/'+page),'Una vista noindex no debe figurar en el sitemap: '+page);
 }
+for(const p of ['fuentes-dian.html','fechas-y-vigencia.html','novedades-tributarias.html','contacto.html','aportes.html']){
+ const h=read(p);
+ assert.match(h,/<header class="top informacion-header">/);
+ assert.match(h,/<nav aria-label="Principal"><a href="[^"]+" class="login">/,'Regreso visible en móvil: '+p);
+}
+assert.match(read('informacion.css'),/\.informacion-header \.nav nav a\.login/);
 assert.match(read('app.html'),/SIGNA: contribuye a mejorar EUCLIDIAN/);
 assert.match(read('app.html'),/href="\/aportes.html"/);
 const signa=read('aportes.html');
