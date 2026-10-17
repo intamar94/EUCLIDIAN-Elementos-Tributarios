@@ -4,6 +4,7 @@ process.env.SUPABASE_URL='https://example.supabase.co';
 process.env.SUPABASE_PUBLISHABLE_KEY='publishable-test';
 process.env.SUPABASE_SERVICE_KEY='service-test';
 process.env.EUCLIDIAN_CLAVE='internal-test';
+process.env.EUCLIDIAN_PUBLIC_ACCESS_ENABLED='1';
 
 const {default:authHandler}=await import('../api/auth.js?test='+Date.now());
 const {autorizarConsulta}=await import('../lib/auth-server.js?test='+Date.now());
