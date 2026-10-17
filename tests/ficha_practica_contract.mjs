@@ -30,7 +30,7 @@ assert.equal(p.resumen,'');
 assert.equal(p.cotejado,false);
 const tecnico=f.borrador(p,'tecnico'),cliente=f.borrador(p,'cliente');
 assert.match(tecnico,/Fecha de aplicación: Por confirmar/);
-assert.match(tecnico,/sujetos y excepciones|sujetos, condiciones/i);
+assert.match(tecnico,/sujetos.*excepciones/i);
 assert.doesNotMatch(tecnico,/nueva obligación automática/);
 assert.match(cliente,/no implica por sí sola/i);
 assert.match(cliente,/completar tras revisión profesional/i);
