@@ -138,3 +138,9 @@ section[id]{scroll-margin-top:96px}
   .cierre-acciones .primary{width:100%;justify-content:center;text-align:center;padding:12px;min-height:52px}
   .cierre-entrar{text-align:center;padding:8px 0;min-height:44px}
 }
+
+/* Marca pedagógica ET: E de Elementos y T de Tributarios, igual acento que la i. */
+.brand .et,.footer-grid .et{color:var(--red);font-weight:700}
+.footer-grid .footer-enlaces{display:flex;flex-direction:column;gap:10px}
+.footer-grid .footer-enlaces>a{color:#dbe4dd;font-size:11px}
+.footer-grid .footer-enlaces>a:hover{text-decoration:underline}

@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="es-CO">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#f7f3ea">
+  <meta name="robots" content="noindex,follow">
+  <title>Reportar un error o sugerir una mejora | EUCLIDIAN</title>
+  <meta name="description" content="Ayúdanos a mejorar EUCLIDIAN: informa errores, documentos faltantes, datos por corregir y sugerencias.">
+  <link rel="icon" href="/icono-euclidian.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Spectral:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root{--papel:#f7f3ea;--tinta:#193329;--verde:#244c38;--rojo:#b85b45;--linea:#d9d8ca;--muted:#526359}
+    *{box-sizing:border-box}body{margin:0;background:var(--papel);color:var(--tinta);font:16px/1.6 "IBM Plex Sans",system-ui,sans-serif}
+    a{color:var(--verde)}a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px solid var(--rojo);outline-offset:3px}
+    .wrap{width:min(100% - 32px,760px);margin-inline:auto}
+    header{border-bottom:1px solid var(--linea);background:#fffdf8}
+    .head{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:74px}
+    .marca{font:600 26px "Spectral",serif;letter-spacing:.04em;text-decoration:none;color:var(--tinta)}
+    .marca em,.sigla{font-style:normal;color:var(--rojo)}
+    .volver{font-size:14px;font-weight:600}
+    main{padding-block:clamp(30px,6vw,65px) 70px}
+    .kicker{display:block;margin-bottom:10px;color:var(--verde);font:600 12px "IBM Plex Mono",monospace;letter-spacing:.1em;text-transform:uppercase}
+    h1,h2{font-family:"Spectral",Georgia,serif;line-height:1.15}
+    h1{font-size:clamp(34px,5.3vw,54px);margin:0 0 14px}
+    .intro{max-width:68ch;color:var(--muted);margin:0 0 25px}
+    .formulario{background:#fffdf8;border:1px solid var(--linea);border-radius:16px;padding:clamp(20px,4vw,34px);box-shadow:0 14px 38px #19332912}
+    .formulario h2{margin:0 0 19px;font-size:26px}
+    label{display:block;font-weight:600;margin:15px 0 6px}
+    select,input,textarea{display:block;width:100%;padding:13px 14px;background:white;color:var(--tinta);font:inherit;border:1px solid #a9b8ad;border-radius:8px}
+    textarea{min-height:175px;resize:vertical}
+    small,.nota{display:block;color:var(--muted);font-size:13px;line-height:1.6;margin-top:8px}
+    button{border:0;border-radius:9px;background:var(--verde);color:white;font:600 15px "IBM Plex Sans",sans-serif;padding:14px 18px;min-height:48px;cursor:pointer;margin-top:22px;width:100%}
+    button:hover{background:#183c29}
+    .estado{min-height:2em;font-weight:500;color:var(--verde);margin:12px 0 0}
+    .correo{padding-top:21px;margin-top:25px;border-top:1px solid var(--linea)}
+    footer{padding:22px 0 35px;border-top:1px solid var(--linea);color:var(--muted);font-size:13px}
+    @media(max-width:480px){.head{min-height:64px}.marca{font-size:21px}.volver{font-size:13px}}
+  </style>
+</head>
+<body>
+  <header><div class="head wrap">
+    <a class="marca" href="/" aria-label="EUCLIDIAN, ir al inicio">EUCL<em>i</em>DIAN</a>
+    <a class="volver" href="/">← Volver a EUCLIDIAN</a>
+  </div></header>
+  <main class="wrap">
+    <span class="kicker">Tu aporte cuenta · EUCLIDIAN</span>
+    <h1>Ayúdanos a mejorar la información tributaria.</h1>
+    <p class="intro">¿Encontraste un error, una norma faltante o tienes una idea? Cuéntanos qué viste para poder revisarlo. EUCLIDIAN es independiente de la DIAN y siempre recomendamos contrastar con la fuente oficial.</p>
+    <div class="formulario">
+      <h2>Reportar o sugerir</h2>
+      <form id="reporte">
+        <label for="tipo">¿Qué quieres comunicarnos?</label>
+        <select id="tipo" name="tipo" required>
+          <option value="" selected disabled>Selecciona una opción</option>
+          <option value="Error en la plataforma">Un error al utilizar la plataforma</option>
+          <option value="Dato para corregir">Un dato o referencia tributaria incorrectos</option>
+          <option value="Documento faltante">Una norma, concepto u oficio faltante</option>
+          <option value="Sugerencia">Una sugerencia de mejora</option>
+          <option value="Otra consulta">Otro comentario</option>
+        </select>
+        <label for="referencia">Referencia (opcional)</label>
+        <input id="referencia" name="referencia" type="text" maxlength="180" autocomplete="off" placeholder="Ej.: Oficio DIAN 1234 de 2026, sección o enlace">
+        <small>Incluye el número del documento o la sección afectada cuando sea posible.</small>
+        <label for="detalle">Describe el problema o tu sugerencia</label>
+        <textarea id="detalle" name="detalle" minlength="12" maxlength="3000" required placeholder="Qué ocurrió, qué esperabas encontrar y cómo podemos comprobarlo…"></textarea>
+        <small>No incluyas contraseñas, datos personales de terceros ni información tributaria confidencial.</small>
+        <button type="submit">Preparar correo para enviarlo →</button>
+        <p class="nota">Se abrirá tu aplicación de correo con el mensaje preparado. <strong>No se enviará automáticamente:</strong> revísalo y pulsa «Enviar» allí.</p>
+        <p id="estado" class="estado" role="status" aria-live="polite"></p>
+      </form>
+      <div class="correo">
+        <strong>También puedes escribirnos directamente:</strong><br>
+        <a href="mailto:contacto@euclidianet.com?subject=EUCLIDIAN%20-%20Consulta">contacto@euclidianet.com</a>
+        <p class="nota">La dirección comenzará a recibir mensajes cuando se active el dominio y el servicio gratuito de correo. Este formulario no registra datos en servidores de EUCLIDIAN.</p>
+      </div>
+    </div>
+  </main>
+  <footer><div class="wrap"><strong>EUCLIDIAN</strong> — <span class="sigla">E</span>lementos <span class="sigla">T</span>ributarios · Tu información y tus aportes merecen un tratamiento cuidadoso.</div></footer>
+  <script>
+    (() => {
+      const form = document.getElementById('reporte');
+      const estado = document.getElementById('estado');
+      form.addEventListener('submit', (event) => {
+        event.preventDefault();
+        if (!form.reportValidity()) return;
+        const tipo = document.getElementById('tipo').value;
+        const referencia = document.getElementById('referencia').value.trim();
+        const detalle = document.getElementById('detalle').value.trim();
+        if (detalle.length < 12) {
+          estado.textContent = 'Por favor, describe tu observación con un poco más de detalle.';
+          return;
+        }
+        const asunto = 'EUCLIDIAN — ' + tipo;
+        const mensaje = [
+          'Tipo: ' + tipo,
+          'Referencia: ' + (referencia || 'No indicada'),
+          'Página: ' + location.origin + location.pathname,
+          '',
+          'Descripción:',
+          detalle
+        ].join('\n');
+        const destinatarios = {
+          'Error en la plataforma': 'errores@euclidianet.com',
+          'Dato para corregir': 'errores@euclidianet.com',
+          'Documento faltante': 'sugerencias@euclidianet.com',
+          'Sugerencia': 'sugerencias@euclidianet.com'
+        };
+        const destinatario = destinatarios[tipo] || 'contacto@euclidianet.com';
+        const enlace = 'mailto:' + destinatario + '?subject=' + encodeURIComponent(asunto) + '&body=' + encodeURIComponent(mensaje);
+        estado.textContent = 'Se está abriendo tu aplicación de correo. El mensaje solo se enviará cuando lo confirmes allí.';
+        location.href = enlace;
+      });
+    })();
+  </script>
+</body>
+</html>
