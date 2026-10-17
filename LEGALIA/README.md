@@ -40,3 +40,11 @@ Se integra una auditoría de LEGAL.ia dentro del workflow existente `control_cal
 - [RGPD arts. 13, 28, 32](https://eur-lex.europa.eu/eli/reg/2016/679/oj)
 - [BGB §312j](https://www.gesetze-im-internet.de/bgb/__312j.html), [§312k](https://www.gesetze-im-internet.de/bgb/__312k.html), [§356a](https://www.gesetze-im-internet.de/bgb/__356a.html)
 - [BaFin](https://www.bafin.de/ref/19629832), [BFSG](https://www.bundesfachstelle-barrierefreiheit.de/DE/Barrierefreiheitsstaerkungsgesetz/barrierefreiheitsstaerkungsgesetz)
+
+## Expedientes reutilizables
+- Cada nuevo proyecto: `node scripts/legal-ia-new-project.mjs mi-proyecto "Mi proyecto"`. Genera **solamente** un archivo JSON con estados REVIEW y datos no sensibles.
+- Completar país de actividad, proveedores y funcionalidad real; revisar `LEGALIA/dominio-y-correo.md`, `LEGALIA/ventas-y-suscripciones.md` y `LEGALIA/inventario-tecnico-euclidian.md` como ejemplos.
+- La evaluación técnica específica de EUCLIDIAN se realiza con `node scripts/legal-ia-static-audit.mjs --json`; su código no debe copiarse ciegamente a una tienda o marketplace.
+- Plantillas jurídicas de trabajo: `LEGALIA/plantillas/IMPRESSUM.de.muster.md` y `LEGALIA/plantillas/DATENSCHUTZ.de.muster.md`. No son documentos legales aprobados y **no aparecen aún en la web**.
+- El workflow existente `control_calidad.yml` ejecuta el inventario y test de regresión. El control estricto de publicación es un **job independiente dentro del mismo workflow**, para permitir que las pruebas funcionales sigan ejecutándose aunque la autorización legal quede pendiente.
+- No usar el resultado CI como autorización de lanzamiento hasta configurar las reglas de protección de rama y el circuito que conecta despliegue Vercel con gate legal; Vercel puede desplegar independientemente del check.
