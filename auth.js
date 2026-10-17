@@ -65,6 +65,7 @@ function authMostrarPuerta(){
 }
 function authOcultarPuerta(){const p=document.getElementById('puerta');if(p)p.hidden=true;}
 function authCambiarTab(registro){
+  if(registro){authStatus('El registro de nuevos usuarios está cerrado por el momento.','aviso');return;}
   const login=document.getElementById('authLoginForm'), alta=document.getElementById('authRegisterForm'), reset=document.getElementById('authResetForm');
   if(reset)reset.hidden=true;if(login)login.hidden=registro;if(alta)alta.hidden=!registro;
   const a=document.getElementById('tabEntrar'),b=document.getElementById('tabCrear');
@@ -196,19 +197,8 @@ window.euclidianAuthSinSuscripcion=async info=>{
 };
 
 document.getElementById('tabEntrar')?.addEventListener('click',()=>authCambiarTab(false));
-document.getElementById('tabCrear')?.addEventListener('click',()=>authCambiarTab(true));
-// Tabs de acceso: mismo contrato accesible que las pestañas de la portada.
-for(const id of ['tabEntrar','tabCrear']){
-  document.getElementById(id)?.addEventListener('keydown',event=>{
-    if(!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;
-    event.preventDefault();
-    const siguiente=event.key==='Home'?'tabEntrar':event.key==='End'?'tabCrear':
-      id==='tabEntrar'?'tabCrear':'tabEntrar';
-    authCambiarTab(siguiente==='tabCrear');
-    document.getElementById(siguiente)?.focus();
-  });
-}
-
+// Registro cerrado: no existe acción de navegación pública al alta.
+// La pantalla de acceso ofrece solo inicio de sesión; sin pestaña de alta.
 document.getElementById('authLoginForm')?.addEventListener('submit',async e=>{
   e.preventDefault();const btn=e.submitter;btn.disabled=true;authStatus('Comprobando tu acceso…');
   try{
@@ -222,7 +212,7 @@ document.getElementById('authLoginForm')?.addEventListener('submit',async e=>{
   finally{btn.disabled=false;}
 });
 document.getElementById('authRegisterForm')?.addEventListener('submit',async e=>{
-  e.preventDefault();const btn=e.submitter;btn.disabled=true;authStatus('Creando tu cuenta…');
+  e.preventDefault();authStatus('Las nuevas cuentas están deshabilitadas por el momento.','aviso');return;
   try{
     const email=document.getElementById('authRegisterEmail').value.trim();
     const password=document.getElementById('authRegisterPassword').value;
@@ -271,7 +261,7 @@ document.getElementById('cuentaRecuperar')?.addEventListener('click',()=>{
 document.getElementById('cerrarCuenta')?.addEventListener('click',()=>{document.getElementById('cuentaPanel').hidden=true;window.euclidianCambiarVista?.('inicio');});
 document.getElementById('cuentaGestionarPago')?.addEventListener('click',e=>authCobro({action:'portal'},e.currentTarget));
 document.getElementById('cuentaActualizar')?.addEventListener('click',()=>window.cargar?.().catch(()=>{}));
-if(!authRecuperacionDesdeHash()&&new URLSearchParams(location.search).get('registro')==='1')authCambiarTab(true);
+authRecuperacionDesdeHash(); // ?registro=1 nunca habilita el formulario de alta.
 
 document.getElementById('perfilForm')?.addEventListener('submit',async e=>{
   e.preventDefault();const btn=e.submitter,estado=document.getElementById('perfilEstado');

@@ -48,20 +48,16 @@ const assert=require('node:assert/strict');
       await page.goto(base+'/app.html',{waitUntil:'domcontentloaded'});
       await page.locator('#puerta').waitFor({state:'visible'});
       assert.equal(await page.locator('meta[name="robots"]').getAttribute('content'),'noindex,nofollow');
-      await page.locator('#tabEntrar').focus();
-      await page.keyboard.press('ArrowRight');
-      assert.equal(await page.locator('#tabCrear').getAttribute('aria-selected'),'true');
-      assert.equal(await page.locator('#authRegisterForm').isVisible(),true);
-      await page.keyboard.press('Home');
-      assert.equal(await page.locator('#tabEntrar').getAttribute('aria-selected'),'true');
-      await page.keyboard.press('End');
-      assert.equal(await page.locator('#tabCrear').getAttribute('aria-selected'),'true');
-      await page.locator('#tabEntrar').click();
-      assert.equal(await page.locator('#authLoginForm').isVisible(),true);
+      assert.equal(await page.locator('#tabCrear').isVisible(),false,'Registro sin pestaña visible');
+      assert.equal(await page.locator('#authRegisterForm').isVisible(),false,'Registro sin formulario visible');
+      assert.equal(await page.locator('#authLoginForm').isVisible(),true,'Inicio de sesión disponible');
+      await page.goto(base+'/app.html?registro=1',{waitUntil:'domcontentloaded'});
+      await page.locator('#puerta').waitFor({state:'visible'});
+      assert.equal(await page.locator('#authRegisterForm').isVisible(),false,'URL antigua no reabre registro');
       assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>window.innerWidth),false,'Sin desbordamiento ingreso '+width);
       await page.screenshot({path:`/tmp/euclidian-ingreso-${width}.png`,fullPage:true});
       assert.deepEqual(errors,[],'Sin errores de JavaScript '+width);
-      console.log(`OK ${width}px: portada, imagen, SEO visible, pestañas, teclado, ingreso y sin desbordamientos`);
+      console.log(`OK ${width}px: portada, imagen, SEO visible, registro cerrado, ingreso y sin desbordamientos`);
       await context.close();
     }
   }finally{

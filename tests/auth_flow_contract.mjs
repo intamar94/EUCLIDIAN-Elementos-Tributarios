@@ -19,9 +19,10 @@ async function callAuth(body){
 {
   let calls=0;global.fetch=async()=>{calls++;throw new Error('no debe llamarse');};
   const res=await callAuth({action:'signup',email:'mal',password:'123'});
-  assert.equal(res.code,400);
+  assert.equal(res.code,403);
+  assert.equal(res.body?.error,'registro_cerrado');
   assert.equal(calls,0);
-  console.log('OK - signup inválido falla antes de red');
+  console.log('OK - signup está cerrado incluso por llamada directa y sin acceso a red');
 }
 {
   let seen=null;

@@ -1,0 +1,24 @@
+{
+  "rewrites": [
+    {
+      "source": "/impressum",
+      "destination": "/api/impressum"
+    },
+    {
+      "source": "/impressum.html",
+      "destination": "/api/impressum"
+    },
+    {
+      "source": "/datenschutz",
+      "destination": "/api/datenschutz"
+    },
+    {
+      "source": "/datenschutz.html",
+      "destination": "/api/datenschutz"
+    },
+    {
+      "source": "/privacidad",
+      "destination": "/api/datenschutz"
+    }
+  ]
+}
