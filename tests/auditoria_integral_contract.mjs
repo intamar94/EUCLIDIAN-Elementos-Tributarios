@@ -74,22 +74,21 @@ const tecla=(id,key)=>{
   callback({key,preventDefault(){prevented=true;}});
   return prevented;
 };
+// El teclado y la URL no pueden abrir el registro mientras está cerrado.
 assert.equal(tecla('tabEntrar','ArrowRight'),true);
-assert.equal(elemento('tabCrear').attrs['aria-selected'],'true');
-assert.equal(elemento('tabCrear').tabIndex,0);
-assert.equal(elemento('tabEntrar').tabIndex,-1);
-assert.equal(elemento('authRegisterForm').hidden,false);
-assert.equal(elemento('authLoginForm').hidden,true);
-assert.equal(elemento('tabCrear').focused,true);
-assert.equal(tecla('tabCrear','Home'),true);
-assert.equal(elemento('tabEntrar').attrs['aria-selected'],'true');
+assert.equal(elemento('tabCrear').attrs['aria-selected'],'false');
 assert.equal(elemento('tabCrear').tabIndex,-1);
+assert.equal(elemento('tabEntrar').attrs['aria-selected'],'true');
+assert.equal(elemento('authRegisterForm').hidden,true);
+assert.equal(elemento('authLoginForm').hidden,false);
+assert.equal(tecla('tabCrear','Home'),true);
 assert.equal(tecla('tabEntrar','End'),true);
 assert.equal(tecla('tabCrear','ArrowLeft'),true);
 assert.equal(elemento('tabEntrar').attrs['aria-selected'],'true');
 assert.equal(tecla('tabEntrar','Escape'),false);
 assert.match(acceso, /id="authLoginForm"[^>]*role="tabpanel"/);
-assert.match(acceso, /id="authRegisterForm"[^>]*role="tabpanel"/);
+assert.match(acceso, /id="authRegisterForm"[^>]*hidden inert/);
+assert.match(acceso, /id="tabCrear"[^>]*hidden disabled/);
 console.log('OK: ingreso accesible por teclado, foco y ARIA');
 
 // Comprobaciones SEO técnicas de la página pública; no sustituyen Search Console.
