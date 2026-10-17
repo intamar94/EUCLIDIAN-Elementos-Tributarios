@@ -103,3 +103,14 @@ a:focus-visible,button:focus-visible,summary:focus-visible{outline:3px solid #b4
  .suscripcion-cierre{padding:28px 23px}
 }
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+
+
+/* Microinteracciones contenidas en superficies decorativas, no en avisos. */
+@keyframes eu-rotacion{from{transform:rotate(-7deg)}to{transform:rotate(7deg)}}
+@keyframes eu-flotar{from{transform:translateY(2px)}to{transform:translateY(-5px)}}
+@media(prefers-reduced-motion:no-preference){
+  .hero-visual .geo-a{animation:eu-rotacion 10s ease-in-out infinite alternate}
+  .hero-visual .geo-b{animation:eu-flotar 8s ease-in-out infinite alternate}
+  .valor-pieza{transition:transform .2s ease,box-shadow .2s ease}
+  .valor-pieza:hover{transform:translateY(-3px);box-shadow:0 18px 36px rgba(28,51,38,.1)}
+}
