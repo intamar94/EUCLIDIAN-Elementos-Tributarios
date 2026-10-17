@@ -1,0 +1,26 @@
+name: Prepublicacion de EUCLIDIAN
+on:
+  pull_request:
+    paths:
+      - 'vercel.json'
+      - 'index.html'
+      - 'app.html'
+      - 'robots.txt'
+      - 'sitemap.xml'
+      - 'contacto.html'
+      - 'tests/lanzamiento_dominio_contract.mjs'
+      - '.github/workflows/prepublicacion.yml'
+  workflow_dispatch:
+jobs:
+  verificar-dominio:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Contrato de dominio y seguridad
+        run: node tests/lanzamiento_dominio_contract.mjs
