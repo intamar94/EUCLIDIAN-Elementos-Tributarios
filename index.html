@@ -21,6 +21,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/landing.css">
+<link rel="stylesheet" href="/identidad-publica.css">
+<link rel="icon" type="image/svg+xml" href="/icono-euclidian.svg">
 <script>
 if(location.search.includes('q=')||location.search.includes('doc=')||location.hash.includes('access_token=')||location.hash.includes('type=recovery')){
   location.replace('/app.html'+location.search+location.hash);
@@ -44,9 +46,9 @@ if(location.search.includes('q=')||location.search.includes('doc=')||location.ha
   <section class="hero wrap" id="que-es">
     <div class="hero-copy">
       <span class="eyebrow">01 · QUÉ ES EUCLIDIAN</span>
-      <h1>Tu biblioteca<br><em>tributaria DIAN.</em></h1>
+      <h1>La normativa ya es complicada.<br><em>Encontrarla no debería serlo.</em></h1>
       <p class="lead">Una plataforma para contadores y revisores fiscales que reúne normas, doctrina y novedades de la DIAN. Encuentra cada documento con sus fechas, su fuente oficial y el contexto disponible.</p>
-      <p class="hero-remate">Tu apoyo diario para investigar, contrastar y volver a los documentos que necesitas.</p>
+      <p class="hero-remate">Tu apoyo diario para investigar y contrastar. <span class="firma-euclides">Euclides trazaba líneas. Nosotros seguimos las fuentes.</span></p>
       <div class="hero-actions">
         <a class="primary" href="#por-dentro">Echa un vistazo <span aria-hidden="true">↓</span></a>
         <a class="secondary" href="/app.html">Ya tengo acceso <span aria-hidden="true">→</span></a>
@@ -55,8 +57,17 @@ if(location.search.includes('q=')||location.search.includes('doc=')||location.ha
     <figure class="hero-visual">
       <img src="/euclides.png" alt="Ilustración de Euclides explicando geometría a sus discípulos" width="1400" height="770">
       <span class="geo geo-a" aria-hidden="true"></span><span class="geo geo-b" aria-hidden="true"></span>
-      <figcaption>La geometría pone el orden. La fuente oficial pone el respaldo.</figcaption>
+      <figcaption><span aria-hidden="true">◇</span> La geometría pone el orden. La fuente oficial pone el respaldo.</figcaption>
     </figure>
+  </section>
+
+  <section class="valor-euclidian wrap" id="beneficios" aria-labelledby="valorTitulo">
+    <div class="valor-cabecera"><span class="eyebrow">DOCUMENTOS EN SU CONTEXTO</span><h2 id="valorTitulo">Un poco de geometría. Mucha claridad.</h2><p>Una manera más ordenada de encontrar y leer los documentos de la DIAN, sin reemplazar el criterio profesional.</p></div>
+    <div class="valor-grid">
+      <article class="valor-pieza"><span class="valor-figura" aria-hidden="true">⌕</span><span class="valor-numero">01 / ENCONTRAR</span><h3>Menos búsqueda.</h3><p>Localiza documentos por número, palabra o tema dentro de la biblioteca disponible.</p></article>
+      <article class="valor-pieza"><span class="valor-figura" aria-hidden="true">△</span><span class="valor-numero">02 / ENTENDER</span><h3>Fechas sin enredos.</h3><p>Identifica por separado la fecha del documento y la de su publicación web, cuando están acreditadas.</p></article>
+      <article class="valor-pieza"><span class="valor-figura" aria-hidden="true">◎</span><span class="valor-numero">03 / CONTRASTAR</span><h3>Siempre con fuente.</h3><p>Abre el original DIAN para comprobar el alcance y la aplicación a cada caso.</p></article>
+    </div>
   </section>
 
   <section class="muestra wrap" id="por-dentro" aria-labelledby="muestraTitulo">
