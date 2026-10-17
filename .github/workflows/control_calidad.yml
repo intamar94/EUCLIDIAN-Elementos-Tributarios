@@ -88,6 +88,8 @@ jobs:
         run: node tests/public_landing_contract.mjs
       - name: Contrato identidad visual editorial
         run: node tests/identidad_visual_contract.mjs
+      - name: Contrato heroes adaptativos y tamaños de escenas
+        run: node tests/heroes_responsive_contract.mjs
       - name: Contrato readiness y observabilidad
         run: node tests/health_readiness_contract.mjs
       - name: Eval de consultas contra datos reales
