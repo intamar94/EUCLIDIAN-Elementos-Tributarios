@@ -1,8 +1,18 @@
-# Decisión de dominio EUCLIDIAN — colaboración Configurador web × LEGAL.ia
+# Configurador web × LEGAL.ia — Histórico de búsqueda (ARCHIVADO)
+
+**Los precios y dominios comparados aquí son históricos; la decisión ya se tomó y está implementada.**
+
+El dominio final **euclidianet.com** está registrado en Vercel y la zona DNS autoritativa funciona en **Cloudflare**. La información técnica legal actualizada es [`REGISTRO-MAESTRO.json`](REGISTRO-MAESTRO.json), el [expediente EUCLIDIAN](proyectos/euclidian.json) y la [revisión de páginas legales PR #82](https://github.com/intamar94/EUCLIDIAN-Elementos-Tributarios/pull/82).
+
+**No buscar, pagar ni comprar otro dominio EUCLIDIAN.** El buzón principal ya es `contacto@euclidianet.com`; sugerencias y errores utilizan sus alias en Cloudflare. El Gewerbe se prevé válido desde **19/10/2026** y se validará con el justificante oficial antes de afirmar la condición de comerciante registrada.
+
+---
+
+# HISTÓRICO NO VIGENTE — Decisión de dominio EUCLIDIAN
 **Fecha de consulta:** 17 octubre 2026. **Estado:** REVIEW, sin compra/registro/cambio DNS.
 
 ## Requisito del titular
-**PRIORIDAD: dominio independiente de EUCLIDIAN, NO el dominio Faro de Intamar.**
+**RESUELTO: dominio independiente EUCLIDIANET.COM, no el dominio Faro de Intamar.**
 Faro de Intamar será el titular empresarial de la plataforma bajo la identificación legal que proceda. Gewerbeanmeldung prevista para el lunes 19-10-2026, todavía pendiente. Usuario prioriza mínimo gasto, evitar duplicar servicios, dirección comercial propia y mantener producción estable.
 
 ## Opciones de dominio (consulta registrar Vercel, USD; disponibilidad y precios variables)
