@@ -4,7 +4,7 @@ const file=p=>readFile(new URL('../'+p,import.meta.url));
 const text=async p=>(await file(p)).toString('utf8');
 const [app,publico,css,js]=await Promise.all([
   'app.html','index.html','animaciones-euclidian.css','animaciones-euclidian.js'].map(text));
-const escenas=['ensenando','dian','pantalla','telefono'];
+const escenas=['ensenando','pantalla','telefono'];
 for(const nombre of escenas){
  const video=await file('assets/euclides-'+nombre+'-hq.webm');
  const poster=await file('assets/euclides-'+nombre+'-hq.webp');
@@ -17,8 +17,20 @@ for(const nombre of escenas){
  assert.ok(app.includes('/assets/euclides-'+nombre+'-hq.webp'),'Falta póster '+nombre);
  assert.ok(!app.includes('/assets/euclides-'+nombre+'.webp'),'No usar miniatura borrosa '+nombre);
 }
-assert.equal((app.match(/class="eu-video" data-eu-video/g)||[]).length,6);
+assert.equal((app.match(/class="eu-video" data-eu-video/g)||[]).length,4);
 assert.equal((app.match(/class="eu-still"/g)||[]).length,6);
+assert.equal((app.match(/class="eu-gif(?: eu-imagen)?"/g)||[]).length,6);
+for(const name of ['cuenta','guia']){
+ const poster=await file('assets/euclides-'+name+'-editorial.webp');
+ assert.ok(poster.length>50000,'Ilustración exclusiva de '+name);
+ assert.ok(app.includes('/assets/euclides-'+name+'-editorial.webp'));
+}
+for(const ext of ['webm','webp']){
+ const b=await file('assets/euclides-dian-sin-franjas.'+ext);
+ assert.ok(b.length>50000,'Novedades sin franjas: '+ext);
+ assert.ok(app.includes('/assets/euclides-dian-sin-franjas.'+ext));
+ assert.ok(!app.includes('/assets/euclides-dian-hq.'+ext));
+}
 assert.equal((publico.match(/class="eu-video" data-eu-video/g)||[]).length,1);
 assert.match(publico,/class="hero-visual"[\s\S]*?<img src="\/euclides\.png"/);
 assert.ok(publico.indexOf('<figure class="hero-visual">')<publico.indexOf('<div class="hero-copy">'));
@@ -35,4 +47,4 @@ assert.match(js,/prefers-reduced-motion: reduce/);
 assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);
 assert.match(css,/\.eu-video\{display:none!important\}/);
 assert.doesNotMatch(css,/#puerta\s*\{|\.auth-caja\s*\{/);
-console.log('Imágenes HD: cuatro WebM 640p, pósters, 7 escenas, carga bajo demanda e ingreso protegido OK');
+console.log('Imágenes HD: 4 vídeos internos, 2 escenas exclusivas estáticas, 7 escenas totales y acceso protegido OK');
