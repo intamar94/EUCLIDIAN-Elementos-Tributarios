@@ -75,6 +75,7 @@ jobs:
           node tests/e2e_consulta_contract.mjs
           node tests/extracto_literal_contract.mjs
           node tests/catalogo_resiliencia_contract.mjs
+          node tests/novedades_resumen_contract.mjs
           node tests/retired_routes_contract.mjs
       - name: Contrato determinista de Auth y entitlement
         run: |
@@ -90,6 +91,20 @@ jobs:
         run: node tests/commercial_access_contract.mjs
       - name: Contrato portada pública y SEO
         run: node tests/public_landing_contract.mjs
+      - name: "Auditoría focalizada: accesibilidad, fechas y SEO"
+        run: node tests/auditoria_integral_contract.mjs
+      - name: "Auditoría real de navegador: portada, ingreso y recorridos"
+        if: github.event_name == 'pull_request'
+        run: |
+          npm install --no-save --package-lock=false --ignore-scripts playwright@1.56.1
+          export CHROMIUM_PATH="$(command -v google-chrome || command -v chromium || true)"
+          if [ -z "$CHROMIUM_PATH" ]; then npx playwright install --with-deps chromium; fi
+          python -m http.server 8765 --bind 127.0.0.1 >/tmp/euclidian-http.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" || true' EXIT
+          sleep 2
+          node tests/ui_public_audit_browser.cjs
+          node tests/ui_onboarding_browser.cjs
       - name: Contrato identidad visual editorial
         run: node tests/identidad_visual_contract.mjs
       - name: Contrato heroes adaptativos y tamaños de escenas

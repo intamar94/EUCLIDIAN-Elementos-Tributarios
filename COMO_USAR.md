@@ -76,7 +76,7 @@ Para enviar desde un dominio propio, configura estos secretos donde se ejecuta e
 ```
 RESEND_API_KEY=re_...
 EUCLIDIAN_REMITENTE=EUCLIDIAN <boletin@tudominio.co>
-EUCLIDIAN_BASE_URL=https://euclidian-elementos-tributarios.vercel.app
+EUCLIDIAN_BASE_URL=https://euclidianet.com
 ```
 
 Primero genera el borrador y prueba el correo con una dirección propia. El envío real queda disponible solamente después de esa revisión.
