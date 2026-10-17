@@ -17,6 +17,7 @@
 <link rel="stylesheet" href="/bienvenida.css">
 <link rel="stylesheet" href="/identidad-euclidian.css">
 <link rel="stylesheet" href="/heroes-euclidian-responsive.css">
+<link rel="stylesheet" href="/animaciones-euclidian.css">
 <link rel="icon" type="image/svg+xml" href="/icono-euclidian.svg">
 </head>
 <body>
@@ -92,22 +93,22 @@
 </div>
 
 <section class="bienvenida marco" id="bienvenida" hidden aria-labelledby="bienvenidaTitulo">
-  <div class="bienvenida-cab"><div><span class="seccion-kicker">EMPIEZA AQUÍ</span><h1 id="bienvenidaTitulo">Tu primera consulta, paso a paso</h1><p>EUCLIDIAN te ayuda a encontrar información tributaria y comprobar su respaldo DIAN.</p><span class="eu-frase">Euclides trazaba líneas. Aquí seguimos las fuentes.</span></div><picture class="eu-gif" data-caption="Tu guía, Euclides" aria-hidden="true"><source media="(prefers-reduced-motion: reduce)" srcset="/geometria-euclidian.svg" type="image/svg+xml"><img src="/assets/euclides-ensenando.webp" width="160" height="90" alt="" loading="lazy" decoding="async"></picture><button type="button" id="saltarGuia">Omitir guía</button></div>
+  <div class="bienvenida-cab"><div><span class="seccion-kicker">EMPIEZA AQUÍ</span><h1 id="bienvenidaTitulo">Tu primera consulta, paso a paso</h1><p>EUCLIDIAN te ayuda a encontrar información tributaria y comprobar su respaldo DIAN.</p><span class="eu-frase">Euclides trazaba líneas. Aquí seguimos las fuentes.</span></div><div class="eu-gif" data-caption="Tu guía, Euclides" aria-label="Animación ilustrada de Euclides"><picture class="eu-still"><source media="(prefers-reduced-motion: reduce)" srcset="/assets/euclides-ensenando-hq.webp" type="image/webp"><img src="/assets/euclides-ensenando-hq.webp" width="640" height="360" alt="" loading="lazy" decoding="async"></picture><video class="eu-video" data-eu-video muted loop playsinline preload="none" poster="/assets/euclides-ensenando-hq.webp" aria-hidden="true"><source data-src="/assets/euclides-ensenando-hq.webm" type="video/webm"></video></div><button type="button" id="saltarGuia">Omitir guía</button></div>
   <ol class="guia-indice" id="guiaIndice" aria-label="Pasos de la guía"></ol>
   <div id="guiaPaso" class="guia-paso" aria-live="polite" aria-atomic="true"></div>
   <div class="guia-controles"><button type="button" id="guiaAnterior">Anterior</button><span id="guiaProgreso"></span><button type="button" id="guiaSiguiente">Siguiente</button></div>
 </section>
 <section class="inicio-panel marco" id="inicioPanel" hidden aria-labelledby="inicioTitulo" tabindex="-1">
-  <div class="inicio-cab"><span class="seccion-kicker">TU BIBLIOTECA TRIBUTARIA</span><h1 id="inicioTitulo">Información para tu trabajo</h1><p id="inicioResumen" role="status">Preparando tu biblioteca…</p><span class="eu-frase">Menos vueltas. Más claridad para consultar.</span><picture class="eu-gif" data-caption="En la escuela de Euclides" aria-hidden="true"><source media="(prefers-reduced-motion: reduce)" srcset="/geometria-euclidian.svg" type="image/svg+xml"><img src="/assets/euclides-ensenando.webp" width="160" height="90" alt="" loading="eager" decoding="async"></picture></div>
+  <div class="inicio-cab"><span class="seccion-kicker">TU BIBLIOTECA TRIBUTARIA</span><h1 id="inicioTitulo">Información para tu trabajo</h1><p id="inicioResumen" role="status">Preparando tu biblioteca…</p><span class="eu-frase">Menos vueltas. Más claridad para consultar.</span><div class="eu-gif" data-caption="En la escuela de Euclides" aria-label="Animación ilustrada de Euclides"><picture class="eu-still"><source media="(prefers-reduced-motion: reduce)" srcset="/assets/euclides-ensenando-hq.webp" type="image/webp"><img src="/assets/euclides-ensenando-hq.webp" width="640" height="360" alt="" loading="eager" decoding="async"></picture><video class="eu-video" data-eu-video muted loop playsinline preload="none" poster="/assets/euclides-ensenando-hq.webp" aria-hidden="true"><source data-src="/assets/euclides-ensenando-hq.webm" type="video/webm"></video></div></div>
   <div id="inicioNovedades" class="inicio-novedades" hidden></div>
   <h2 class="inicio-subtitulo">Últimos documentos de la biblioteca</h2><p class="ayuda-consulta">Tres resultados del catálogo, ordenados por su fecha documental disponible. Para ver las publicaciones de los últimos 14 días, abre Novedades.</p>
   <div id="inicioDocumentos" class="inicio-documentos"></div>
 </section>
-<section class="novedades-cab marco" id="novedadesCab" hidden aria-labelledby="novedadesTitulo" tabindex="-1"><span class="seccion-kicker">NOVEDADES</span><h1 id="novedadesTitulo">Publicaciones recientes</h1><p>Últimos 14 días según la publicación web DIAN o la fecha verificada del documento. Ambas fechas se muestran por separado; una publicación reciente puede corresponder a un documento anterior.</p><span class="eu-frase">La norma se mueve. Mejor verla venir.</span><picture class="eu-gif" data-caption="El taller tributario" aria-hidden="true"><source media="(prefers-reduced-motion: reduce)" srcset="/geometria-euclidian.svg" type="image/svg+xml"><img src="/assets/euclides-dian.webp" width="160" height="90" alt="" loading="lazy" decoding="async"></picture></section>
+<section class="novedades-cab marco" id="novedadesCab" hidden aria-labelledby="novedadesTitulo" tabindex="-1"><span class="seccion-kicker">NOVEDADES</span><h1 id="novedadesTitulo">Publicaciones recientes</h1><p>Últimos 14 días según la publicación web DIAN o la fecha verificada del documento. Ambas fechas se muestran por separado; una publicación reciente puede corresponder a un documento anterior.</p><span class="eu-frase">La norma se mueve. Mejor verla venir.</span><div class="eu-gif" data-caption="El taller tributario" aria-label="Animación ilustrada de Euclides"><picture class="eu-still"><source media="(prefers-reduced-motion: reduce)" srcset="/assets/euclides-dian-hq.webp" type="image/webp"><img src="/assets/euclides-dian-hq.webp" width="640" height="360" alt="" loading="lazy" decoding="async"></picture><video class="eu-video" data-eu-video muted loop playsinline preload="none" poster="/assets/euclides-dian-hq.webp" aria-hidden="true"><source data-src="/assets/euclides-dian-hq.webm" type="video/webm"></video></div></section>
 
 <section class="explorar marco" hidden id="explorar" aria-labelledby="explorarTitulo">
   <div class="explorar-cabecera">
-    <div class="titulo-consulta"><span class="seccion-numero" aria-hidden="true">01</span><div><span class="seccion-kicker">EXPLORAR</span><h2 id="explorarTitulo">Tu mesa de consulta</h2><p>Tus temas y los documentos a los que quieres volver.</p><span class="eu-frase">Sin regla, sin compás y sin dar tantas vueltas.</span></div><picture class="eu-gif" data-caption="Explora sin rodeos" aria-hidden="true"><source media="(prefers-reduced-motion: reduce)" srcset="/geometria-euclidian.svg" type="image/svg+xml"><img src="/assets/euclides-telefono.webp" width="160" height="90" alt="" loading="lazy" decoding="async"></picture></div>
+    <div class="titulo-consulta"><span class="seccion-numero" aria-hidden="true">01</span><div><span class="seccion-kicker">EXPLORAR</span><h2 id="explorarTitulo">Tu mesa de consulta</h2><p>Tus temas y los documentos a los que quieres volver.</p><span class="eu-frase">Sin regla, sin compás y sin dar tantas vueltas.</span></div><div class="eu-gif" data-caption="Explora sin rodeos" aria-label="Animación ilustrada de Euclides"><picture class="eu-still"><source media="(prefers-reduced-motion: reduce)" srcset="/assets/euclides-telefono-hq.webp" type="image/webp"><img src="/assets/euclides-telefono-hq.webp" width="640" height="360" alt="" loading="lazy" decoding="async"></picture><video class="eu-video" data-eu-video muted loop playsinline preload="none" poster="/assets/euclides-telefono-hq.webp" aria-hidden="true"><source data-src="/assets/euclides-telefono-hq.webm" type="video/webm"></video></div></div>
 
   </div>
   <div class="selector-temas">
@@ -122,7 +123,7 @@
 
 <section class="cuenta-panel marco" hidden id="cuentaPanel" aria-labelledby="cuentaTitulo">
   <div class="cuenta-cabecera">
-    <div class="titulo-consulta"><span class="seccion-numero" aria-hidden="true">03</span><div><span class="seccion-kicker">CUENTA</span><h2 id="cuentaTitulo">Tu acceso a EUCLIDIAN</h2><p id="cuentaDescripcion">Tu perfil y tu suscripción.</p><span class="eu-frase">Tu acceso, sin laberintos.</span></div><picture class="eu-gif" data-caption="Tu espacio personal" aria-hidden="true"><source media="(prefers-reduced-motion: reduce)" srcset="/geometria-euclidian.svg" type="image/svg+xml"><img src="/assets/euclides-telefono.webp" width="160" height="90" alt="" loading="lazy" decoding="async"></picture></div>
+    <div class="titulo-consulta"><span class="seccion-numero" aria-hidden="true">03</span><div><span class="seccion-kicker">CUENTA</span><h2 id="cuentaTitulo">Tu acceso a EUCLIDIAN</h2><p id="cuentaDescripcion">Tu perfil y tu suscripción.</p><span class="eu-frase">Tu acceso, sin laberintos.</span></div><div class="eu-gif" data-caption="Tu espacio personal" aria-label="Animación ilustrada de Euclides"><picture class="eu-still"><source media="(prefers-reduced-motion: reduce)" srcset="/assets/euclides-telefono-hq.webp" type="image/webp"><img src="/assets/euclides-telefono-hq.webp" width="640" height="360" alt="" loading="lazy" decoding="async"></picture><video class="eu-video" data-eu-video muted loop playsinline preload="none" poster="/assets/euclides-telefono-hq.webp" aria-hidden="true"><source data-src="/assets/euclides-telefono-hq.webm" type="video/webm"></video></div></div>
     <button type="button" class="accion-textual" id="cerrarCuenta">Cerrar</button>
   </div>
   <div class="cuenta-grid">
@@ -153,7 +154,7 @@
 </section>
 
 <section class="controles marco" hidden id="controles" aria-label="Buscar documentos DIAN">
-  <div class="titulo-consulta"><span class="seccion-numero" aria-hidden="true">02</span><div><span class="seccion-kicker">CONSULTAR</span><h2>Buscar documentos tributarios</h2><p>Busca por número, palabra o tema.</p><span class="eu-frase">La normativa ya es complicada. Encontrarla no debería serlo.</span></div><picture class="eu-gif" data-caption="Consulta con claridad" aria-hidden="true"><source media="(prefers-reduced-motion: reduce)" srcset="/geometria-euclidian.svg" type="image/svg+xml"><img src="/assets/euclides-pantalla.webp" width="160" height="90" alt="" loading="lazy" decoding="async"></picture></div>
+  <div class="titulo-consulta"><span class="seccion-numero" aria-hidden="true">02</span><div><span class="seccion-kicker">CONSULTAR</span><h2>Buscar documentos tributarios</h2><p>Busca por número, palabra o tema.</p><span class="eu-frase">La normativa ya es complicada. Encontrarla no debería serlo.</span></div><div class="eu-gif" data-caption="Consulta con claridad" aria-label="Animación ilustrada de Euclides"><picture class="eu-still"><source media="(prefers-reduced-motion: reduce)" srcset="/assets/euclides-pantalla-hq.webp" type="image/webp"><img src="/assets/euclides-pantalla-hq.webp" width="640" height="360" alt="" loading="lazy" decoding="async"></picture><video class="eu-video" data-eu-video muted loop playsinline preload="none" poster="/assets/euclides-pantalla-hq.webp" aria-hidden="true"><source data-src="/assets/euclides-pantalla-hq.webm" type="video/webm"></video></div></div>
   <form class="buscador" id="formBuscar" role="search">
     <label class="solo-lectores" for="consulta">Buscar por número, título o contenido</label>
     <input id="consulta" type="search" maxlength="160" placeholder="Busca por número, título o tema, p. ej. retención en la fuente" autocomplete="off">
@@ -184,5 +185,6 @@
 <script src="/auth.js" defer></script>
 <script src="/bienvenida.js" defer></script>
 <script src="/bandeja.js" defer></script>
+<script src="/animaciones-euclidian.js" defer></script>
 </body>
 </html>
