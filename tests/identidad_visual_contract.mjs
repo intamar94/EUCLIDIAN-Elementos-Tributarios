@@ -52,12 +52,12 @@ const copyStart=publico.indexOf('<div class="hero-copy">');
 assert.ok(imageStart>=0 && imageStart<copyStart, 'El hero comienza por imagen, nunca texto');
 assert.match(publico,/class="eu-hero-gif"/);
 assert.match(cssPub,/\.hero\s*\{display:flex;flex-direction:column/);
-assert.equal((app.match(/class="eu-gif"/g)||[]).length,6,
+assert.equal((app.match(/class="eu-gif(?: eu-imagen)?"/g)||[]).length,6,
   'Cada sección interna lleva una animación');
 assert.ok(!app.slice(app.indexOf('<div id="puerta"'),app.indexOf('<header hidden id="cab"')).includes('class="eu-gif"'),
   'Ingreso preservado sin GIF ni cambio visual');
 for(const src of ['euclides-ensenando','euclides-dian','euclides-pantalla','euclides-telefono']){
-  assert.ok(app.includes('/assets/'+src+'-hq.webp')||publico.includes('/assets/'+src+'-hq.webp'));
+  assert.ok(app.includes('/assets/'+src+(src==='euclides-dian'?'-sin-franjas':'-hq')+'.webp')||publico.includes('/assets/'+src+'-hq.webp'));
 }
 assert.match(cssApp,/\.eu-gif/);
 assert.match(app,/prefers-reduced-motion: reduce/);
