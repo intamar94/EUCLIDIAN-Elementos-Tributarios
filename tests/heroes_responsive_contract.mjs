@@ -11,7 +11,7 @@ assert.equal((app.match(/class="eu-gif"/g)||[]).length,6);
 assert.equal((app.match(/data-caption="/g)||[]).length,6);
 assert.ok(landing.indexOf('<figure class="hero-visual">')<landing.indexOf('<div class="hero-copy">'));
 for(const cls of ['inicio-cab','novedades-cab','bienvenida-cab']){
- const tag=app.match(new RegExp('class="'+cls+'[^>]*>[\\s\\S]*?<picture class="eu-gif"'));
+ const tag=app.match(new RegExp('class="'+cls+'[^>]*>[\\s\\S]*?<div class="eu-gif"'));
  assert.ok(tag,cls+' debe contener escena visible fuera del texto');
 }
 for(const context of ['explorar-cabecera','cuenta-cabecera']){
@@ -19,7 +19,7 @@ for(const context of ['explorar-cabecera','cuenta-cabecera']){
  const end=app.indexOf('</div>',app.indexOf('<picture class="eu-gif"',start));
  assert.ok(start>0 && end>start,context);
 }
-assert.match(app,/<div class="titulo-consulta">[\s\S]*?<span class="eu-frase">La normativa ya es complicada\. Encontrarla no debería serlo\.<\/span><\/div><picture class="eu-gif"/);
+assert.match(app,/<div class="titulo-consulta">[\s\S]*?<span class="eu-frase">La normativa ya es complicada\. Encontrarla no debería serlo\.<\/span><\/div><div class="eu-gif"/);
 assert.match(app,/<img class="ilustracion" src="\/euclides\.png" alt="Euclides explica a sus discípulos" width="1400" height="770">/);
 assert.doesNotMatch(mobile,/#puerta\s*\{|\.auth-caja\s*\{/);
 assert.match(mobile,/position:relative!important;right:auto!important;bottom:auto!important/);
