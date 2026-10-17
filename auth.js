@@ -197,6 +197,17 @@ window.euclidianAuthSinSuscripcion=async info=>{
 
 document.getElementById('tabEntrar')?.addEventListener('click',()=>authCambiarTab(false));
 document.getElementById('tabCrear')?.addEventListener('click',()=>authCambiarTab(true));
+// Tabs de acceso: mismo contrato accesible que las pestañas de la portada.
+for(const id of ['tabEntrar','tabCrear']){
+  document.getElementById(id)?.addEventListener('keydown',event=>{
+    if(!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;
+    event.preventDefault();
+    const siguiente=event.key==='Home'?'tabEntrar':event.key==='End'?'tabCrear':
+      id==='tabEntrar'?'tabCrear':'tabEntrar';
+    authCambiarTab(siguiente==='tabCrear');
+    document.getElementById(siguiente)?.focus();
+  });
+}
 
 document.getElementById('authLoginForm')?.addEventListener('submit',async e=>{
   e.preventDefault();const btn=e.submitter;btn.disabled=true;authStatus('Comprobando tu acceso…');
