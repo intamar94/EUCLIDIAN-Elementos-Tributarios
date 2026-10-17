@@ -85,9 +85,6 @@ jobs:
           node scripts/legal-ia-gate.mjs --mode audit
           node scripts/legal-ia-static-audit.mjs
           node tests/legalia_gate_contract.mjs
-      - name: LEGAL.ia - gate de publicación en PR
-        if: github.event_name == 'pull_request'
-        run: node scripts/legal-ia-gate.mjs --mode release
       - name: Regresiones Python de fuente y fechas
         run: python -m unittest discover -s tests -p 'test_*.py'
       - name: Regresión comercial y ownership
@@ -133,3 +130,20 @@ jobs:
           cd scripts
           python test_normalizador_juridico.py
           python test_cola_reprocesamiento.py
+
+  legalia_publicacion:
+    name: LEGAL.ia - control independiente de publicación
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Bloquear la comercialización sin expediente aprobado
+        run: node scripts/legal-ia-gate.mjs --mode release
