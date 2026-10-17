@@ -104,7 +104,7 @@
   "legal_implementation": {
     "pull_request_url": "https://github.com/intamar94/EUCLIDIAN-Elementos-Tributarios/pull/82",
     "implementation_branch": "legal/euclidianet-compliance-latest",
-    "status": "CODE_TESTED_DRAFT_PENDING_LEGAL_RELEASE",
+    "status": "GITHUB_MAIN_MERGED_PROD_BLOCKED",
     "routes": [
       "/impressum",
       "/datenschutz",
@@ -115,16 +115,18 @@
     "legal_name_source": "Gewerbe expected 2026-10-19, not yet verified",
     "home_address_publication": "USER_CHOSE_OWN_ADDRESS_EXACT_DETAILS_NOT_IN_PUBLIC_GITHUB",
     "registration": {
-      "frontend": "HIDDEN",
-      "api": "FAIL_CLOSED_403",
-      "production": "AWAIT_DEPLOYMENT",
+      "frontend": "CODE_MERGED",
+      "api": "SERVER_DENIES_SIGNUP_WHEN_FLAG_FALSE_CODE_MERGED",
+      "production": "PENDING_VERCEL_RELEASE",
       "env_key": "EUCLIDIAN_SIGNUP_ENABLED",
       "env_value": "false",
       "automated_tests": "PR82_PENDING_CI"
     },
-    "pages_publication": "AWAIT_IDENTITY_AND_PRIVACY",
+    "pages_publication": "PENDING_REAL_NAME_ADDRESS_AND_PRIVACY",
     "legal_email": "contacto@euclidianet.com",
-    "publication_consented": false
+    "publication_consented": false,
+    "github_main_sha": "58aca2a8f21ac4f393837edbf3615c7fbb496d4e",
+    "release_blocker": "Vercel free daily deployment limit HTTP 402; retryAfter 86400; no extra payment authorized"
   },
   "verification_last_checked_date": "2026-10-17"
 }
