@@ -17,10 +17,20 @@ for(const nombre of escenas){
  assert.ok(app.includes('/assets/euclides-'+nombre+'-hq.webp'),'Falta póster '+nombre);
  assert.ok(!app.includes('/assets/euclides-'+nombre+'.webp'),'No usar miniatura borrosa '+nombre);
 }
-assert.equal((app.match(/class="eu-video" data-eu-video/g)||[]).length,4);
+const cuentaVideo=await file('assets/euclides-cuenta-nueva-hq.webm');
+const cuentaPoster=await file('assets/euclides-cuenta-nueva-hq.webp');
+assert.ok(cuentaVideo.length>100000&&cuentaVideo.length<1200000,'Animación Cuenta HQ');
+assert.equal(cuentaVideo.toString('hex',0,4),'1a45dfa3');
+assert.ok(cuentaPoster.length>50000&&cuentaPoster.length<400000,'Póster Cuenta HQ');
+assert.equal(cuentaPoster.toString('ascii',0,4),'RIFF');
+assert.ok(app.includes('/assets/euclides-cuenta-nueva-hq.webm'));
+assert.ok(app.includes('/assets/euclides-cuenta-nueva-hq.webp'));
+assert.ok(!app.includes('/assets/euclides-cuenta-editorial.webp'));
+assert.doesNotMatch(publico,/<figure class="hero-visual">[\s\S]*?<video/);
+assert.equal((app.match(/class="eu-video" data-eu-video/g)||[]).length,5);
 assert.equal((app.match(/class="eu-still"/g)||[]).length,6);
 assert.equal((app.match(/class="eu-gif(?: eu-imagen)?"/g)||[]).length,6);
-for(const name of ['cuenta','guia']){
+for(const name of ['guia']){
  const poster=await file('assets/euclides-'+name+'-editorial.webp');
  assert.ok(poster.length>50000,'Ilustración exclusiva de '+name);
  assert.ok(app.includes('/assets/euclides-'+name+'-editorial.webp'));
@@ -31,14 +41,14 @@ for(const ext of ['webm','webp']){
  assert.ok(app.includes('/assets/euclides-dian-sin-franjas.'+ext));
  assert.ok(!app.includes('/assets/euclides-dian-hq.'+ext));
 }
-assert.equal((publico.match(/class="eu-video" data-eu-video/g)||[]).length,1);
+assert.equal((publico.match(/class="eu-video" data-eu-video/g)||[]).length,0);
 assert.match(publico,/class="hero-visual"[\s\S]*?<img src="\/euclides\.png"/);
 assert.ok(publico.indexOf('<figure class="hero-visual">')<publico.indexOf('<div class="hero-copy">'));
 assert.match(app,/<img class="ilustracion" src="\/euclides\.png" alt="Euclides explica a sus discípulos" width="1400" height="770">/);
 assert.match(app,/href="\/animaciones-euclidian\.css"/);
-assert.match(publico,/href="\/animaciones-euclidian\.css"/);
+assert.doesNotMatch(publico,/href="\/animaciones-euclidian\.css"/);
 assert.match(app,/src="\/animaciones-euclidian\.js" defer/);
-assert.match(publico,/src="\/animaciones-euclidian\.js" defer/);
+assert.doesNotMatch(publico,/src="\/animaciones-euclidian\.js" defer/);
 assert.match(js,/IntersectionObserver/);
 assert.match(js,/document\.hidden/);
 assert.match(js,/video\.pause\(\)/);
@@ -47,4 +57,4 @@ assert.match(js,/prefers-reduced-motion: reduce/);
 assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);
 assert.match(css,/\.eu-video\{display:none!important\}/);
 assert.doesNotMatch(css,/#puerta\s*\{|\.auth-caja\s*\{/);
-console.log('Imágenes HD: 4 vídeos internos, 2 escenas exclusivas estáticas, 7 escenas totales y acceso protegido OK');
+console.log('Imágenes HD: 5 vídeos internos y 1 escena estática; portada sin vídeo y acceso protegido OK');

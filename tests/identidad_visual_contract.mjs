@@ -50,7 +50,7 @@ for(const asset of animations){
 const imageStart=publico.indexOf('<figure class="hero-visual">');
 const copyStart=publico.indexOf('<div class="hero-copy">');
 assert.ok(imageStart>=0 && imageStart<copyStart, 'El hero comienza por imagen, nunca texto');
-assert.match(publico,/class="eu-hero-gif"/);
+assert.doesNotMatch(publico,/class="eu-hero-gif"|data-eu-video/, 'La portada deja solo la imagen original');
 assert.match(cssPub,/\.hero\s*\{display:flex;flex-direction:column/);
 assert.equal((app.match(/class="eu-gif(?: eu-imagen)?"/g)||[]).length,6,
   'Cada sección interna lleva una animación');
@@ -61,6 +61,6 @@ for(const src of ['euclides-ensenando','euclides-dian','euclides-pantalla','eucl
 }
 assert.match(cssApp,/\.eu-gif/);
 assert.match(app,/prefers-reduced-motion: reduce/);
-assert.match(publico,/prefers-reduced-motion: reduce/);
+assert.match(cssPub,/prefers-reduced-motion/, 'La portada conserva reglas de accesibilidad');
 
 console.log('Identidad editorial: portada, seis vistas, accesibilidad, acceso preservado y contratación cerrada OK');
