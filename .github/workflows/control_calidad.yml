@@ -78,6 +78,11 @@ jobs:
         run: |
           node tests/payment_events_contract.mjs
           node tests/billing_flow_contract.mjs
+      - name: LEGAL.ia - auditoría sin secretos
+        run: node scripts/legal-ia-gate.mjs --mode audit
+      - name: LEGAL.ia - gate de publicación en PR
+        if: github.event_name == 'pull_request'
+        run: node scripts/legal-ia-gate.mjs --mode release
       - name: Regresiones Python de fuente y fechas
         run: python -m unittest discover -s tests -p 'test_*.py'
       - name: Regresión comercial y ownership
