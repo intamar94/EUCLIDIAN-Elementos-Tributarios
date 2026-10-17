@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 460 260" role="img" aria-labelledby="title desc">
+<title id="title">Geometría de Euclidian</title><desc id="desc">Construcción geométrica con círculo, compás y columna clásica.</desc>
+<defs><pattern id="grid" width="27" height="27" patternUnits="userSpaceOnUse"><path d="M27 0H0V27" fill="none" stroke="#c5b9a7" stroke-width=".5" opacity=".48"/></pattern><linearGradient id="wash" x1="0" x2="1"><stop stop-color="#e8eee6"/><stop offset="1" stop-color="#f7f3ea"/></linearGradient></defs>
+<rect width="460" height="260" fill="url(#wash)"/><rect width="460" height="260" fill="url(#grid)"/>
+<g stroke="#9e735c" fill="none" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" opacity=".84">
+<path d="M18 230H442M28 217H432" opacity=".4"/>
+<circle cx="301" cy="111" r="91"/><circle cx="301" cy="111" r="67" stroke-dasharray="3 8"/><path d="M210 111H392M301 20V202" stroke-dasharray="5 5"/><path d="M210 111L357 39 370 158Z"/><path d="M301 111L357 39M301 111L370 158" stroke-width="1.8"/>
+<path d="M206 20h35m-18-8v16m158 170h27m-13-12v24" opacity=".6"/>
+</g>
+<g stroke="#244535" stroke-width="2" fill="none" stroke-linejoin="round" stroke-linecap="round">
+<path d="M74 209V55M124 209V55M61 209H139V220H61ZM59 41H141V55H59ZM69 31H131L141 41H59Z"/>
+<path d="M84 62V201M97 62V201M110 62V201M74 55H124"/>
+<path d="M61 224H139M64 29H136"/>
+</g>
+<circle cx="357" cy="39" r="8" fill="#bd6650"/><circle cx="301" cy="111" r="5" fill="#bd6650"/>
+<path d="M146 208l44-48 35 36m-35-36 15-43" fill="none" stroke="#bd6650" stroke-width="1.2" stroke-linecap="round"/>
+<path d="M158 208L141 231M224 196l15 31" stroke="#9e735c" fill="none" stroke-width="1.2"/>
+<text x="296" y="236" fill="#5d6b5d" font-family="Georgia,serif" font-style="italic" font-size="12">Elementos · claridad · fuente</text>
+</svg>
