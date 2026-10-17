@@ -79,7 +79,7 @@ jobs:
           node --check api/session.js
           node --check api/documentos.js
           node --check lib/auth-server.js
-      - name: Prelanzamiento: dominio, SEO, cuenta y privacidad
+      - name: "Prelanzamiento: dominio, SEO, cuenta y privacidad"
         run: |
           node --check api/aportes.js
           node tests/lanzamiento_dominio_contract.mjs
