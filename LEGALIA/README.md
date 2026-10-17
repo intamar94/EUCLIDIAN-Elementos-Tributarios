@@ -31,7 +31,7 @@ El repositorio Euclidian es público: **nunca subir dirección doméstica, nombr
 `node scripts/legal-ia-gate.mjs --mode release` — salida 1 si hay revisiones pendientes.
 `node scripts/legal-ia-gate.mjs --mode release --json` — informe automatizable.
 
-El workflow GitHub Actions realiza el gate en PR y semanalmente al estar en rama principal. **Hacer obligatorio el estado de GitHub Actions en las reglas de la rama principal** para que bloquee merges. Un resultado aprobado significa únicamente que las evidencias definidas están marcadas y que hay enlaces locales; no garantiza validez jurídica. Esta rama por sí sola NO cambia producción, compra dominio ni concede aprobaciones.
+Se integra una auditoría de LEGAL.ia dentro del workflow existente `control_calidad.yml`; una comprobación de salida estricta para PR bloquea hasta aprobar. La plantilla `LEGALIA/plantillas/legalia-compliance.yml` queda **inactiva** para respetar el contrato de cuatro workflows de EUCLIDIAN. **Hacer obligatorio el estado de GitHub Actions en las reglas de la rama principal** para que bloquee merges. Un resultado aprobado significa únicamente que las evidencias definidas están marcadas y que hay enlaces locales; no garantiza validez jurídica. Esta rama por sí sola NO cambia producción, compra dominio ni concede aprobaciones.
 
 ## Referencias
 - [GewO §14](https://www.gesetze-im-internet.de/gewo/__14.html)
