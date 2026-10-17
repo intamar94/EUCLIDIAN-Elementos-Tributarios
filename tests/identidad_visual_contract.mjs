@@ -33,4 +33,34 @@ for(const css of [cssPub,cssApp]) assert.match(css,/prefers-reduced-motion/);
 assert.match(geo,/<svg/);
 assert.match(geo,/viewBox="0 0 460 260"/);
 assert.match(icon,/<svg/);
+
+const animations=[
+  'assets/euclides-ensenando.webp',
+  'assets/euclides-dian.webp',
+  'assets/euclides-pantalla.webp',
+  'assets/euclides-telefono.webp'
+];
+for(const asset of animations){
+  const binary=await readFile(new URL('../'+asset,import.meta.url));
+  assert.ok(binary.length>1000&&binary.length<20000, 'Animación optimizada '+asset);
+  assert.equal(binary.toString('ascii',0,4),'RIFF','WebP real '+asset);
+  assert.equal(binary.toString('ascii',8,12),'WEBP','Cabecera WebP '+asset);
+  assert.ok(binary.includes(Buffer.from('ANIM')), 'Animación WebP, no imagen estática '+asset);
+}
+const imageStart=publico.indexOf('<figure class="hero-visual">');
+const copyStart=publico.indexOf('<div class="hero-copy">');
+assert.ok(imageStart>=0 && imageStart<copyStart, 'El hero comienza por imagen, nunca texto');
+assert.match(publico,/class="eu-hero-gif"/);
+assert.match(cssPub,/\.hero\s*\{display:flex;flex-direction:column/);
+assert.equal((app.match(/class="eu-gif"/g)||[]).length,6,
+  'Cada sección interna lleva una animación');
+assert.ok(!app.slice(app.indexOf('<div id="puerta"'),app.indexOf('<header hidden id="cab"')).includes('class="eu-gif"'),
+  'Ingreso preservado sin GIF ni cambio visual');
+for(const src of ['euclides-ensenando','euclides-dian','euclides-pantalla','euclides-telefono']){
+  assert.ok(app.includes('/assets/'+src+'.webp')||publico.includes('/assets/'+src+'.webp'));
+}
+assert.match(cssApp,/\.eu-gif/);
+assert.match(app,/prefers-reduced-motion: reduce/);
+assert.match(publico,/prefers-reduced-motion: reduce/);
+
 console.log('Identidad editorial: portada, seis vistas, accesibilidad, acceso preservado y contratación cerrada OK');
