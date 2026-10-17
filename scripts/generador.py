@@ -58,7 +58,7 @@ log = logging.getLogger("euclidian")
 
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_KEY")
-BASE_URL = os.getenv("EUCLIDIAN_BASE_URL", "https://euclidian-elementos-tributarios.vercel.app").rstrip("/")
+BASE_URL = os.getenv("EUCLIDIAN_BASE_URL", "https://euclidianet.com").rstrip("/")
 
 MESES = ["", "enero", "febrero", "marzo", "abril", "mayo", "junio", "julio",
          "agosto", "septiembre", "octubre", "noviembre", "diciembre"]
