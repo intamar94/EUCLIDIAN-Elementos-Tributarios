@@ -77,8 +77,8 @@ const tecla=(id,key)=>{
 assert.equal(elemento('tabEntrar').attrs['aria-selected']||'true','true');
 assert.match(acceso,/id="tabCrear"[^>]*hidden disabled/,'Sin pestaña pública de registro');
 assert.match(acceso,/id="authRegisterForm"[^>]*hidden inert/,'Formulario de alta desactivado');
-assert.equal(tecla('tabEntrar','ArrowRight'),false,'No hay navegación al alta');
-assert.equal(tecla('tabEntrar','Escape'),false);
+assert.equal(elemento('tabEntrar').listeners.keydown,undefined,'No hay navegación de pestañas hacia registro');
+
 console.log('OK: acceso disponible sin abrir el registro de usuarios');
 
 // Comprobaciones SEO técnicas de la página pública; no sustituyen Search Console.
