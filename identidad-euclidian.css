@@ -170,3 +170,45 @@ body{background-color:#f6f3ec;background-image:
   .bienvenida-cab>div{max-width:72%}
   .bienvenida-cab>button{padding:7px 9px;font-size:12px;min-height:40px}
 }
+
+
+/* Animaciones originales de Euclides, convertidas a WebP animado para
+   no cargar 13 MB de GIF originales. Sin modificar el acceso (#puerta). */
+.inicio-cab,.novedades-cab,.explorar-cabecera,.cuenta-cabecera,
+.controles>.titulo-consulta,.bienvenida-cab{min-height:152px}
+.eu-gif{position:absolute!important;right:15px;bottom:16px;z-index:3;
+  display:block;width:clamp(125px,16vw,177px);max-width:none!important;
+  padding:5px;border:1px solid #d0d6c8;border-radius:12px;
+  background:#fffaf0;box-shadow:0 9px 27px rgba(30,47,38,.12);pointer-events:none}
+.eu-gif img{display:block;width:100%;height:auto;aspect-ratio:16/9;
+  object-fit:cover;border-radius:7px}
+.inicio-cab .eu-gif,.novedades-cab .eu-gif,.bienvenida-cab .eu-gif{max-width:none}
+.explorar-cabecera .eu-gif,.cuenta-cabecera .eu-gif,
+.controles>.titulo-consulta .eu-gif{max-width:none}
+.inicio-cab h1,.novedades-cab h1,.explorar-cabecera h2,
+.cuenta-cabecera h2,.controles>.titulo-consulta h2,
+.bienvenida-cab h1{max-width:calc(100% - 190px)}
+.eu-frase{max-width:calc(100% - 190px)}
+/* La ficha documental sigue despejada, sin animaciones repetidas. */
+@media(max-width:700px){
+ .inicio-cab,.novedades-cab,.explorar-cabecera,.cuenta-cabecera,
+ .controles>.titulo-consulta,.bienvenida-cab{min-height:142px}
+ .eu-gif{right:7px;bottom:12px;width:clamp(96px,26vw,128px);padding:3px;border-radius:8px}
+ .eu-gif img{border-radius:5px}
+ .inicio-cab h1,.novedades-cab h1,.explorar-cabecera h2,
+ .cuenta-cabecera h2,.controles>.titulo-consulta h2,
+ .bienvenida-cab h1{max-width:calc(100% - 115px)}
+ .inicio-cab p,.novedades-cab p,.explorar-cabecera p,
+ .cuenta-cabecera p,.controles>.titulo-consulta p,.bienvenida-cab p{max-width:calc(100% - 105px)}
+ .eu-frase{max-width:calc(100% - 108px);font-size:12px}
+ .bienvenida-cab>div{max-width:calc(100% - 100px)}
+ .bienvenida-cab>button{position:relative;align-self:start;z-index:4}
+ .cuenta-cabecera #cerrarCuenta{position:relative;z-index:4}
+}
+@media(max-width:410px){
+ .inicio-cab h1,.novedades-cab h1,.explorar-cabecera h2,
+ .cuenta-cabecera h2,.controles>.titulo-consulta h2,
+ .bienvenida-cab h1{font-size:24px}
+ .eu-gif{width:99px;bottom:11px;right:6px}
+ .eu-frase{font-size:11.5px}
+}
