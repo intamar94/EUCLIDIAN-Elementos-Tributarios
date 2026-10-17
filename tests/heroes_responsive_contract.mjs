@@ -16,7 +16,7 @@ for(const cls of ['inicio-cab','novedades-cab','bienvenida-cab']){
 }
 for(const context of ['explorar-cabecera','cuenta-cabecera']){
  const start=app.indexOf('class="'+context+'"');
- const end=app.indexOf('</div>',app.indexOf('<picture class="eu-gif"',start));
+ const end=app.indexOf('</div>',app.indexOf('<div class="eu-gif"',start));
  assert.ok(start>0 && end>start,context);
 }
 assert.match(app,/<div class="titulo-consulta">[\s\S]*?<span class="eu-frase">La normativa ya es complicada\. Encontrarla no debería serlo\.<\/span><\/div><div class="eu-gif"/);
