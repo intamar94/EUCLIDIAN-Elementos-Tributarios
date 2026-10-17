@@ -1,6 +1,5 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import handler from '../api/auth.js';
 
 const read=(file)=>readFileSync(new URL('../'+file,import.meta.url),'utf8');
 function response(){
@@ -16,6 +15,7 @@ const oldKey=process.env.SUPABASE_PUBLISHABLE_KEY;
 try {
  process.env.SUPABASE_URL='https://example.supabase.co';
  process.env.SUPABASE_PUBLISHABLE_KEY='not-a-secret-test';
+ const {default:handler}=await import('../api/auth.js');
  for(const v of [undefined,'false','0','TRUE']){
   if(v===undefined)delete process.env.EUCLIDIAN_SIGNUP_ENABLED;
   else process.env.EUCLIDIAN_SIGNUP_ENABLED=v;
