@@ -33,7 +33,7 @@
 
     <div class="auth-tabs" role="tablist" aria-label="Acceso a EUCLIDIAN">
       <button type="button" id="tabEntrar" role="tab" aria-selected="true" aria-controls="authLoginForm">Entrar</button>
-      <button type="button" id="tabCrear" role="tab" aria-selected="false" aria-controls="authRegisterForm" tabindex="-1">Crear cuenta</button>
+      <button type="button" id="tabCrear" hidden disabled role="tab" aria-selected="false" aria-controls="authRegisterForm" tabindex="-1">Crear cuenta</button>
     </div>
 
     <form id="authLoginForm" class="auth-form" role="tabpanel" aria-labelledby="tabEntrar">
@@ -45,8 +45,8 @@
       <button type="button" class="auth-link" id="authRecover">Olvidé mi contraseña</button>
     </form>
 
-    <form id="authRegisterForm" class="auth-form" role="tabpanel" hidden aria-labelledby="tabCrear">
-      <p class="auth-intro">Crea tu cuenta personal. La consulta completa se habilita cuando tengas una suscripción activa; crear la cuenta todavía no da acceso a los documentos.</p>
+    <form id="authRegisterForm" class="auth-form" role="tabpanel" hidden inert aria-labelledby="tabCrear">
+      <p class="auth-intro">El registro público todavía no está disponible.</p>
       <label for="authRegisterEmail">Correo</label>
       <input id="authRegisterEmail" type="email" autocomplete="email" required placeholder="tu@correo.com">
       <label for="authRegisterPassword">Contraseña</label>
@@ -61,6 +61,7 @@
       <button type="submit" class="auth-principal">Guardar nueva contraseña</button>
     </form>
 
+    <p class="auth-intro" id="accesoPausado" role="status">Estamos preparando EUCLIDIAN. El registro y el acceso de usuarios aún no están abiertos. Puedes escribir a <a href="mailto:contacto@euclidianet.com">contacto@euclidianet.com</a>.</p>
     <div class="mal" id="mal" role="status" aria-live="polite"></div>
 
     <details class="acceso-interno">
