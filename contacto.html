@@ -102,7 +102,13 @@
           'Descripción:',
           detalle
         ].join('\n');
-        const destinatario = 'contacto@euclidianet.com';
+        const destinatarios = {
+          'Error en la plataforma': 'errores@euclidianet.com',
+          'Dato para corregir': 'errores@euclidianet.com',
+          'Documento faltante': 'sugerencias@euclidianet.com',
+          'Sugerencia': 'sugerencias@euclidianet.com'
+        };
+        const destinatario = destinatarios[tipo] || 'contacto@euclidianet.com';
         const enlace = 'mailto:' + destinatario + '?subject=' + encodeURIComponent(asunto) + '&body=' + encodeURIComponent(mensaje);
         estado.textContent = 'Se está abriendo tu aplicación de correo. El mensaje solo se enviará cuando lo confirmes allí.';
         location.href = enlace;
