@@ -4,6 +4,7 @@ import Stripe from 'stripe';
 process.env.SUPABASE_URL='https://example.supabase.co';
 process.env.SUPABASE_PUBLISHABLE_KEY='publishable-test';
 process.env.SUPABASE_SERVICE_KEY='service-test';
+process.env.EUCLIDIAN_PUBLIC_ACCESS_ENABLED='1';
 process.env.STRIPE_SECRET_KEY='sk_test_contract';
 process.env.STRIPE_WEBHOOK_SECRET='whsec_contract';
 process.env.PAYMENT_PROVIDER='stripe';
