@@ -19,7 +19,7 @@ assert.ok(html.indexOf('id="que-es"')<html.indexOf('id="por-dentro"')&&html.inde
 assert.equal((html.match(/role="tabpanel"/g)||[]).length,3,'Tres vistas de ejemplo');
 assert.match(html,/contratación|CONTRATACIÓN/);
 assert.match(html,/Vistas ilustrativas/);
-assert.match(html,/\/app\.html\?registro=1/);
+assert.doesNotMatch(html,/\/app\.html\?registro=1/);
 
 const ubicaciones=['id="que-es"','id="por-dentro"','id="como-funciona"','id="preguntas"','id="suscripcion"','id="cierreTitulo"','<footer>'];
 assert.ok(ubicaciones.every((x,i)=>i===0||html.indexOf(ubicaciones[i-1])<html.indexOf(x)), 'La portada explica, muestra, resuelve dudas y luego vende');
@@ -27,7 +27,7 @@ const inicioPlan=html.indexOf('<section class="suscripcion wrap"');
 assert.ok(!html.slice(0,inicioPlan).includes('$49.900')&&!html.slice(0,inicioPlan).includes('$29.900'), 'No adelantar cifras antes del plan');
 assert.ok(html.slice(inicioPlan).includes('$49.900')&&html.slice(inicioPlan).includes('$29.900'), 'Mostrar tarifas aprobadas al final');
 const cierre=html.slice(html.indexOf('class="suscripcion-cierre"'));
-assert.match(cierre,/href="\/app\.html\?registro=1"/);
+assert.match(cierre,/href="mailto:contacto@euclidianet\.com/);
 assert.match(cierre,/no se realizan cobros/i);
 assert.match(cierre,/registro y el acceso para usuarios se encuentran temporalmente cerrados/i);
 assert.ok(!/href="[^"]*(checkout|stripe|pagar)[^"]*"/i.test(cierre),'No simular contratación aún desactivada');
