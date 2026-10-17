@@ -26,9 +26,21 @@ const CABECERA_FECHA_WEB = /(?:publicad[oa]\s+en\s+la\s+p[aá]gina\s+(?:web\s+)?
 // Estas frases son plantillas antiguas sobre el tipo de acto y las etiquetas
 // temáticas. No describen el criterio jurídico de un documento individual.
 const SINTESIS_PLANTILLA = /Doctrina DIAN:\s*orienta, no obliga|te toca si trabajas con/i;
-function fechaCorteNovedades(){const f=new Date();f.setUTCDate(f.getUTCDate()-DIAS_NOVEDAD);return f.toISOString().slice(0,10);}
+// Las fechas de novedades se interpretan con el calendario colombiano,
+// aunque la función se ejecute en un servidor configurado en UTC.
+function fechaHoyColombia(){
+  const partes=new Intl.DateTimeFormat('en-US',{timeZone:'America/Bogota',
+    year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());
+  const v=tipo=>partes.find(p=>p.type===tipo)?.value;
+  return `${v('year')}-${v('month')}-${v('day')}`;
+}
+function fechaCorteNovedades(){
+  const f=new Date(fechaHoyColombia()+'T12:00:00Z');
+  f.setUTCDate(f.getUTCDate()-DIAS_NOVEDAD);
+  return f.toISOString().slice(0,10);
+}
 function fechaDocumentoCoherente(d){const anio=String(d.numero_resolucion||'').match(/-((?:19|20)\d{2})$/)?.[1];return d.fecha_es_real===true&&typeof d.fecha_publicacion==='string'&&(!anio||d.fecha_publicacion.slice(0,4)===anio);}
-function fechaReciente(fecha){const valor=String(fecha||'').slice(0,10);return /^\d{4}-\d{2}-\d{2}$/.test(valor)&&valor>=fechaCorteNovedades()&&valor<=new Date().toISOString().slice(0,10);}
+function fechaReciente(fecha){const valor=String(fecha||'').slice(0,10);return /^\d{4}-\d{2}-\d{2}$/.test(valor)&&valor>=fechaCorteNovedades()&&valor<=fechaHoyColombia();}
 function esNovedadOficial(d){return fechaReciente(d.fecha_publicacion_web)||(fechaDocumentoCoherente(d)&&fechaReciente(d.fecha_publicacion));}
 function fechaNovedad(d){const web=fechaReciente(d.fecha_publicacion_web)?d.fecha_publicacion_web:'';const acto=fechaDocumentoCoherente(d)&&fechaReciente(d.fecha_publicacion)?d.fecha_publicacion:'';return web>acto?web:acto;}
 export default async function handler(req,res){
