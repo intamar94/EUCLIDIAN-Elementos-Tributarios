@@ -58,7 +58,7 @@ function checkProject(slug) {
     add('control.'+id,accepted||excluded,description+'; aprobación o no-aplicabilidad justificada con evidencia',source,state==='REJECTED'?'REJECTED':'REVIEW');
   }
   let root=null;
-  if(safeText(p.web_root)){
+  if(typeof p.web_root==='string' && p.web_root.trim()){
     const candidate=path.resolve(process.cwd(),p.web_root);
     const cwd=process.cwd()+path.sep;
     if(candidate===process.cwd()||candidate.startsWith(cwd))root=candidate;
