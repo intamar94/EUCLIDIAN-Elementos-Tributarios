@@ -6,7 +6,7 @@
   const motion=window.matchMedia('(prefers-reduced-motion: reduce)');
   function activo(video){
     const visual=video.closest('.eu-gif,.eu-hero-gif');
-    if(!visual||document.hidden||motion.matches||video.dataset.enVista!=='1')return false;
+    if(!visual||video.dataset.fallo==='1'||document.hidden||motion.matches||video.dataset.enVista!=='1')return false;
     // Las distintas secciones de la aplicación se ocultan con hidden.
     for(let n=visual;n;n=n.parentElement)if(n.hidden)return false;
     return true;
@@ -21,7 +21,7 @@
       video.load();
     }
     const playing=video.play();
-    if(playing&&typeof playing.catch==='function')playing.catch(()=>{video.hidden=true;});
+    if(playing&&typeof playing.catch==='function')playing.catch(()=>{video.dataset.fallo='1';video.hidden=true;});
   }
   function sincronizar(){for(const video of videos)ajustar(video);}
   if(!('IntersectionObserver' in window)){
@@ -43,5 +43,5 @@
   // Detecta cambios de vista sin volver a solicitar todos los vídeos.
   const changes=new MutationObserver(sincronizar);
   changes.observe(document.body,{subtree:true,attributes:true,attributeFilter:['hidden']});
-  for(const v of videos)v.addEventListener('error',()=>{v.hidden=true;});
+  for(const v of videos)v.addEventListener('error',()=>{v.dataset.fallo='1';v.hidden=true;});
 })();
