@@ -36,7 +36,7 @@
       "email_delivery_test": "PENDING",
       "outbound_from_custom_domain": "NOT_VERIFIED",
       "operating_company": "Faro de Intamar",
-      "legal_name": "AWAIT_GEWERVBE_OFFICIAL_RECORD",
+      "legal_name": "AWAIT_GEWERBE_OFFICIAL_RECORD",
       "publication": {
         "legal_pages_status": "PR_DRAFT",
         "technical_pr": "https://github.com/intamar94/EUCLIDIAN-Elementos-Tributarios/pull/82",
