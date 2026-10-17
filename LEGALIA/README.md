@@ -1,4 +1,31 @@
-# LEGAL.ia · Faro de Intamar — cadena legal y técnica
+# LEGAL.ia · FARO de Intamar — paquete compartido para todas las webs y aplicaciones
+
+**Kit reutilizable preparado en rama de revisión. No es una certificación jurídica ni una autorización de publicación comercial.**
+
+## Empezar aquí
+
+1. [Cartera de proyectos](PORTAFOLIO.md): expedientes iniciales EUCLIDIAN, FARO-01, FABRICABLE, ZweiTierras, Mundo de Papel, BienvenidoQR, MercadoQR y PflegeDeutsch Pocket.
+2. [Manual para agentes y responsable](OPERACION.md): qué hace MIKAI, LEGAL.ia, Configurador web y qué decisiones se reservan a la titular.
+3. [Reglas condicionales](catalogo-riesgos.json): SaaS, tiendas, mercados, servicios, IA, menores, datos sensibles, pagos y fondos ajenos.
+4. [Plantillas editables](plantillas/): Impressum, Datenschutzerklärung genérica/específica, SaaS, tienda, desistimiento, cancelación, almacenamiento/cookies, pie de página.
+5. [Protección de datos privados](PRIVACIDAD-Y-EVIDENCIAS.md), [proveedores](MATRIZ-PROVEEDORES.md) y [fuentes oficiales](FUENTES-Y-CAMBIOS.md).
+6. [Procedimiento técnico para dominios](dominio-y-correo.md) y [coordinación dominio EUCLIDIAN](dominio-euclidian.md).
+
+### Un proyecto nuevo
+
+```bash
+node scripts/legal-ia-new-project.mjs nombre-corto "Nombre comercial" --type digital_product --markets DE,CO --risks user_accounts
+node scripts/legal-ia-gate.mjs --mode audit --project nombre-corto --json
+node scripts/legal-ia-gate.mjs --mode audit --all --json
+```
+
+No requiere instalar servicios adicionales ni pagar una suscripción. Para integrar el bloqueo comercial en **otro repositorio**, copiar/adaptar el job legal y el árbol LEGALIA; esta rama de EUCLIDIAN no gobierna automáticamente los despliegues de otras plataformas.
+
+El motor es **fail-closed** y requiere evidencia; los documentos jurídicos siguen siendo borradores hasta completar empresa, actividad, contenido, base jurídica, terceros, permisos, consentimiento y aprobaciones. El Gewerbe sigue pendiente para el 19/10/2026. No registrar datos personales en el GitHub público.
+
+---
+
+## Arquitectura y procedimiento detallado
 
 **Estado: BORRADOR / REVIEW.** Arquitectura recuperada de LEGAL.ia → APPROVED / REVIEW / REJECTED; MIKAI orquesta, LEGAL.ia verifica y un humano autorizado aprueba. Primer módulo instalado en una **rama aislada de Euclidian** para evitar cambios en producción; será trasladable a los demás proyectos.
 
