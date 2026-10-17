@@ -68,8 +68,8 @@ function authCambiarTab(registro){
   const login=document.getElementById('authLoginForm'), alta=document.getElementById('authRegisterForm'), reset=document.getElementById('authResetForm');
   if(reset)reset.hidden=true;if(login)login.hidden=registro;if(alta)alta.hidden=!registro;
   const a=document.getElementById('tabEntrar'),b=document.getElementById('tabCrear');
-  if(a)a.setAttribute('aria-selected',registro?'false':'true');
-  if(b)b.setAttribute('aria-selected',registro?'true':'false');
+  if(a){a.setAttribute('aria-selected',registro?'false':'true');a.tabIndex=registro?-1:0;}
+  if(b){b.setAttribute('aria-selected',registro?'true':'false');b.tabIndex=registro?0:-1;}
   authStatus('');
 }
 function authRecuperacionDesdeHash(){
