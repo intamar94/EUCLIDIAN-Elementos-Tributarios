@@ -4,6 +4,8 @@ process.env.SUPABASE_URL='https://example.supabase.co';
 process.env.SUPABASE_PUBLISHABLE_KEY='publishable-test';
 process.env.SUPABASE_SERVICE_KEY='service-test';
 process.env.EUCLIDIAN_CLAVE='internal-test';
+process.env.EUCLIDIAN_PUBLIC_ACCESS_ENABLED='1';
+process.env.EUCLIDIAN_SIGNUP_ENABLED='0';
 
 const {default:authHandler}=await import('../api/auth.js?test='+Date.now());
 const {autorizarConsulta}=await import('../lib/auth-server.js?test='+Date.now());
@@ -19,9 +21,10 @@ async function callAuth(body){
 {
   let calls=0;global.fetch=async()=>{calls++;throw new Error('no debe llamarse');};
   const res=await callAuth({action:'signup',email:'mal',password:'123'});
-  assert.equal(res.code,400);
+  assert.equal(res.code,403);
+  assert.equal(res.body?.error,'registro_cerrado');
   assert.equal(calls,0);
-  console.log('OK - signup inválido falla antes de red');
+  console.log('OK - signup público bloqueado en servidor incluso con parámetros inválidos');
 }
 {
   let seen=null;
@@ -36,6 +39,22 @@ async function callAuth(body){
   assert.equal(seen.options.headers.apikey,'publishable-test');
   assert.notEqual(seen.options.headers.apikey,'service-test');
   console.log('OK - signin usa exclusivamente clave publicable');
+}
+{
+  process.env.EUCLIDIAN_PUBLIC_ACCESS_ENABLED='0';
+  let calls=0;global.fetch=async()=>{calls++;throw new Error('red no autorizada');};
+  for(const action of ['signin','refresh','recover','update_password']){
+    const r=await callAuth({action,email:'persona@example.com',password:'password-seguro'});
+    assert.equal(r.code,403);
+    assert.equal(r.body?.error,'acceso_publico_cerrado');
+  }
+  assert.equal(calls,0);
+  const denied=await autorizarConsulta({headers:{authorization:'Bearer old-session'}});
+  assert.equal(denied.ok,false);
+  assert.equal(denied.status,403);
+  assert.equal(denied.error,'acceso_publico_cerrado');
+  process.env.EUCLIDIAN_PUBLIC_ACCESS_ENABLED='1';
+  console.log('OK - acceso público apagado bloquea signin, refresh y consultas sin tocar acceso interno');
 }
 {
   global.fetch=async()=>new Response('{}',{status:200,headers:{'content-type':'application/json'}});
@@ -83,4 +102,4 @@ async function callAuth(body){
   assert.equal(acceso.error,'suscripcion_requerida');
   console.log('OK - cuenta sin suscripción no entra al corpus');
 }
-console.log('Contrato Auth: 6/6 escenarios OK');
+console.log('Contrato Auth: control de cierre público y acceso interno OK');

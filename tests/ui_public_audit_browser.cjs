@@ -48,14 +48,16 @@ const assert=require('node:assert/strict');
       await page.goto(base+'/app.html',{waitUntil:'domcontentloaded'});
       await page.locator('#puerta').waitFor({state:'visible'});
       assert.equal(await page.locator('meta[name="robots"]').getAttribute('content'),'noindex,nofollow');
+      // Prepublicación: la titular cerró explícitamente el registro público.
+      assert.equal(await page.locator('#tabCrear').isVisible(),false,'Registro oculto '+width);
+      assert.equal(await page.locator('#tabCrear').isEnabled(),false,'Registro inhabilitado '+width);
+      assert.equal(await page.locator('#authRegisterForm').isVisible(),false,'Formulario de alta oculto '+width);
       await page.locator('#tabEntrar').focus();
-      await page.keyboard.press('ArrowRight');
-      assert.equal(await page.locator('#tabCrear').getAttribute('aria-selected'),'true');
-      assert.equal(await page.locator('#authRegisterForm').isVisible(),true);
-      await page.keyboard.press('Home');
-      assert.equal(await page.locator('#tabEntrar').getAttribute('aria-selected'),'true');
-      await page.keyboard.press('End');
-      assert.equal(await page.locator('#tabCrear').getAttribute('aria-selected'),'true');
+      for(const key of ['ArrowRight','Home','End']){
+        await page.keyboard.press(key);
+        assert.equal(await page.locator('#tabEntrar').getAttribute('aria-selected'),'true','Sin acceso por teclado al registro '+width);
+        assert.equal(await page.locator('#authRegisterForm').isVisible(),false,'Alta sigue cerrada '+width);
+      }
       await page.locator('#tabEntrar').click();
       assert.equal(await page.locator('#authLoginForm').isVisible(),true);
       assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>window.innerWidth),false,'Sin desbordamiento ingreso '+width);

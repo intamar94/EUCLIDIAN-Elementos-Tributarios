@@ -32,6 +32,12 @@ export default async function handler(req,res){
   if(req.method!=='POST')return res.status(405).json({error:'method_not_allowed'});
   if(!SUPABASE_URL||!PUBLISHABLE_KEY)return res.status(503).json({error:'auth_no_configurado'});
   const action=String(req.body?.action||'');
+  // Pre-lanzamiento: no permitir nuevas cuentas ni entrar como usuario público.
+  // La vía interna está protegida separadamente por EUCLIDIAN_CLAVE.
+  if(action==='signup'&&process.env.EUCLIDIAN_SIGNUP_ENABLED!=='1')
+    return res.status(403).json({error:'registro_cerrado',message:'La creación de cuentas aún no está disponible.'});
+  if(['signin','refresh','recover','update_password'].includes(action)&&process.env.EUCLIDIAN_PUBLIC_ACCESS_ENABLED!=='1')
+    return res.status(403).json({error:'acceso_publico_cerrado',message:'El acceso de usuarios está temporalmente cerrado mientras se prepara EUCLIDIAN.'});
   try{
     if(action==='signup'||action==='signin'){
       const email=String(req.body?.email||'').trim().toLowerCase();

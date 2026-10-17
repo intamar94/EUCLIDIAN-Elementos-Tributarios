@@ -65,6 +65,8 @@ function authMostrarPuerta(){
 }
 function authOcultarPuerta(){const p=document.getElementById('puerta');if(p)p.hidden=true;}
 function authCambiarTab(registro){
+  // La inscripción está cerrada incluso si se llega con ?registro=1 o por teclado.
+  if(registro){authStatus('El registro público todavía no está disponible.','aviso');registro=false;}
   const login=document.getElementById('authLoginForm'), alta=document.getElementById('authRegisterForm'), reset=document.getElementById('authResetForm');
   if(reset)reset.hidden=true;if(login)login.hidden=registro;if(alta)alta.hidden=!registro;
   const a=document.getElementById('tabEntrar'),b=document.getElementById('tabCrear');
@@ -202,6 +204,7 @@ for(const id of ['tabEntrar','tabCrear']){
   document.getElementById(id)?.addEventListener('keydown',event=>{
     if(!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;
     event.preventDefault();
+    if(document.getElementById('tabCrear')?.disabled)return;
     const siguiente=event.key==='Home'?'tabEntrar':event.key==='End'?'tabCrear':
       id==='tabEntrar'?'tabCrear':'tabEntrar';
     authCambiarTab(siguiente==='tabCrear');
@@ -221,20 +224,9 @@ document.getElementById('authLoginForm')?.addEventListener('submit',async e=>{
   }catch(err){authStatus(err.message||'No se pudo iniciar sesión.','error');}
   finally{btn.disabled=false;}
 });
-document.getElementById('authRegisterForm')?.addEventListener('submit',async e=>{
-  e.preventDefault();const btn=e.submitter;btn.disabled=true;authStatus('Creando tu cuenta…');
-  try{
-    const email=document.getElementById('authRegisterEmail').value.trim();
-    const password=document.getElementById('authRegisterPassword').value;
-    const {r,data}=await authPost({action:'signup',email,password});
-    if(!r.ok)throw new Error(data.message||'No se pudo crear la cuenta.');
-    if(data.access_token){
-      authGuardar(data);authOcultarPuerta();await window.cargar?.();
-    }else{
-      authStatus('Cuenta creada. Revisa tu correo y confirma el acceso para continuar.','ok');
-    }
-  }catch(err){authStatus(err.message||'No se pudo crear la cuenta.','error');}
-  finally{btn.disabled=false;}
+document.getElementById('authRegisterForm')?.addEventListener('submit',e=>{
+  e.preventDefault();
+  authStatus('El registro de nuevas cuentas está cerrado por ahora.','aviso');
 });
 document.getElementById('authRecover')?.addEventListener('click',async()=>{
   const email=document.getElementById('authEmail').value.trim();

@@ -46,7 +46,7 @@ const checks=[
  ['P3 contexto de consulta',nav.includes('describirConsulta(data)')],
  ['Vistas separadas con inicio compacto',nav.includes('function aplicarVista')&&html.includes('inicioPanel')&&html.includes('novedadesCab')&&!html.includes('hoyResumen')],
  ['P4 acceso personal visible',html.includes('authLoginForm')&&html.includes('authRegisterForm')&&html.includes('cuentaPanel')],
- ['P4 flujo auth cliente',auth.includes("action:'signin'")&&auth.includes("action:'signup'")&&auth.includes("action:'refresh'")&&auth.includes("action:'recover'")&&auth.includes("action:'logout'")],
+ ['P4 flujo auth cliente con alta pública temporalmente cerrada',auth.includes("action:'signin'")&&!auth.includes("action:'signup'")&&auth.includes("action:'refresh'")&&auth.includes("action:'recover'")&&auth.includes("action:'logout'")&&authApi.includes("EUCLIDIAN_SIGNUP_ENABLED")&&authApi.includes("registro_cerrado")&&html.includes('id="tabCrear" hidden disabled')&&html.includes('id="authRegisterForm"')],
  ['P4 consultas usan bearer',nav.includes('Authorization:')&&nav.includes('Bearer')&&api.includes('autorizarConsulta(req)')],
  ['P4 entitlement server-side',authServer.includes('euclidian_estado_acceso')&&authServer.includes("error:'suscripcion_requerida'")],
  ['P4 recuperación de contraseña',auth.includes("action:'update_password'")&&html.includes('authResetForm')],
