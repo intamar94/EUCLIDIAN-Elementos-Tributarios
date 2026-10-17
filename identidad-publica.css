@@ -15,7 +15,7 @@ body:before{opacity:.19;mask-image:linear-gradient(to bottom,#000,transparent 90
 .nav .login{border-radius:9px;border-color:#aebfb1;min-height:42px;display:flex;align-items:center}
 .nav .login:hover{background:#e9f0e8}
 .hero{gap:45px;padding-top:65px;padding-bottom:68px}
-.hero:before{content:"";position:absolute;left:-5%;right:-5%;top:12%;height:90%;z-index:-1;pointer-events:none;
+.hero:before{content:"";position:absolute;left:0;right:0;top:12%;height:90%;z-index:-1;pointer-events:none;
  background:radial-gradient(ellipse at 10% 52%,rgba(205,224,205,.33),transparent 55%)}
 .hero h1{font-size:clamp(40px,4.4vw,64px);max-width:750px;color:#1d3c2d;letter-spacing:-.04em;line-height:1.08}
 .hero h1 em{color:#985d45;font-weight:400}
