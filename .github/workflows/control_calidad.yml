@@ -17,6 +17,7 @@ on:
       - 'identidad-euclidian.css'
       - 'heroes-euclidian-responsive.css'
       - 'animaciones-euclidian.css'
+      - 'estandar-heroes-euclidian.css'
       - 'animaciones-euclidian.js'
       - 'assets/**'
       - 'hero-publico-responsive.css'
@@ -95,6 +96,8 @@ jobs:
         run: node tests/heroes_responsive_contract.mjs
       - name: Contrato de imágenes y vídeo HD
         run: node tests/hd_assets_contract.mjs
+      - name: Contrato de seis heroes uniformes
+        run: node tests/estandar_heroes_contract.mjs
       - name: Contrato readiness y observabilidad
         run: node tests/health_readiness_contract.mjs
       - name: Eval de consultas contra datos reales
