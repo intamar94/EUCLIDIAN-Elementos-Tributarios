@@ -34,9 +34,10 @@
 
     <div class="auth-tabs" role="tablist" aria-label="Acceso a EUCLIDIAN">
       <button type="button" id="tabEntrar" role="tab" aria-selected="true" aria-controls="authLoginForm">Entrar</button>
-      <button type="button" id="tabCrear" role="tab" aria-selected="false" aria-controls="authRegisterForm" tabindex="-1">Crear cuenta</button>
+      <button type="button" id="tabCrear" role="tab" aria-selected="false" aria-controls="authRegisterForm" tabindex="-1" hidden disabled>Crear cuenta</button>
     </div>
 
+    <p class="auth-intro" role="status">El registro de nuevos usuarios está temporalmente cerrado. El acceso permanece disponible únicamente para cuentas autorizadas.</p>
     <form id="authLoginForm" class="auth-form" role="tabpanel" aria-labelledby="tabEntrar">
       <label for="authEmail">Correo</label>
       <input id="authEmail" type="email" autocomplete="email" required placeholder="tu@correo.com">
@@ -46,7 +47,7 @@
       <button type="button" class="auth-link" id="authRecover">Olvidé mi contraseña</button>
     </form>
 
-    <form id="authRegisterForm" class="auth-form" role="tabpanel" hidden aria-labelledby="tabCrear">
+    <form id="authRegisterForm" class="auth-form" role="tabpanel" hidden inert aria-labelledby="tabCrear">
       <p class="auth-intro">Crea tu cuenta personal. La consulta completa se habilita cuando tengas una suscripción activa; crear la cuenta todavía no da acceso a los documentos.</p>
       <label for="authRegisterEmail">Correo</label>
       <input id="authRegisterEmail" type="email" autocomplete="email" required placeholder="tu@correo.com">
