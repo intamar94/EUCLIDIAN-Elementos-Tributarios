@@ -152,3 +152,12 @@ body{background-color:#f6f3ec;background-image:
 }
 @media(max-width:360px){.eu-frase{font-size:12px}.inicio-cab h1,.novedades-cab h1{font-size:23px}}
 @media(prefers-reduced-motion:reduce){.tema-personal,#cab .nav-principal .nav-item{transition:none!important}}
+
+
+/* Movimiento de construcción geométrica: tenue, sin afectar el contenido. */
+@keyframes eu-trazo{from{transform:translateX(-5px) rotate(-1.2deg)}to{transform:translateX(5px) rotate(1.2deg)}}
+@media(prefers-reduced-motion:no-preference){
+  .inicio-cab::before,.novedades-cab::before,.explorar-cabecera::before,
+  .cuenta-cabecera::before,.controles>.titulo-consulta::before,
+  .bienvenida-cab::before{animation:eu-trazo 11s ease-in-out infinite alternate}
+}
