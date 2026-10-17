@@ -2,6 +2,10 @@
 
 **Kit reutilizable preparado en rama de revisión. No es una certificación jurídica ni una autorización de publicación comercial.**
 
+## Registro único que se actualiza con cada cambio
+
+**[REGISTRO-MAESTRO.json](REGISTRO-MAESTRO.json)** reúne dominio, correo, Gewerbe previsto, hitos, PRs y política de sincronización entre Configurador web, LEGAL.ia y los proyectos. Es el núcleo operativo; las evidencias personales permanecen en Drive privado. **El registro previsto para el lunes no es un registro confirmado.**
+
 ## Empezar aquí
 
 1. [Cartera de proyectos](PORTAFOLIO.md): expedientes iniciales EUCLIDIAN, FARO-01, FABRICABLE, ZweiTierras, Mundo de Papel, BienvenidoQR, MercadoQR y PflegeDeutsch Pocket.
