@@ -8,6 +8,7 @@ on:
   push:
     paths:
       - 'scripts/**'
+      - 'LEGALIA/**'
       - 'tests/**'
       - 'api/**'
       - 'index.html'
@@ -85,6 +86,15 @@ jobs:
         run: |
           node tests/payment_events_contract.mjs
           node tests/billing_flow_contract.mjs
+      - name: LEGAL.ia - auditoría sin secretos
+        run: |
+          node --check scripts/legal-ia-gate.mjs
+          node --check scripts/legal-ia-static-audit.mjs
+          node --check scripts/legal-ia-new-project.mjs
+          node scripts/legal-ia-gate.mjs --mode audit
+          node scripts/legal-ia-gate.mjs --mode audit --all
+          node scripts/legal-ia-static-audit.mjs
+          node tests/legalia_gate_contract.mjs
       - name: Regresiones Python de fuente y fechas
         run: python -m unittest discover -s tests -p 'test_*.py'
       - name: Regresión comercial y ownership
@@ -150,3 +160,20 @@ jobs:
           cd scripts
           python test_normalizador_juridico.py
           python test_cola_reprocesamiento.py
+
+  legalia_publicacion:
+    name: LEGAL.ia - control independiente de publicación
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Bloquear la comercialización sin expediente aprobado
+        run: node scripts/legal-ia-gate.mjs --mode release

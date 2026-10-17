@@ -1,0 +1,130 @@
+{
+  "schema_version": "1.0",
+  "project": "EUCLIDIAN — Elementos Tributarios",
+  "parent_company": "Faro de Intamar",
+  "public_url": "https://euclidianet.com/",
+  "operator_jurisdiction": "DE",
+  "target_market": [
+    "CO"
+  ],
+  "project_type": [
+    "landing",
+    "saas"
+  ],
+  "company_scope_approved": false,
+  "features": {
+    "user_accounts": true,
+    "payment_checkout_live": false,
+    "recurring_b2c_sales_live": false,
+    "customer_funds_held": false,
+    "third_party_font_requests": true,
+    "ai_features_live": false,
+    "children_targeted": false,
+    "sensitive_personal_data": false,
+    "location_tracking": false,
+    "marketing_tracking": false,
+    "email_marketing": false,
+    "regulated_activity": false,
+    "user_generated_content": false,
+    "public_signup_enabled": false
+  },
+  "vendors_to_review": [
+    "Vercel",
+    "Supabase",
+    "Google Fonts"
+  ],
+  "domain": {
+    "candidate": "euclidianet.com",
+    "registrar": "Vercel registrar; DNS autoritativo Cloudflare",
+    "purchased": true,
+    "dns_verified": true,
+    "https_verified": true,
+    "canonical_website_checked": false,
+    "public_access_without_vercel_login_checked": false,
+    "email_dns_spf_dkim_dmarc_checked": false,
+    "renewal_monitor_configured": false,
+    "canonical_source_configured": true,
+    "email_dns_mx_spf_dkim_verified": true,
+    "email_dmarc_verified": false,
+    "email_routing_configured": true,
+    "email_routing_provider": "Cloudflare Email Routing",
+    "dns_provider": "Cloudflare",
+    "email_forwarding_destination_verified": true,
+    "email_delivery_tested": false,
+    "contact_email": "contacto@euclidianet.com",
+    "support_emails": [
+      "contacto@euclidianet.com",
+      "sugerencias@euclidianet.com",
+      "errores@euclidianet.com"
+    ]
+  },
+  "pages": {
+    "impressum": {
+      "path": "/impressum",
+      "status": "REVIEW"
+    },
+    "datenschutz": {
+      "path": "/datenschutz",
+      "status": "REVIEW"
+    },
+    "terms_if_checkout": {
+      "status": "REVIEW"
+    },
+    "withdrawal_if_applicable": {
+      "status": "REVIEW"
+    }
+  },
+  "controls": {
+    "privacy_mapping": "REVIEW",
+    "processor_contracts_dpa": "REVIEW",
+    "security_access": "REVIEW",
+    "cookie_consent_audit": "REVIEW",
+    "brand_and_asset_licensing": "REVIEW",
+    "cross_border_tax_and_terms": "REVIEW",
+    "source_attribution_disclaimers": "REVIEW",
+    "customer_terms_if_live": "REVIEW",
+    "kuendigungsbutton_if_applicable": "REVIEW",
+    "widerrufsbutton_if_applicable": "REVIEW",
+    "regulated_payments_external_legal_opinion": "REVIEW",
+    "account_legal": "REVIEW",
+    "data_deletion": "REVIEW"
+  },
+  "human_approval": {
+    "status": "REVIEW",
+    "reviewer": null,
+    "reviewed_at": null,
+    "evidence_link": null
+  },
+  "slug": "euclidian",
+  "web_root": ".",
+  "classification_reviewed": false,
+  "risk_inventory_confirmed": false,
+  "evidence": {},
+  "exceptions": {},
+  "legal_implementation": {
+    "pull_request_url": "https://github.com/intamar94/EUCLIDIAN-Elementos-Tributarios/pull/82",
+    "implementation_branch": "legal/euclidianet-compliance-latest",
+    "status": "CODE_TESTED_DRAFT_PENDING_LEGAL_RELEASE",
+    "routes": [
+      "/impressum",
+      "/datenschutz",
+      "/privacidad"
+    ],
+    "contact_email_server_env": "EUCLIDIAN_LEGAL_EMAIL",
+    "publish_approval_flag": "EUCLIDIAN_LEGAL_APPROVED=0",
+    "legal_name_source": "Gewerbe expected 2026-10-19, not yet verified",
+    "home_address_publication": "USER_CHOSE_OWN_ADDRESS_EXACT_DETAILS_NOT_IN_PUBLIC_GITHUB",
+    "registration": {
+      "frontend": "HIDDEN",
+      "api": "FAIL_CLOSED_403",
+      "production": "AWAIT_DEPLOYMENT",
+      "env_key": "EUCLIDIAN_SIGNUP_ENABLED",
+      "env_value": "false",
+      "automated_tests": "PR82_PENDING_CI"
+    },
+    "pages_publication": "AWAIT_IDENTITY_AND_PRIVACY",
+    "legal_email": "contacto@euclidianet.com",
+    "publication_consented": false
+  },
+  "verification_last_checked_date": "2026-10-17"
+}

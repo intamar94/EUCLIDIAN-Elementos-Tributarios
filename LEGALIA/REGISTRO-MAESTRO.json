@@ -1,0 +1,102 @@
+{
+  "schema_version": "1.0",
+  "system": "LEGAL.ia",
+  "owner_brand": "Faro de Intamar",
+  "policy": "Fuente jurídica central por proyecto; no usar datos declarados como prueba legal sin documentos",
+  "last_confirmed_on": "2026-10-17",
+  "gewerbe": {
+    "expected_effective_date": "2026-10-19",
+    "confirmation_status": "PENDING",
+    "evidence_ref": null,
+    "can_mark_confirmed_automatically": false
+  },
+  "projects": {
+    "euclidian": {
+      "domain": "euclidianet.com",
+      "website": "https://euclidianet.com",
+      "domain_bought": true,
+      "registrar": "Vercel",
+      "dns_authoritative_provider": "Cloudflare",
+      "dns_zone_status": "active",
+      "hosting": "Vercel",
+      "contact_email": "contacto@euclidianet.com",
+      "extra_inboxes": [
+        "sugerencias@euclidianet.com",
+        "errores@euclidianet.com"
+      ],
+      "email_provider": "Cloudflare Email Routing",
+      "email_dest_verified": true,
+      "email_rules_enabled": true,
+      "email_dns": {
+        "MX": "PRESENT",
+        "SPF": "PRESENT",
+        "DKIM": "PRESENT",
+        "DMARC": "NOT_OBSERVED"
+      },
+      "email_delivery_test": "PENDING",
+      "outbound_from_custom_domain": "NOT_VERIFIED",
+      "operating_company": "Faro de Intamar",
+      "legal_name": "AWAIT_GEWERBE_OFFICIAL_RECORD",
+      "publication": {
+        "legal_pages_status": "CODE_REVIEW_AND_CI_NOT_YET_PUBLISHED",
+        "technical_pr": "https://github.com/intamar94/EUCLIDIAN-Elementos-Tributarios/pull/82",
+        "approved_flag": "0",
+        "impressum": "PREPARED_NOT_LIVE",
+        "datenschutz": "PREPARED_NOT_LIVE"
+      },
+      "compliance": {
+        "trade_registration": "PENDING_OFFICIAL_EVIDENCE",
+        "operator_identity": "PENDING",
+        "physical_address": "PRIVATE_DETAILS_PENDING_VERIFICATION",
+        "privacy_dataflow": "REVIEW",
+        "terms_if_payments_activated": "REVIEW"
+      },
+      "verified_sources": [
+        "Cloudflare zone/dns/email/rules API 2026-10-17",
+        "Vercel domains/project settings API 2026-10-17",
+        "GitHub PR #82 and #67"
+      ],
+      "non_sensitive_drive_evidence_home": "https://drive.google.com/drive/folders/1A6p9UqG18lad--7Rua1YclwG9wgtXj_E",
+      "account_creation": {
+        "enabled": false,
+        "vercel_flag": "EUCLIDIAN_SIGNUP_ENABLED=false",
+        "frontend": "TAB_AND_FORM_HIDDEN",
+        "api": "POST /api/auth action=signup => HTTP 403 when disabled",
+        "code_pr": "https://github.com/intamar94/EUCLIDIAN-Elementos-Tributarios/pull/82",
+        "production_verification": "PENDING_DEPLOYMENT"
+      },
+      "public_contact": "contacto@euclidianet.com",
+      "legal_reviews_pending": [
+        "Gewerbe 2026-10-19 (expected only)",
+        "official proprietor full name",
+        "serviceable address authorisation",
+        "final privacy provider/retention/third country details"
+      ],
+      "automatic_tasks": "DISABLED_PER_USER_REQUEST"
+    }
+  },
+  "sync_rules": {
+    "on_change": [
+      "domain",
+      "DNS",
+      "email",
+      "hosting",
+      "provider",
+      "features",
+      "authentication",
+      "cookies",
+      "storage",
+      "personal_data",
+      "AI",
+      "pricing",
+      "payments",
+      "country_market",
+      "Gewerbe",
+      "brand_identity"
+    ],
+    "workflow": "Verificar fuente primaria → sincronizar expediente público sin secretos → revisar obligaciones → activar aprobaciones humanas sólo con prueba → registrar referencias y fechas",
+    "auto_approve": false,
+    "auto_publish": false,
+    "never_store_sensitive_information_in_public_github": true
+  }
+}

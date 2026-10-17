@@ -1,0 +1,131 @@
+{
+  "schema_version": "1.0",
+  "project": "FARO-01 — ayuda cotidiana (futuro)",
+  "parent_company": "Faro de Intamar",
+  "public_url": null,
+  "operator_jurisdiction": "DE",
+  "target_market": [
+    "DE"
+  ],
+  "project_type": [
+    "marketplace",
+    "local_service"
+  ],
+  "company_scope_approved": false,
+  "features": {
+    "user_accounts": true,
+    "payment_checkout_live": false,
+    "recurring_b2c_sales_live": false,
+    "customer_funds_held": true,
+    "third_party_font_requests": false,
+    "ai_features_live": false,
+    "children_targeted": false,
+    "sensitive_personal_data": false,
+    "location_tracking": false,
+    "marketing_tracking": false,
+    "email_marketing": false,
+    "regulated_activity": false,
+    "user_generated_content": false,
+    "marketplace_helpers": true
+  },
+  "vendors_to_review": [],
+  "domain": {
+    "candidate": null,
+    "registrar": null,
+    "purchased": false,
+    "dns_verified": false,
+    "https_verified": false,
+    "canonical_website_checked": false,
+    "public_access_without_vercel_login_checked": false,
+    "email_dns_spf_dkim_dmarc_checked": false,
+    "renewal_monitor_configured": false
+  },
+  "pages": {
+    "impressum": {
+      "path": "/impressum.html",
+      "status": "REVIEW"
+    },
+    "datenschutz": {
+      "path": "/datenschutz.html",
+      "status": "REVIEW"
+    },
+    "terms_if_checkout": {
+      "status": "REVIEW"
+    },
+    "withdrawal_if_applicable": {
+      "status": "REVIEW"
+    }
+  },
+  "controls": {
+    "privacy_mapping": "REVIEW",
+    "processor_contracts_dpa": "REVIEW",
+    "security_access": "REVIEW",
+    "cookie_consent_audit": "REVIEW",
+    "brand_and_asset_licensing": "REVIEW",
+    "cross_border_tax_and_terms": "REVIEW",
+    "source_attribution_disclaimers": "REVIEW",
+    "customer_terms_if_live": "REVIEW",
+    "kuendigungsbutton_if_applicable": "REVIEW",
+    "widerrufsbutton_if_applicable": "REVIEW",
+    "regulated_payments_external_legal_opinion": "REVIEW",
+    "worker_status_insurance_tax": "REVIEW",
+    "data_protection_for_vulnerable_users": "REVIEW",
+    "customer_contracts": "REVIEW",
+    "cancellation_and_penalties": "REVIEW",
+    "payments_with_licensed_psp": "REVIEW",
+    "account_legal": "REVIEW",
+    "data_deletion": "REVIEW",
+    "checkout_terms": "REVIEW",
+    "consumer_withdrawal": "REVIEW",
+    "billing_tax": "REVIEW",
+    "subscription_cancellation": "REVIEW",
+    "payments_regulated": "REVIEW",
+    "funds_segregation": "REVIEW",
+    "ai_transparency": "REVIEW",
+    "ai_training_data": "REVIEW",
+    "child_privacy": "REVIEW",
+    "parental_controls": "REVIEW",
+    "special_data_basis": "REVIEW",
+    "data_impact_assessment": "REVIEW",
+    "location_privacy": "REVIEW",
+    "marketing_consent": "REVIEW",
+    "unsubscribe": "REVIEW",
+    "sector_licensing": "REVIEW",
+    "professional_disclaimer": "REVIEW",
+    "platform_moderation": "REVIEW",
+    "ip_takedown": "REVIEW",
+    "marketplace_roles": "REVIEW",
+    "intermediary_legal": "REVIEW",
+    "seller_information": "REVIEW",
+    "consumer_rights": "REVIEW",
+    "returns_warranty": "REVIEW",
+    "product_safety": "REVIEW",
+    "accessibility_scoping": "REVIEW",
+    "service_liability": "REVIEW",
+    "worker_classification": "REVIEW",
+    "insurance": "REVIEW"
+  },
+  "human_approval": {
+    "status": "REVIEW",
+    "reviewer": null,
+    "reviewed_at": null,
+    "evidence_link": null,
+    "review_scope": "Commercial production; not a substitute for professional review",
+    "date": null,
+    "evidence": null
+  },
+  "classification_reviewed": false,
+  "risk_inventory_confirmed": false,
+  "web_root": null,
+  "evidence": {},
+  "exceptions": {},
+  "stage": "PLANNING",
+  "business_model": [
+    "mandados puntuales con Helfer-Vergütung",
+    "Abo recurrente"
+  ],
+  "notes": "No activar recarga de saldo libre FARO, pagos ni captación de Helfer hasta contar con análisis jurídico regulatorio y de contratación.",
+  "slug": "faro-01",
+  "phase": "CONCEPT_ONLY",
+  "risk_assumptions": "Tipo marketplace + servicio local y posibles saldos/prepagos son hipótesis de diseño, NO evidencia de operaciones actuales. Mantener evaluación BaFin/ZAG, contratación e impuestos antes de implementar."
+}

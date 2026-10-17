@@ -1,0 +1,44 @@
+{
+  "schema_version": "1.0",
+  "umbrella_brand": "Faro de Intamar",
+  "jurisdiction": "DE",
+  "legal_form_expected": "Einzelunternehmen (por confirmar)",
+  "trade_registration": {
+    "planned_filing_date": "2026-10-19",
+    "status": "PENDING",
+    "evidence": null,
+    "business_activity_scope_verified": false,
+    "expected_effective_date": "2026-10-19",
+    "user_expected_validity": "El lunes 19/10/2026 estará válido según la previsión comunicada por la titular. No se dispone aún del documento para confirmarlo.",
+    "verified_effective_date": null
+  },
+  "legal_identity": {
+    "full_name_verified": false,
+    "serviceable_address_confirmed_for_publication": false,
+    "contact_email_verified": false,
+    "public_address_choice": "OWN_RESIDENTIAL_ADDRESS",
+    "public_address_consented_in_principle": true,
+    "address_value": "NOT_STORED_IN_PUBLIC_REPOSITORY",
+    "address_publication_note": "La usuaria prefiere usar su domicilio como dirección empresarial pública; validar el dato exacto y el borrador del Impressum por canal privado antes de publicar. No subir domicilio real ni comprobantes aquí.",
+    "note": "Tu domicilio exacto no se registra en este repositorio. Datos publicados solo con revisión previa.",
+    "official_source": "Gewerbeanmeldung / Gewerbeschein cuando esté disponible",
+    "contact_email": "contacto@euclidianet.com",
+    "contact_email_status": "CLOUDFLARE_ROUTING_ACTIVE_FORWARD_DESTINATION_VERIFIED_DELIVERY_TEST_PENDING",
+    "contact_email_note": "Para EUCLIDIAN, contacto@euclidianet.com se reenvía al Gmail verificado por Cloudflare; otros proyectos pueden usar otra dirección.",
+    "contact_email_dns_verified": true
+  },
+  "tax": {
+    "finanzamt_questionnaire_status": "PENDING",
+    "vat_classification_reviewed": false
+  },
+  "brand_trademark_check_status": "REVIEW",
+  "approval": {
+    "status": "REVIEW",
+    "approver": null,
+    "date": null,
+    "evidence": null,
+    "private_evidence_storage": "PENDING"
+  },
+  "privacy_note": "NO guardar en repositorio público datos personales, dirección, documento, claves, formularios fiscales ni Gewerbeschein.",
+  "brand_trademark_check_reference": null
+}

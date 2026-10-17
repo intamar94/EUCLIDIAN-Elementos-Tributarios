@@ -1,0 +1,174 @@
+{
+  "schema_version": "1.0",
+  "legal_owner": "Faro de Intamar",
+  "reviewed_on": "2026-10-17",
+  "notice": "Las reglas son un inventario de riesgos; no son dictámenes ni sustituyen análisis específico de jurisdicción o actividad.",
+  "shared": {
+    "privacy_mapping": "Mapa real de categorías de datos, finalidades, base jurídica, retención y derechos (DSGVO)",
+    "processor_contracts_dpa": "Proveedores, AVV/DPA, transferencias internacionales, subencargados y contratos",
+    "security_access": "Accesos, copias, seguridad, política de incidentes y control de tokens",
+    "cookie_consent_audit": "Storage, cookies, trackers y consentimiento/estricta necesidad (TDDDG §25)",
+    "brand_and_asset_licensing": "Marca, imágenes, tipografías, licencias, activos generativos y procedencia"
+  },
+  "conditional": [
+    {
+      "when_any": [
+        "user_accounts"
+      ],
+      "controls": [
+        "account_legal",
+        "data_deletion"
+      ],
+      "description": "Cuentas, comunicaciones transaccionales, baja, eliminación y control de datos",
+      "source": "DSGVO/BGB"
+    },
+    {
+      "when_any": [
+        "payment_checkout_live"
+      ],
+      "controls": [
+        "checkout_terms",
+        "consumer_withdrawal",
+        "billing_tax"
+      ],
+      "description": "Contratación de pago, información de precio e impuestos, pedido explícito, desistimiento aplicable y facturas",
+      "source": "BGB §§312j,356a / impuestos"
+    },
+    {
+      "when_any": [
+        "recurring_b2c_sales_live"
+      ],
+      "controls": [
+        "subscription_cancellation"
+      ],
+      "description": "Renovaciones, condiciones y Kündigungsbutton cuando aplique",
+      "source": "BGB §312k"
+    },
+    {
+      "when_any": [
+        "customer_funds_held"
+      ],
+      "controls": [
+        "payments_regulated",
+        "funds_segregation"
+      ],
+      "description": "Valor almacenado/saldo/retención de fondos: revisión especializada ZAG/BaFin y PSP",
+      "source": "ZAG / BaFin"
+    },
+    {
+      "when_any": [
+        "ai_features_live"
+      ],
+      "controls": [
+        "ai_transparency",
+        "ai_training_data"
+      ],
+      "description": "Reglas de IA, transparencia, derechos y protección de datos según uso/rol/riesgo",
+      "source": "Reglamento UE IA / DSGVO"
+    },
+    {
+      "when_any": [
+        "children_targeted"
+      ],
+      "controls": [
+        "child_privacy",
+        "parental_controls"
+      ],
+      "description": "Servicios dirigidos a menores: privacidad, consentimiento, seguridad, contenido",
+      "source": "DSGVO y legislación nacional"
+    },
+    {
+      "when_any": [
+        "sensitive_personal_data"
+      ],
+      "controls": [
+        "special_data_basis",
+        "data_impact_assessment"
+      ],
+      "description": "Datos especiales: condición art. 9 y evaluación EIPD cuando se requiere",
+      "source": "DSGVO arts.9,35"
+    },
+    {
+      "when_any": [
+        "location_tracking"
+      ],
+      "controls": [
+        "location_privacy"
+      ],
+      "description": "Localización, permisos, exactitud y minimización del rastreo",
+      "source": "DSGVO"
+    },
+    {
+      "when_any": [
+        "marketing_tracking",
+        "email_marketing"
+      ],
+      "controls": [
+        "marketing_consent",
+        "unsubscribe"
+      ],
+      "description": "Marketing, seguimiento, consentimientos, bajas y comunicaciones",
+      "source": "DSGVO/TDDDG/UWG"
+    },
+    {
+      "when_any": [
+        "regulated_activity"
+      ],
+      "controls": [
+        "sector_licensing",
+        "professional_disclaimer"
+      ],
+      "description": "Habilitación sectorial, profesión, seguros, límites de las recomendaciones",
+      "source": "Normativa sectorial"
+    },
+    {
+      "when_any": [
+        "user_generated_content"
+      ],
+      "controls": [
+        "platform_moderation",
+        "ip_takedown"
+      ],
+      "description": "Contenido de usuarios, moderación, avisos/retirada e IP según función de plataforma",
+      "source": "DSA / propiedad intelectual"
+    },
+    {
+      "when_type_any": [
+        "marketplace"
+      ],
+      "controls": [
+        "marketplace_roles",
+        "intermediary_legal",
+        "seller_information"
+      ],
+      "description": "Marketplaces: rol contractual, vendedores, consumidores, intermediación y obligaciones aplicables",
+      "source": "DSA/BGB/consumo"
+    },
+    {
+      "when_type_any": [
+        "ecommerce",
+        "physical_goods"
+      ],
+      "controls": [
+        "consumer_rights",
+        "returns_warranty",
+        "product_safety",
+        "accessibility_scoping"
+      ],
+      "description": "Ventas: devoluciones, garantía, seguridad producto, accesibilidad y exenciones reales",
+      "source": "BGB/ProdSG/BFSG"
+    },
+    {
+      "when_type_any": [
+        "local_service"
+      ],
+      "controls": [
+        "service_liability",
+        "worker_classification",
+        "insurance"
+      ],
+      "description": "Servicios presenciales: deberes, responsabilidad, seguros y situación legal de colaboradores",
+      "source": "BGB / empleo"
+    }
+  ]
+}
