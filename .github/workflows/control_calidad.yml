@@ -11,6 +11,10 @@ on:
       - 'tests/**'
       - 'api/**'
       - 'index.html'
+      - 'vercel.json'
+      - 'robots.txt'
+      - 'sitemap.xml'
+      - 'contacto.html'
       - 'app.html'
       - 'landing.css'
       - 'identidad-publica.css'
@@ -70,6 +74,8 @@ jobs:
           node --check api/session.js
           node --check api/documentos.js
           node --check lib/auth-server.js
+      - name: Contrato dominio, SEO y cabeceras de prepublicación
+        run: node tests/lanzamiento_dominio_contract.mjs
       - name: Verificar contrato E2E de consulta trazable
         run: |
           node tests/e2e_consulta_contract.mjs
