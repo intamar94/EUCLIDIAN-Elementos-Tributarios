@@ -144,7 +144,8 @@ export default async function handler(req,res){
         if(!extractoDelCuerpo(d.texto_completo,d.resumen_borrador))d.resumen_borrador=null;
         // Una fecha de Diario Oficial u otra cita no acredita publicación web DIAN.
         // Las fechas heredadas sin el encabezado explícito no se muestran como tal.
-        if(d.fecha_publicacion_web&&!CABECERA_FECHA_WEB.test(String(d.texto_completo||'')))d.fecha_publicacion_web=null;
+        if(d.fecha_publicacion_web&&(!fechaCivilValida(String(d.fecha_publicacion_web).slice(0,10))||!CABECERA_FECHA_WEB.test(String(d.texto_completo||''))))d.fecha_publicacion_web=null;
+        if(d.fecha_publicacion&&!fechaCivilValida(String(d.fecha_publicacion).slice(0,10))){d.fecha_publicacion=null;d.fecha_es_real=false;}
         d.evaluacion_resultado=evaluaciones.get(d.id)||'REVIEW';
         if(SINTESIS_PLANTILLA.test(String(d.resumen_humano||d.resumen_borrador||''))){
           // En una ficha contrastada conservamos pregunta/tesis y metadatos,
