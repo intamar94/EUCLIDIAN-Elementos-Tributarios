@@ -161,3 +161,12 @@ body{background-color:#f6f3ec;background-image:
   .cuenta-cabecera::before,.controles>.titulo-consulta::before,
   .bienvenida-cab::before{animation:eu-trazo 11s ease-in-out infinite alternate}
 }
+
+
+/* Centrado y controles que deben permanecer visibles. */
+.novedades-cab.marco{margin:18px auto 22px}
+.bienvenida-cab>button{max-width:none}
+@media(max-width:700px){
+  .bienvenida-cab>div{max-width:72%}
+  .bienvenida-cab>button{padding:7px 9px;font-size:12px;min-height:40px}
+}
