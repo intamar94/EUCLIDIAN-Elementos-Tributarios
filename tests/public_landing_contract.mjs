@@ -6,7 +6,7 @@ const css=await readFile(new URL('../landing.css',import.meta.url),'utf8');
 
 assert.match(html,/<title>[^<]*EUCLIDIAN[^<]*<\/title>/i);
 assert.match(html,/<meta name="description" content="[^"]{80,}"/i);
-assert.match(html,/<link rel="canonical" href="https:\/\/euclidian-elementos-tributarios\.vercel\.app\//i);
+assert.match(html,/<link rel="canonical" href="https:\/\/euclidianet\.com\//i);
 assert.match(html,/<meta property="og:title"/i);
 assert.match(html,/<script type="application\/ld\+json">/i);
 assert.match(html,/href="\/app\.html"/i);
