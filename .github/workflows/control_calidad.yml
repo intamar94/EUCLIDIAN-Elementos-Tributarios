@@ -82,6 +82,7 @@ jobs:
         run: |
           node --check scripts/legal-ia-gate.mjs
           node --check scripts/legal-ia-static-audit.mjs
+          node --check scripts/legal-ia-new-project.mjs
           node scripts/legal-ia-gate.mjs --mode audit
           node scripts/legal-ia-static-audit.mjs
           node tests/legalia_gate_contract.mjs
