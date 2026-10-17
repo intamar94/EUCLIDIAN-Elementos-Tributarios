@@ -56,6 +56,21 @@ try{
  assert.ok(data.checks.some(c=>c.id==='control.payments_regulated'),'Risk-based guard was not applied');
  assert.ok(data.checks.some(c=>c.id==='control.marketplace_roles'),'Sector guard was not applied');
  assert.ok(data.checks.some(c=>c.id==='control.account_legal'),'Account guard was not applied');
+ // APPROVED labels cannot make unfinished draft texts publishable.
+ const fixture='LEGALIA/test-web-'+process.pid;
+ try{
+   fs.mkdirSync(fixture,{recursive:true});
+   fs.writeFileSync(path.join(fixture,'index.html'),'<a href="/impressum.html">Impressum</a><a href="/datenschutz.html">Datenschutz</a>');
+   fs.writeFileSync(path.join(fixture,'impressum.html'),'ENTWURF {{LEGAL_NAME}}');
+   fs.writeFileSync(path.join(fixture,'datenschutz.html'),'BORRADOR {{VERANTWORTLICHER}}');
+   dossier.web_root=fixture;
+   dossier.pages.impressum={path:'/impressum.html',status:'APPROVED',evidence:'PRIVATE-REF-001'};
+   dossier.pages.datenschutz={path:'/datenschutz.html',status:'APPROVED',evidence:'PRIVATE-REF-002'};
+   fs.writeFileSync(filepath,JSON.stringify(dossier,null,2));
+   const guard=JSON.parse(cmd('scripts/legal-ia-gate.mjs',['--mode','audit','--project',slug,'--json']).stdout);
+   assert.equal(guard.checks.find(x=>x.id==='page.impressum')?.result,'REVIEW');
+   assert.equal(guard.checks.find(x=>x.id==='page.datenschutz')?.result,'REVIEW');
+ }finally{fs.rmSync(fixture,{recursive:true,force:true})}
  const release=cmd('scripts/legal-ia-gate.mjs',['--mode','release','--project',slug,'--json']);
  assert.equal(release.status,1,'Release must fail closed');
  const same=cmd('scripts/legal-ia-new-project.mjs',[slug,'Duplicate']);
