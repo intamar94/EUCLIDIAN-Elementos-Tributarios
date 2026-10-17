@@ -2,11 +2,11 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 const read=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8');
 const base='https://euclidianet.com';
-const pages=['index.html','fuentes-dian.html','fechas-y-vigencia.html','novedades-tributarias.html'];
+const pages=['index.html','fuentes-dian.html','fechas-y-vigencia.html','novedades-tributarias.html','contacto.html'];
 const s=read('sitemap.xml'),robots=read('robots.txt');
 assert.ok(robots.includes('Sitemap: '+base+'/sitemap.xml'));
 const locs=[...s.matchAll(/<loc>([^<]+)<\/loc>/g)].map(x=>x[1]);
-assert.equal(locs.length,pages.length,'El sitemap solo contiene la portada y las tres guías públicas');
+assert.equal(locs.length,pages.length,'El sitemap solo contiene la portada, tres guías y el contacto público');
 assert.deepEqual([...locs].sort(),pages.map(p=>base+(p==='index.html'?'/':'/'+p)).sort());
 for(const page of pages){
  const html=read(page),url=base+(page==='index.html'?'/':'/'+page);
@@ -28,7 +28,7 @@ for(const page of pages){
  const obj=JSON.parse(json[0][1]);assert.equal(obj['@context'],'https://schema.org');
  assert.ok(!html.includes('euclidian-elementos-tributarios.vercel.app'),page+' refiere al host anterior');
 }
-for(const page of ['app.html','aportes.html','contacto.html']){
+for(const page of ['app.html','aportes.html']){
  const html=read(page);
  assert.match(html,/<meta name="robots" content="noindex[,a-z]*">/);
  assert.ok(!s.includes(base+'/'+page),'Una vista noindex no debe figurar en el sitemap: '+page);
@@ -43,8 +43,8 @@ assert.match(read('api/aportes.js'),/EUCLIDIAN_APORTES_ENABLED==='1'/);
 assert.match(read('api/aportes.js'),/EUCLIDIAN_PUBLIC_ACCESS_ENABLED==='1'/);
 assert.match(read('api/aportes.js'),/EUCLIDIAN_LEGAL_APPROVED==='1'/);
 const config=JSON.parse(read('vercel.json'));
-for(const p of ['/app.html','/aportes.html','/contacto.html','/api/(.*)']){
+for(const p of ['/app.html','/aportes.html','/api/(.*)']){
  assert.ok(config.headers.some(h=>h.source===p&&h.headers.some(x=>x.key==='X-Robots-Tag'&&x.value.includes('noindex'))),'Falta X-Robots-Tag: '+p);
 }
 assert.match(read('docs/SEO_Y_OFERTA_COLOMBIA.md'),/dominio verificado `euclidianet.com`/);
-console.log('SEO integral: 4 páginas indexables, zonas privadas noindex, SIGNA cerrado y dominio canónico verificados');
+console.log('SEO integral: 5 páginas indexables, zonas privadas noindex, SIGNA cerrado y dominio canónico verificados');

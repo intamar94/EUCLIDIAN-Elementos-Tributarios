@@ -51,6 +51,6 @@
 6. Revisar trimestralmente contenidos y cambios normativos, enlaces rotos, Search Console y conversiones legítimas sin seguimiento invasivo.
 
 ## EUCLIDIAN — aplicación actual
-Dominio canonical: `https://euclidianet.com/`. Páginas públicas SEO candidatas: portada, fuentes DIAN, fechas y vigencia, novedades tributarias. `/app.html`, `/aportes.html` (SIGNA), `/contacto.html` y APIs no son destinos de indexación. Las páginas legales se servirán solo con datos y aprobación; LEGAL.ia conserva el control jurídico.
+Dominio canonical: `https://euclidianet.com/`. Páginas públicas SEO candidatas: portada, fuentes DIAN, fechas y vigencia, novedades tributarias y contacto público, sujetos a verificación. `/app.html`, `/aportes.html` (SIGNA) y APIs no son destinos de indexación. La página pública `/contacto.html` podrá indexarse únicamente después de comprobar sus canales y la aprobación legal. Las páginas legales se servirán solo con datos y aprobación; LEGAL.ia conserva el control jurídico.
 **SIGNA:** sección de cuenta y formulario preparados en la rama de trabajo; convocatoria temporal, precio y acceso comercial sin definir. Los aportes permanecen cerrados por defecto. No se habilitan pagos.
 **Reutilización:** compartir este documento con el agente que indique la titular; primero duplicar y adaptar la ficha, no replicar el sitemap o dominio de EUCLIDIAN en otro proyecto.

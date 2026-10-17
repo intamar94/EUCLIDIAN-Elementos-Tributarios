@@ -73,15 +73,6 @@
           "value": "noindex, nofollow, noarchive"
         }
       ]
-    },
-    {
-      "source": "/contacto.html",
-      "headers": [
-        {
-          "key": "X-Robots-Tag",
-          "value": "noindex, nofollow, noarchive"
-        }
-      ]
     }
   ]
 }
