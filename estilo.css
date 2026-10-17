@@ -295,3 +295,6 @@ button:focus-visible,a:focus-visible,summary:focus-visible{outline:3px solid #86
 .guardado-fila button:last-child{font-size:.85rem;text-decoration:underline}
 .guardar-documento{grid-column:1/-1}
 .guardar-documento[aria-pressed="true"]{background:#e2ebe4}
+
+/* E/T de Elementos Tributarios comparten acento con la i de EUCLiDIAN. */
+.sub .et{color:var(--alerta);font-weight:700}
