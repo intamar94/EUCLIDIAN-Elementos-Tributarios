@@ -24,5 +24,5 @@ const invalida=ficha.body.documentos.find(d=>d.id==='fecha-imposible');
 assert.equal(invalida?.fecha_publicacion_web,null,'La API no muestra publicación web imposible');
 assert.equal(invalida?.fecha_publicacion,null,'La API no muestra fecha del acto imposible');
 assert.equal(invalida?.fecha_es_real,false);
-r=await call({resumen:'1'},'incorrecta');assert.equal(r.code,401);
+r=await call({resumen:'1'},'incorrecta');assert.equal(r.code,403);assert.equal(r.body.error,'acceso_publico_cerrado');
 console.log('OK resumen global: total de 30, segunda página de 5, salida mínima, aprobación y autenticación conservadas');
