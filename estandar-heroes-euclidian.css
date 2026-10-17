@@ -149,13 +149,17 @@
 .eu-gif.eu-imagen{background:var(--eu-hero-mate)}
 .eu-gif[data-caption]::after{
   content:attr(data-caption);
-  position:absolute;left:0;bottom:0;right:0;z-index:3;
-  padding:10px 14px 11px;min-height:34px;
+  position:absolute;left:11px;bottom:11px;right:auto;z-index:3;
+  min-height:0;max-width:calc(100% - 22px);
+  padding:7px 11px;
   box-sizing:border-box;
-  background:linear-gradient(to top,rgba(23,45,33,.83),rgba(23,45,33,.55));
-  color:#fffdf7;
-  font:500 11px/1.35 'IBM Plex Mono',monospace;
-  letter-spacing:.06em;
+  background:rgba(249,247,238,.95);
+  border:1px solid rgba(89,111,94,.20);
+  border-radius:7px;
+  box-shadow:0 3px 12px rgba(20,38,29,.11);
+  color:#234231;
+  font:600 10.5px/1.35 'IBM Plex Mono',monospace;
+  letter-spacing:.045em;
 }
 /* Mismo ritmo de entrada para todos los módulos que siguen al hero */
 #inicioNovedades,.selector-temas,.cuenta-grid,#barra,.guia-indice{
@@ -224,7 +228,7 @@
   .inicio-cab .eu-frase,.novedades-cab .eu-frase,.bienvenida-cab .eu-frase,
   .explorar-cabecera .eu-frase,.cuenta-cabecera .eu-frase,
   .controles>.titulo-consulta .eu-frase{font-size:13px}
-  .eu-gif[data-caption]::after{padding:9px 12px;min-height:33px;font-size:10px}
+  .eu-gif[data-caption]::after{left:9px;bottom:9px;padding:6px 9px;min-height:0;font-size:10px}
   #explorar.explorar,#cuentaPanel.cuenta-panel{padding-bottom:20px!important}
   .cuenta-cabecera>#cerrarCuenta{min-height:44px;margin-top:3px}
 }
