@@ -11,7 +11,7 @@ assert.equal((app.match(/class="eu-gif"/g)||[]).length,6);
 assert.equal((app.match(/data-caption="/g)||[]).length,6);
 assert.ok(landing.indexOf('<figure class="hero-visual">')<landing.indexOf('<div class="hero-copy">'));
 for(const cls of ['inicio-cab','novedades-cab','bienvenida-cab']){
- const tag=app.match(new RegExp('<div class="'+cls+'"[\\s\\S]*?<picture class="eu-gif"'));
+ const tag=app.match(new RegExp('class="'+cls+'[^>]*>[\\s\\S]*?<picture class="eu-gif"'));
  assert.ok(tag,cls+' debe contener escena visible fuera del texto');
 }
 for(const context of ['explorar-cabecera','cuenta-cabecera']){
