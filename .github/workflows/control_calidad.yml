@@ -13,6 +13,10 @@ on:
       - 'index.html'
       - 'app.html'
       - 'landing.css'
+      - 'identidad-publica.css'
+      - 'identidad-euclidian.css'
+      - 'icono-euclidian.svg'
+      - 'geometria-euclidian.svg'
       - 'bandeja.js'
       - 'portada.js'
       - 'auth.js'
@@ -80,6 +84,8 @@ jobs:
         run: node tests/commercial_access_contract.mjs
       - name: Contrato portada pública y SEO
         run: node tests/public_landing_contract.mjs
+      - name: Contrato identidad visual editorial
+        run: node tests/identidad_visual_contract.mjs
       - name: Contrato readiness y observabilidad
         run: node tests/health_readiness_contract.mjs
       - name: Eval de consultas contra datos reales

@@ -1,0 +1,116 @@
+/* EUCLIDIAN · identidad editorial pública.
+   No cambia precios, pagos, enlaces de acceso ni identidad de documentos. */
+:root{
+ --paper:#f7f3ea;--surface:#fffdf8;--ink:#193329;--muted:#526359;
+ --line:#d9d8ca;--green:#244c38;--green-soft:#e5eee6;
+ --red:#b85b45;--blue:#4e6f8f;--terra:#b85b45;--cobre:#ab805c;
+ --sombra:0 15px 42px rgba(28,51,38,.08)
+}
+body{background:var(--paper)}
+body:before{opacity:.19;mask-image:linear-gradient(to bottom,#000,transparent 90%)}
+.top{background:rgba(250,248,242,.95);border-bottom-color:#d7d9cd}
+.nav{min-height:78px}.brand{font-size:26px;letter-spacing:.07em}.brand em{color:var(--terra)}
+.brand span{margin-top:7px;font-size:9px;letter-spacing:.16em}
+.nav nav a:not(.login){font-size:13px}
+.nav .login{border-radius:9px;border-color:#aebfb1;min-height:42px;display:flex;align-items:center}
+.nav .login:hover{background:#e9f0e8}
+.hero{gap:45px;padding-top:65px;padding-bottom:68px}
+.hero:before{content:"";position:absolute;left:-5%;right:-5%;top:12%;height:90%;z-index:-1;pointer-events:none;
+ background:radial-gradient(ellipse at 10% 52%,rgba(205,224,205,.33),transparent 55%)}
+.hero h1{font-size:clamp(40px,4.4vw,64px);max-width:750px;color:#1d3c2d;letter-spacing:-.04em;line-height:1.08}
+.hero h1 em{color:#985d45;font-weight:400}
+.hero .lead{font-size:17px;color:#485e50;max-width:66ch}
+.hero-remate{font-size:14px;line-height:1.7;color:#284f3a;max-width:560px}
+.firma-euclides{display:block;margin-top:12px;font:italic 18px/1.45 'Spectral',Georgia,serif;color:#855b46}
+.firma-euclides:before{content:"— ";color:#b76550}
+.hero-actions .primary{background:#214b36;border-color:#214b36}
+.hero-actions .secondary{background:#fffdf8}
+.primary,.secondary{border-radius:9px;min-height:49px;padding:12px 19px;font-size:14px}
+.hero-visual{border-radius:19px;border-color:#d6d9ca;background:#f0e5d9;box-shadow:0 23px 54px rgba(26,45,32,.12)}
+.hero-visual img{object-position:center 42%;filter:saturate(.86) contrast(1.01)}
+.hero-visual figcaption{font:500 12px/1.5 'IBM Plex Sans',sans-serif;color:#3b5143;padding:15px 20px}
+.hero-visual figcaption span{color:#bb6650;font-size:16px;margin-right:5px}
+.geo-a{border-color:#a85e49;opacity:.75}.geo-b{border-bottom-color:rgba(73,112,93,.20)}
+.valor-euclidian{padding:3px 0 82px}
+.valor-cabecera{max-width:800px;margin-bottom:25px}
+.valor-cabecera h2{margin:11px 0;font:600 clamp(29px,3.6vw,43px)/1.1 'Spectral',Georgia,serif;letter-spacing:-.025em;color:#1b4130}
+.valor-cabecera p{margin:0;font-size:15px;line-height:1.6;color:#516558}
+.valor-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}
+.valor-pieza{position:relative;min-width:0;min-height:220px;padding:27px 24px 24px;
+  border:1px solid #d8dece;border-top:3px solid #9db8a2;border-radius:14px;
+  background:#fffcf6;box-shadow:var(--sombra);overflow:hidden}
+.valor-pieza:nth-child(2){background:#f5f4ed;border-top-color:#b98661}
+.valor-pieza:nth-child(3){background:#edf1ed;border-top-color:#6b8996}
+.valor-pieza::after{content:"";position:absolute;right:-55px;top:-70px;width:150px;height:150px;
+ border:1px solid rgba(154,117,87,.2);border-radius:50%;pointer-events:none}
+.valor-figura{display:inline-flex;align-items:center;justify-content:center;
+ width:42px;height:42px;margin-bottom:14px;border:1px solid #bfcabb;border-radius:50%;
+ color:#955945;font-size:23px;line-height:1}
+.valor-numero{display:block;color:#707d71;font:600 10px 'IBM Plex Mono',monospace;letter-spacing:.11em}
+.valor-pieza h3{margin:8px 0;font:600 26px/1.2 'Spectral',Georgia,serif;color:#214532}
+.valor-pieza p{margin:0;font-size:13px;line-height:1.65;color:#526357}
+.section-index{background:#f9f5ea;border-color:#c8cfbd;color:#795b41}
+.section-title h2{color:#1d4130}
+.eyebrow{color:#95614b}
+.muestra-marco{border-color:#cad7c9;border-radius:15px;box-shadow:var(--sombra)}
+.muestra-barra{background:#e9ede5}
+.muestra-pantalla{background:linear-gradient(130deg,#f0f1e9,#e7efe9)}
+.muestra-pantalla .mini-ficha{background:#fffdf8;border-color:#d2dcd2;border-left-color:#4e6f8f;box-shadow:0 8px 20px rgba(34,52,43,.05)}
+.muestra-tabs button{border-radius:8px}
+.muestra-tabs button[aria-selected="true"]{background:#214b36;border-color:#214b36}
+.muestra-explica{position:relative}
+.muestra-explica:before{content:"";display:block;width:54px;height:54px;margin:0 0 15px;
+ background:url('/geometria-euclidian.svg') center/cover;border-radius:50%;
+ border:1px solid #d0d9cd}
+.muestra-explica h3{color:#234934}
+.mini-fechas b{color:#375d65}
+.mini-estado>span{border-left-color:#b88955}
+.como-funciona .suscripcion-pasos>div{border-top-color:#bdcbb8;padding:16px 16px 14px;
+  border-radius:0 0 11px 11px;background:rgba(255,253,248,.66)}
+.como-funciona .suscripcion-pasos>div:nth-child(2){border-top-color:#b58d70}
+.como-funciona .suscripcion-pasos>div:nth-child(3){border-top-color:#799da7}
+.preguntas details{border-color:#d0d7ca}
+.preguntas summary{font-weight:600}
+.preguntas summary:hover{color:#214f37}
+.suscripcion-estado{background:linear-gradient(135deg,#e8eee6,#f6f2e8)}
+.suscripcion-cierre{position:relative;overflow:hidden;background:linear-gradient(130deg,#1b3e2c,#2a503e);
+ border:1px solid #1b3829}
+.suscripcion-cierre:after{content:"";position:absolute;right:-60px;top:-54px;width:280px;height:240px;
+ background:url('/geometria-euclidian.svg') center/cover no-repeat;
+ opacity:.13;filter:grayscale(.5);mask-image:linear-gradient(to right,transparent,#000 65%);pointer-events:none}
+.suscripcion-cierre>*{position:relative;z-index:1}
+.suscripcion-cierre h3{font-size:clamp(31px,3.2vw,43px)}
+footer{background:#183629;border-top-color:#ac7b60}
+.footer-grid strong{font-size:22px}
+.footer-grid a:hover{color:#fff}
+a:focus-visible,button:focus-visible,summary:focus-visible{outline:3px solid #b4644f;outline-offset:3px}
+@media(max-width:900px){.hero{gap:29px}.hero h1{max-width:720px}.valor-euclidian{padding-bottom:55px}}
+@media(max-width:620px){
+ .nav{min-height:64px}.brand{font-size:24px}.brand span{font-size:8px}
+ .hero{padding-top:31px;padding-bottom:44px;gap:24px}
+ .hero h1{font-size:clamp(35px,9vw,44px);line-height:1.08}
+ .hero .lead{font-size:15px}
+ .firma-euclides{font-size:16px;margin-top:8px}
+ .hero-visual{min-height:305px}
+ .hero-visual img{height:265px}
+ .hero-visual figcaption{font-size:11px}
+ .valor-grid{grid-template-columns:1fr;gap:10px}
+ .valor-pieza{min-height:0;padding:18px 18px 20px}
+ .valor-pieza h3{font-size:24px}
+ .valor-pieza p{font-size:13px}
+ .valor-figura{width:36px;height:36px;font-size:20px;margin-bottom:8px}
+ .valor-euclidian{padding-bottom:48px}
+ .suscripcion-cierre{padding:28px 23px}
+}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+
+
+/* Microinteracciones contenidas en superficies decorativas, no en avisos. */
+@keyframes eu-rotacion{from{transform:rotate(-7deg)}to{transform:rotate(7deg)}}
+@keyframes eu-flotar{from{transform:translateY(2px)}to{transform:translateY(-5px)}}
+@media(prefers-reduced-motion:no-preference){
+  .hero-visual .geo-a{animation:eu-rotacion 10s ease-in-out infinite alternate}
+  .hero-visual .geo-b{animation:eu-flotar 8s ease-in-out infinite alternate}
+  .valor-pieza{transition:transform .2s ease,box-shadow .2s ease}
+  .valor-pieza:hover{transform:translateY(-3px);box-shadow:0 18px 36px rgba(28,51,38,.1)}
+}

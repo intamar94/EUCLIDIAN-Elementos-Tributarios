@@ -1,0 +1,172 @@
+/* EUCLIDIAN / Sistema visual editorial · 2026-10
+   Exclusivamente la zona autenticada: el acceso (#puerta), su imagen y
+   los mecanismos de autenticación no se alteran. Los datos no cambian. */
+:root{
+  --eu-pino:#1f3d32;--eu-terracota:#b65a45;--eu-azul:#4e6f8f;
+  --eu-salvia:#e5eee6;--eu-pergamino:#f7f3ea;
+  --eu-cobre:#ae7c58;--eu-borde:#d4d7cc;
+  --eu-sombra:0 13px 34px rgba(29,50,37,.065)
+}
+/* Superficies con calidez de papel y aire. La pantalla de login conserva
+   la composición aprobada en consulta.css. */
+body{background-color:#f6f3ec;background-image:
+  linear-gradient(rgba(44,78,58,.027) 1px,transparent 1px),
+  linear-gradient(90deg,rgba(44,78,58,.027) 1px,transparent 1px);
+  background-size:38px 38px}
+#cab{background:rgba(250,248,242,.97);border-bottom:1px solid #d8d9cd}
+#cab .marca{font-family:'Spectral',Georgia,serif;font-weight:600;letter-spacing:.075em}
+#cab .marca em{color:var(--eu-terracota)}
+#cab .guia-reabrir{border:1px solid #b9c7ba;background:transparent;color:var(--eu-pino);border-radius:9px}
+#cab .recargar{border-radius:9px;border-color:#c4cec4}
+#cab .guia-reabrir:hover,#cab .recargar:hover{background:var(--eu-salvia)}
+#cab .nav-principal .nav-item{transition:background-color .18s ease,color .18s ease,border-color .18s ease}
+#cab .nav-principal .nav-item.activo,#cab .nav-principal .nav-item[aria-current="page"]{
+  background:#e0eae2;color:#1c4933;border-radius:11px}
+#cab .nav-principal .nav-glyph{color:#aa604f;font-size:1.1em}
+#cab .nav-principal .activo .nav-glyph{color:#1f5b41}
+/* Hero por sección: misma construcción, distinto contenido, sin tomar
+   altura excesiva sobre la consulta. */
+.inicio-cab,.novedades-cab,.explorar-cabecera,.cuenta-cabecera,
+.controles>.titulo-consulta,.bienvenida-cab{
+  position:relative;isolation:isolate;
+  overflow:hidden;
+  background:linear-gradient(105deg,rgba(249,247,240,.99) 0%,
+    rgba(244,242,232,.98) 57%,rgba(226,237,226,.83) 100%);
+  border:1px solid #d6dbd1;border-top:3px solid var(--eu-pino);
+  border-radius:17px;
+  box-shadow:var(--eu-sombra)
+}
+.inicio-cab::before,.novedades-cab::before,.explorar-cabecera::before,
+.cuenta-cabecera::before,.controles>.titulo-consulta::before,.bienvenida-cab::before{
+  content:"";position:absolute;z-index:-1;right:0;top:0;bottom:0;
+  width:min(43%,340px);background:url('/geometria-euclidian.svg') center/cover no-repeat;
+  opacity:.86;mask-image:linear-gradient(90deg,transparent,#000 23%);
+  pointer-events:none
+}
+.inicio-cab::after,.novedades-cab::after,.explorar-cabecera::after,
+.cuenta-cabecera::after,.controles>.titulo-consulta::after,.bienvenida-cab::after{
+  content:"";position:absolute;left:23px;bottom:14px;
+  width:44px;height:2px;background:var(--eu-terracota);
+  border-radius:2px;pointer-events:none
+}
+.inicio-cab,.novedades-cab{margin:18px 0 22px;padding:24px 27px 33px}
+.explorar-cabecera,.cuenta-cabecera,.controles>.titulo-consulta,.bienvenida-cab{
+  margin:0 0 21px;padding:21px 25px 30px}
+.explorar-cabecera{margin-top:0}
+.inicio-cab>*,
+.novedades-cab>*,
+.explorar-cabecera>*,
+.cuenta-cabecera>*,
+.controles>.titulo-consulta>*,
+.bienvenida-cab>*{position:relative;z-index:1;max-width:76%}
+.inicio-cab h1,.novedades-cab h1,.explorar-cabecera h2,.cuenta-cabecera h2,
+.controles>.titulo-consulta h2,.bienvenida-cab h1{
+  color:var(--eu-pino);font-family:'Spectral',Georgia,serif;
+  font-size:clamp(27px,3.6vw,39px);letter-spacing:-.025em;line-height:1.14
+}
+.inicio-cab p,.novedades-cab p,.explorar-cabecera p,
+.cuenta-cabecera p,.controles>.titulo-consulta p,.bienvenida-cab p{
+  font-size:14px;line-height:1.55;color:#4d6051;max-width:60ch
+}
+.seccion-kicker{color:#935844;letter-spacing:.13em}
+.seccion-numero{border-color:#b9c7ba;color:#52695a}
+.eu-frase{display:inline-flex;align-items:center;gap:8px;
+  margin-top:9px;color:#86634a;font:italic 14px/1.4 'Spectral',Georgia,serif}
+.eu-frase::before{content:"";width:16px;height:1px;background:var(--eu-terracota)}
+/* Controles: lectura y acción son claramente distintos. */
+.selector-temas{max-width:none;margin:14px 0 20px;
+  padding:18px 20px 20px;border:1px solid #cad5cb;border-radius:14px;
+  background:linear-gradient(135deg,#e7eee5,#f4f4ec);
+  box-shadow:var(--eu-sombra)}
+.selector-temas label{font-size:15px;color:var(--eu-pino)}
+.selector-temas select{width:min(100%,650px);min-height:52px;border:1px solid #abbfb1;
+  border-radius:9px;background:#fffdfa;color:#213e30}
+.selector-temas p{max-width:76ch;color:#4b5f50}
+.temas-personales{gap:12px}
+.tema-personal{border-color:#d4dacd;border-radius:13px;background:#fffdf8;
+  box-shadow:0 7px 18px rgba(24,46,30,.045);
+  transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease}
+.tema-personal:hover{transform:translateY(-2px);border-color:#a4bea9;box-shadow:var(--eu-sombra)}
+.tema-personal-abrir{min-height:90px;padding:16px 18px}
+.tema-personal-abrir strong{font:600 21px/1.15 'Spectral',Georgia,serif;color:#213f31}
+.tema-personal-abrir span{color:#47634e}
+.tema-personal-quitar{border-color:#e4d6d0;color:#a34f3c}
+.guardados-panel{margin-top:26px;padding:23px 20px 22px;
+  border:1px solid #d8dcd2;border-top:3px solid #8f9faa;border-radius:15px;
+  background:#fdfbf6;box-shadow:var(--eu-sombra)}
+.guardados-panel h3{font-size:clamp(24px,3vw,31px);color:var(--eu-pino)}
+.guardados-panel>p{font-size:13.5px;max-width:78ch}
+.guardado-fila{border-color:#d6dcd4;background:#fffdf9;box-shadow:0 3px 13px rgba(30,49,31,.035)}
+.guardado-fila button:first-child{color:#244f3a;font-weight:600}
+.guardado-fila button:last-child{color:#a3493c}
+.inicio-documento{box-shadow:var(--eu-sombra);border-color:#d1dacd}
+.inicio-documento:hover{transform:translateY(-2px)}
+.inicio-subtitulo{font-family:'Spectral',Georgia,serif;color:#244434}
+.controles .buscador input{min-height:50px;border-radius:9px;background:#fffdf9;border-color:#bfcbbf}
+.controles .buscador button[type="submit"]{border-color:var(--eu-pino);border-radius:9px;background:var(--eu-pino);color:#fff;padding-inline:25px}
+.controles .buscador button[type="submit"]:hover{background:#315b44}
+.filtros-directos select{border-radius:8px;border-color:#c0cdbf;background-color:#fffdf9}
+.cuenta-panel{margin-top:18px;border:0;border-radius:0;background:transparent;box-shadow:none}
+.cuenta-cabecera{align-items:flex-start}
+.cuenta-grid{gap:11px}
+.cuenta-dato{background:#fffdf9;border-color:#d1dacd;border-radius:12px;box-shadow:var(--eu-sombra)}
+.cuenta-dato small{color:#657a6a}.cuenta-dato strong{color:var(--eu-pino)}
+.suscripcion-oferta{border-color:#c3d6ca;border-radius:13px;background:linear-gradient(120deg,#ebf1e8,#faf6ec)}
+.perfil-form input{border-radius:9px;background:#fffdf9}
+.perfil-form button,.cuenta-acciones button{border-radius:9px}
+/* Resultados documentales: signos discretos, nunca adornar advertencias. */
+#lista article{border-radius:12px;box-shadow:0 7px 21px rgba(27,45,35,.045)}
+#lista .resumen-resultado{border-left:2px solid #b6c8b7;padding-left:12px}
+#lista .estado-clave-item{box-shadow:none}
+#lista .detalle-resultado>summary{color:#315d77}
+#lista .detalle-resultado>summary:hover{text-decoration:underline}
+.bienvenida{background:transparent;border:0;box-shadow:none;padding-top:16px}
+.bienvenida-cab{align-items:flex-start}
+.bienvenida-cab button{flex:none;z-index:1;background:#fffdf8;border-radius:9px}
+.guia-paso{background:#fffcf6;border:1px solid #d5dccf;border-radius:14px;margin-top:17px;padding:20px}
+.guia-indice li{border-radius:8px}
+.carga-geometrica .geo-orbita{color:#b45c47}
+/* Una nota cálida sin modificar las señales normativas. */
+.eu-cita{margin:0 0 13px;padding:9px 13px;border-left:2px solid #b45c47;
+  background:#f7f1e8;color:#5b4f43;font:italic 14px/1.4 'Spectral',Georgia,serif}
+@media(max-width:700px){
+  .inicio-cab,.novedades-cab,.explorar-cabecera,.cuenta-cabecera,
+  .controles>.titulo-consulta,.bienvenida-cab{padding:17px 16px 25px;border-radius:12px}
+  .inicio-cab::before,.novedades-cab::before,.explorar-cabecera::before,
+  .cuenta-cabecera::before,.controles>.titulo-consulta::before,.bienvenida-cab::before{
+    width:36%;opacity:.43}
+  .inicio-cab::after,.novedades-cab::after,.explorar-cabecera::after,
+  .cuenta-cabecera::after,.controles>.titulo-consulta::after,.bienvenida-cab::after{left:16px;bottom:12px}
+  .inicio-cab>*,.novedades-cab>*,.explorar-cabecera>*,
+  .cuenta-cabecera>*,.controles>.titulo-consulta>*,.bienvenida-cab>*{max-width:100%}
+  .inicio-cab h1,.novedades-cab h1,.explorar-cabecera h2,.cuenta-cabecera h2,
+  .controles>.titulo-consulta h2,.bienvenida-cab h1{font-size:clamp(24px,7vw,31px);max-width:90%}
+  .inicio-cab p,.novedades-cab p,.explorar-cabecera p,.cuenta-cabecera p,
+  .controles>.titulo-consulta p,.bienvenida-cab p{max-width:90%;font-size:13px}
+  .eu-frase{font-size:13px;max-width:90%}
+  .selector-temas{padding:16px 14px;border-radius:12px}
+  .guardados-panel{padding:17px 14px;border-radius:12px}
+  .tema-personal-abrir strong{font-size:19px}
+  .bienvenida-cab button{position:relative;z-index:2}
+  #cab .nav-principal .nav-item{border-radius:9px}
+}
+@media(max-width:360px){.eu-frase{font-size:12px}.inicio-cab h1,.novedades-cab h1{font-size:23px}}
+@media(prefers-reduced-motion:reduce){.tema-personal,#cab .nav-principal .nav-item{transition:none!important}}
+
+
+/* Movimiento de construcción geométrica: tenue, sin afectar el contenido. */
+@keyframes eu-trazo{from{transform:translateX(-5px) rotate(-1.2deg)}to{transform:translateX(5px) rotate(1.2deg)}}
+@media(prefers-reduced-motion:no-preference){
+  .inicio-cab::before,.novedades-cab::before,.explorar-cabecera::before,
+  .cuenta-cabecera::before,.controles>.titulo-consulta::before,
+  .bienvenida-cab::before{animation:eu-trazo 11s ease-in-out infinite alternate}
+}
+
+
+/* Centrado y controles que deben permanecer visibles. */
+.novedades-cab.marco{margin:18px auto 22px}
+.bienvenida-cab>button{max-width:none}
+@media(max-width:700px){
+  .bienvenida-cab>div{max-width:72%}
+  .bienvenida-cab>button{padding:7px 9px;font-size:12px;min-height:40px}
+}
