@@ -39,8 +39,14 @@ function fechaCorteNovedades(){
   f.setUTCDate(f.getUTCDate()-DIAS_NOVEDAD);
   return f.toISOString().slice(0,10);
 }
-function fechaDocumentoCoherente(d){const anio=String(d.numero_resolucion||'').match(/-((?:19|20)\d{2})$/)?.[1];return d.fecha_es_real===true&&typeof d.fecha_publicacion==='string'&&(!anio||d.fecha_publicacion.slice(0,4)===anio);}
-function fechaReciente(fecha){const valor=String(fecha||'').slice(0,10);return /^\d{4}-\d{2}-\d{2}$/.test(valor)&&valor>=fechaCorteNovedades()&&valor<=fechaHoyColombia();}
+function fechaCivilValida(valor){
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(valor))return false;
+  const [anio,mes,dia]=valor.split('-').map(Number);
+  const fecha=new Date(Date.UTC(anio,mes-1,dia));
+  return fecha.getUTCFullYear()===anio&&fecha.getUTCMonth()===mes-1&&fecha.getUTCDate()===dia;
+}
+function fechaDocumentoCoherente(d){const anio=String(d.numero_resolucion||'').match(/-((?:19|20)\d{2})$/)?.[1];return d.fecha_es_real===true&&fechaCivilValida(String(d.fecha_publicacion||'').slice(0,10))&&(!anio||d.fecha_publicacion.slice(0,4)===anio);}
+function fechaReciente(fecha){const valor=String(fecha||'').slice(0,10);return fechaCivilValida(valor)&&valor>=fechaCorteNovedades()&&valor<=fechaHoyColombia();}
 function esNovedadOficial(d){return fechaReciente(d.fecha_publicacion_web)||(fechaDocumentoCoherente(d)&&fechaReciente(d.fecha_publicacion));}
 function fechaNovedad(d){const web=fechaReciente(d.fecha_publicacion_web)?d.fecha_publicacion_web:'';const acto=fechaDocumentoCoherente(d)&&fechaReciente(d.fecha_publicacion)?d.fecha_publicacion:'';return web>acto?web:acto;}
 export default async function handler(req,res){
