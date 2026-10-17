@@ -38,11 +38,15 @@
       "operating_company": "Faro de Intamar",
       "legal_name": "AWAIT_GEWERBE_OFFICIAL_RECORD",
       "publication": {
-        "legal_pages_status": "CODE_REVIEW_AND_CI_NOT_YET_PUBLISHED",
+        "legal_pages_status": "MERGED_TO_MAIN_BUT_RELEASE_NOT_DEPLOYED",
         "technical_pr": "https://github.com/intamar94/EUCLIDIAN-Elementos-Tributarios/pull/82",
         "approved_flag": "0",
-        "impressum": "PREPARED_NOT_LIVE",
-        "datenschutz": "PREPARED_NOT_LIVE"
+        "impressum": "SERVER_ROUTE_MERGED_PROTECTED_UNTIL_VERIFIED_IDENTITY",
+        "datenschutz": "SERVER_ROUTE_MERGED_PROTECTED_UNTIL_PRIVACY_REVIEW",
+        "deployment_status": "BLOCKED_VERCEL_HTTP_402_API_DEPLOYMENTS_FREE_PER_DAY",
+        "retry_after_seconds": 86400,
+        "last_known_prod_git_sha": "b14318f7289d8798aa1b8f71ed6f8b1cd12d376e",
+        "no_automatic_scheduled_deployment": true
       },
       "compliance": {
         "trade_registration": "PENDING_OFFICIAL_EVIDENCE",
@@ -63,7 +67,10 @@
         "frontend": "TAB_AND_FORM_HIDDEN",
         "api": "POST /api/auth action=signup => HTTP 403 when disabled",
         "code_pr": "https://github.com/intamar94/EUCLIDIAN-Elementos-Tributarios/pull/82",
-        "production_verification": "PENDING_DEPLOYMENT"
+        "production_verification": "PENDING_RELEASE_BLOCKED_VERCEL_FREE_DAILY_BUILD_QUOTA",
+        "github_main_merged": true,
+        "github_main_commit": "58aca2a8f21ac4f393837edbf3615c7fbb496d4e",
+        "preproduction_quality_ci": "PASS"
       },
       "public_contact": "contacto@euclidianet.com",
       "legal_reviews_pending": [
