@@ -8,7 +8,7 @@ Preservar logotipo, paleta, tipografía, animaciones, diseño móvil/PC, navegac
 | Área | Evidencia observada | Estado | Siguiente condición de salida |
 | --- | --- | --- | --- |
 | Código y publicación | rama `main`, despliegue de producción Vercel `c123d8b8` READY; 30 etapas del último CI aprobadas | 🟢 | verificación de navegación pública anónima |
-| Dominio | proyecto Vercel enumera `euclidianet.com` y `www.euclidianet.com`; zona Cloudflare `active`, CNAME de ambos hosts a destino Vercel, sin proxy | 🟠 | HTTP 200 y SSL en móvil + equipo sin sesión; www redirige correctamente |
+| Dominio | Vercel confirma los dos dominios `verified=true`; `www.euclidianet.com` tiene redirect 308 al apex. Zona Cloudflare `active`, CNAME de ambos hosts a destino Vercel, sin proxy | 🟠 | HTTP 200 y SSL en móvil + equipo sin sesión; www redirige correctamente |
 | Acceso público | Vercel reporta `ssoProtection.enabled=true` y `deploymentType=all`, `project.live=false`; no se pudo realizar comprobación HTTP externa fiable desde las herramientas disponibles | 🔴 | verificar qué dominios protege SSO y conservar barreras de admin |
 | Registro | `api/auth.js` niega `signup` salvo `EUCLIDIAN_SIGNUP_ENABLED=true`; UI de alta oculta | 🟢 cerrado | aprobación jurídica, privacidad, soporte, condiciones, identidad |
 | Pagos | `api/checkout.js` bloquea sin `configuracionCobro().enabled`; `/api/payment-webhook` exige firma | 🟠 | revisar configuración real en entorno, sandbox, fiscalidad, reembolsos, desistimiento |
@@ -23,7 +23,7 @@ Preservar logotipo, paleta, tipografía, animaciones, diseño móvil/PC, navegac
 ## Ruta consecutiva y control de salida
 ### E1. Operación y seguridad
 - [x] Verificar existencia de producción READY y rama `main`.
-- [x] Revisar los dominios vinculados a Vercel y los CNAME/MX en Cloudflare.
+- [x] Revisar Vercel `verified=true` en los dominios, redirect 308 `www`→apex y CNAME/MX en Cloudflare.
 - [x] Confirmar compuerta de alta cerrada en código y control de checkout condicional.
 - [ ] Comprobar inicio y `www` desde red pública sin cookies, navegador privado móvil y PC.
 - [ ] Investigar `ssoProtection`; no desactivarlo sin distinguir acceso público y administración.
