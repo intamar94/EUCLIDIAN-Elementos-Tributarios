@@ -1,10 +1,33 @@
 {
- "schema_version":"1.0","umbrella_brand":"Faro de Intamar","jurisdiction":"DE",
- "legal_form_expected":"Einzelunternehmen (por confirmar)",
- "trade_registration":{"planned_filing_date":"2026-10-19","status":"PENDING","evidence":null,"business_activity_scope_verified":false},
- "legal_identity":{"full_name_verified":false,"serviceable_address_confirmed_for_publication":false,"contact_email_verified":false},
- "tax":{"finanzamt_questionnaire_status":"PENDING","vat_classification_reviewed":false},
- "brand_trademark_check_status":"REVIEW",
- "approval":{"status":"REVIEW","approver":null,"date":null,"evidence":null},
- "privacy_note":"NO guardar en repositorio público datos personales, dirección, documento, claves, formularios fiscales ni Gewerbeschein."
+  "schema_version": "1.0",
+  "umbrella_brand": "Faro de Intamar",
+  "jurisdiction": "DE",
+  "legal_form_expected": "Einzelunternehmen (por confirmar)",
+  "trade_registration": {
+    "planned_filing_date": "2026-10-19",
+    "status": "PENDING",
+    "evidence": null,
+    "business_activity_scope_verified": false
+  },
+  "legal_identity": {
+    "full_name_verified": false,
+    "serviceable_address_confirmed_for_publication": false,
+    "contact_email_verified": false,
+    "public_address_choice": "OWN_RESIDENTIAL_ADDRESS",
+    "public_address_consented_in_principle": true,
+    "address_value": "NOT_STORED_IN_PUBLIC_REPOSITORY",
+    "address_publication_note": "La usuaria prefiere usar su domicilio como dirección empresarial pública; validar el dato exacto y el borrador del Impressum por canal privado antes de publicar. No subir domicilio real ni comprobantes aquí."
+  },
+  "tax": {
+    "finanzamt_questionnaire_status": "PENDING",
+    "vat_classification_reviewed": false
+  },
+  "brand_trademark_check_status": "REVIEW",
+  "approval": {
+    "status": "REVIEW",
+    "approver": null,
+    "date": null,
+    "evidence": null
+  },
+  "privacy_note": "NO guardar en repositorio público datos personales, dirección, documento, claves, formularios fiscales ni Gewerbeschein."
 }
