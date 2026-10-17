@@ -29,7 +29,7 @@ assert.ok(html.slice(inicioPlan).includes('$49.900')&&html.slice(inicioPlan).inc
 const cierre=html.slice(html.indexOf('class="suscripcion-cierre"'));
 assert.match(cierre,/href="\/app\.html\?registro=1"/);
 assert.match(cierre,/no se realizan cobros/i);
-assert.match(cierre,/registro no activa la biblioteca/i);
+assert.match(cierre,/registro y el acceso para usuarios se encuentran temporalmente cerrados/i);
 assert.ok(!/href="[^"]*(checkout|stripe|pagar)[^"]*"/i.test(cierre),'No simular contratación aún desactivada');
 assert.ok(html.indexOf('class="preguntas-lista"')<html.indexOf('class="suscripcion-estado"'),'FAQ antes del precio');
 assert.match(css,/\.cierre-acciones\s*\.primary/);
