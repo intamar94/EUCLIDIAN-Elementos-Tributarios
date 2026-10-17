@@ -52,3 +52,13 @@ Cualquier modificación de `controls` a APPROVED necesita revisión del responsa
 - **Tras comprobar Gewerbe:** confirmar titular/alcance, documentos privados, fiscalidad y publicación consciente de Impressum.
 - **Cuando el sitio esté listo:** evidencia de DNS/HTTPS, seguridad, páginas legales y derechos consumidor; autorización humana.
 - **Tras lanzamiento:** alertas por expiración dominio, cambios legales relevantes y control de nuevos proveedores/productos.
+
+## Sincronización obligatoria de nuevos trabajos con el núcleo LEGAL.ia
+**Registro maestro técnico/jurídico:** [`REGISTRO-MAESTRO.json`](REGISTRO-MAESTRO.json) y un expediente por proyecto en `proyectos/*.json`.
+- En cada cambio de web, nuevo dominio, hosting, correo, auth, pagos, IA, tratamiento de datos, nueva función, mercado o actividad, **primero comprobar hechos en los proveedores conectados** (GitHub, Vercel, Cloudflare, Supabase, Gmail, Drive).
+- Registrar la fuente y la fecha de comprobación en el expediente; mantener separación entre `VERIFIED`, `EXPECTED`, `PENDING`, `REVIEW` y `APPROVED`.
+- **El Gewerbe de Faro de Intamar se espera efectivo el lunes 19 de octubre de 2026** por indicación de la titular, pero se mantiene `PENDING` hasta recibir el justificante y verificar titular, fecha y actividad. No publicar un registro inexistente ni inventar un Handelsregisternummer.
+- El dominio **euclidianet.com** pertenece a la infraestructura real del proyecto: DNS Cloudflare, sitio Vercel, MX/SPF/DKIM de Email Routing, soporte `contacto@euclidianet.com`. No volver a pedir un buzón como si estuviera sin configurar.
+- La implementación pública de páginas legales está en [PR #82](https://github.com/intamar94/EUCLIDIAN-Elementos-Tributarios/pull/82); el núcleo reusable en [PR #67](https://github.com/intamar94/EUCLIDIAN-Elementos-Tributarios/pull/67). Mantener referencias cruzadas, evitando dos implementaciones incompatibles.
+- Las variables de entorno operativas verificadas de Vercel incluyen `EUCLIDIAN_LEGAL_EMAIL=contacto@euclidianet.com` y `EUCLIDIAN_LEGAL_APPROVED=0`. Nombre legal y domicilio exacto nunca se incorporan a GitHub público; extraerlos solo de documento empresarial verificado por canal privado y mostrar tras autorización.
+- El monitoreo periódico puede detectar cambios e iniciar revisiones, pero un agente **no valida jurídicamente de forma automática** ni cambia a `APPROVED` por el mero transcurso del tiempo.
