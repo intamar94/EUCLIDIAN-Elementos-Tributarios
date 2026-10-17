@@ -1,0 +1,6 @@
+.eu-legal-links{display:flex;align-items:center;flex-wrap:wrap;gap:8px 18px;font-size:13px;line-height:1.5}
+.eu-legal-links a{color:inherit;text-underline-offset:3px;opacity:.87}
+.eu-legal-links a:hover{opacity:1}
+.eu-legal-links a:focus-visible{outline:3px solid #c5a46c;outline-offset:3px}
+.eu-legal-app{justify-content:center;padding:14px 16px;margin:16px auto;color:#52645c;background:#f5f3ec;border-top:1px solid #dadbd5;max-width:100%;box-sizing:border-box}
+@media(max-width:600px){.eu-legal-links{gap:8px 12px}.eu-legal-app{font-size:12px;padding:14px 10px}}
