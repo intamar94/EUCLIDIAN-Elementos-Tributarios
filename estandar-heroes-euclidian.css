@@ -26,7 +26,7 @@
   padding-top:16px!important;
 }
 #inicioPanel.inicio-panel{padding-top:16px!important}
-#novedadesCab.novedades-cab{margin:16px auto var(--eu-hero-espacio)!important}
+#novedadesCab.novedades-cab{width:calc(100% - 2 * var(--eu-hero-gutter))!important;max-width:calc(var(--ancho,1280px) - 2 * var(--eu-hero-gutter))!important;margin:16px auto var(--eu-hero-espacio)!important}
 #controles.controles{padding-top:16px!important}
 .inicio-cab,.novedades-cab,.bienvenida-cab,
 .explorar-cabecera,.cuenta-cabecera,.controles>.titulo-consulta{
