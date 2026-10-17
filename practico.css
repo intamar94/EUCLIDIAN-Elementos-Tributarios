@@ -1,0 +1,28 @@
+/* Lectura práctica: información y borradores separados de acciones jurídicas. */
+.practico-30{margin:12px 0 15px;border:1px solid #cbd7cb;border-radius:12px;background:#f9fbf6;overflow:hidden}
+.practico-30>summary{min-height:55px;padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;list-style:none;color:#244532}
+.practico-30>summary::-webkit-details-marker{display:none}
+.practico-30>summary::after{content:'⌄';margin-left:auto;font-size:25px;line-height:1;color:#58705e;transition:transform .16s ease}
+.practico-30[open]>summary::after{transform:rotate(180deg)}
+.practico-signo{width:32px;height:32px;flex:none;display:grid;place-items:center;color:#965d47;background:#f2e7dc;border-radius:50%;font-size:19px}
+.practico-30>summary strong{display:block;font-weight:650;font-size:15px;line-height:1.35}
+.practico-30>summary small{display:block;margin-top:2px;font-size:12px;font-weight:400;color:#556d5b;line-height:1.4}
+.practico-interior{padding:0 16px 18px;border-top:1px solid #d4ded4}
+.practico-nota{margin:15px 0 12px;color:#6c5842;font-size:12px;line-height:1.5}
+.practico-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:0 0 15px}
+.practico-grid>div{padding:12px;background:#fffefb;border-left:3px solid #b3c6b6;border-radius:4px}
+.practico-grid dt{font-size:12px;color:#3c604a;font-weight:700;margin-bottom:7px}
+.practico-grid dd{font-size:13px;line-height:1.55;color:#283f31;margin:0;overflow-wrap:anywhere}
+.practico-check{display:grid;gap:9px;background:#f0f2ec;border-radius:8px;padding:12px}
+.practico-check>strong{font-size:13px;color:#244532}
+.practico-check label{display:flex;align-items:start;gap:9px;font-size:13px;line-height:1.45;color:#344f3f;cursor:pointer}
+.practico-check input{width:18px;height:18px;flex:none;margin-top:0;accent-color:#245139}
+.practico-acciones{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-top:14px}
+.practico-acciones button,.practico-acciones a{min-height:44px;border-radius:8px;padding:10px 12px;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;line-height:1.35;text-align:center;text-decoration:none;cursor:pointer}
+.practico-acciones a{background:#214633;color:#fff;border:1px solid #214633}
+.practico-acciones button{border:1px solid #b8cabe;color:#274b36;background:#fffefa}
+.practico-acciones button:hover{border-color:#678a70;background:#edf4eb}
+.practico-acciones button:focus-visible,.practico-acciones a:focus-visible,.practico-30 summary:focus-visible{outline:3px solid #a55f4c;outline-offset:2px}
+.practico-pie{margin:12px 0 0;font-size:12px;line-height:1.45;color:#647565}
+@media(max-width:650px){.practico-grid{grid-template-columns:1fr}.practico-acciones{display:grid;grid-template-columns:1fr}.practico-interior{padding:0 13px 14px}.practico-30>summary{padding:12px 13px}.practico-grid>div{padding:11px}}
+@media(prefers-reduced-motion:reduce){.practico-30>summary::after{transition:none}}

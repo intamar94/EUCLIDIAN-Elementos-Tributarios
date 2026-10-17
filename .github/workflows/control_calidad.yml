@@ -31,6 +31,8 @@ on:
       - 'package-lock.json'
       - 'sql/**'
       - 'bloques.js'
+      - 'practico.js'
+      - 'practico.css'
       - 'fichas.js'
       - 'temas.js'
       - 'estilo.css'
@@ -66,10 +68,13 @@ jobs:
           node --check portada.js
           node --check auth.js
           node --check bloques.js
+          node --check practico.js
           node --check api/auth.js
           node --check api/session.js
           node --check api/documentos.js
           node --check lib/auth-server.js
+      - name: Contrato ficha práctica y borradores seguros
+        run: node tests/ficha_practica_contract.mjs
       - name: Verificar contrato E2E de consulta trazable
         run: |
           node tests/e2e_consulta_contract.mjs
