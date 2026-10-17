@@ -4,10 +4,10 @@
 ## Estado comprobado de infraestructura
 - Dominio real **euclidianet.com**, comprado y verificado con Vercel; configurado para el proyecto euclidian-elementos-tributarios.
 - **www.euclidianet.com** redirige al principal con HTTP 308, ambos asignados y verificados.
-- Nameservers **ns1.vercel-dns.com** y **ns2.vercel-dns.com**, configuración A válida.
-- Al momento de la consulta, la zona tenía ALIAS y CAA, **sin MX/SPF/DKIM/DMARC**; no hay correo @euclidianet.com acreditado.
+- **DNS autoritativo ahora en Cloudflare**, zona `euclidianet.com` **active** (17/10/2026); nameservers `meg.ns.cloudflare.com` y `wilson.ns.cloudflare.com`. La configuración de Vercel ha sido comprobada sin conflictos.
+- **Correo configurado por Configurador web en Cloudflare Email Routing**: estado `ready`, reglas activas `contacto@euclidianet.com`, `sugerencias@euclidianet.com`, `errores@euclidianet.com` con destino Gmail verificado; MX, SPF y DKIM publicados. **No se encontró DMARC** en la zona consultada y **aún no se ha probado recepción con correo entrante real**. Cloudflare ofrece reenvío de recepción; no presupone capacidad de enviar como `@euclidianet.com`.
 - Último despliegue de producción READY; ajustes de protección Vercel SSO requieren verificación independiente antes de afirmar disponibilidad pública.
-- La página de inicio enlazaba canonical a un subdominio Vercel antiguo; este PR cambia canonical, OG, robots y sitemap al dominio comprado.
+- La rama principal vigente ya actualizó canonical, OG, robots y sitemap al dominio `euclidianet.com`. Este PR conserva esos cambios del corrector, modifica solamente las páginas legales y sus enlaces.
 
 ## Implementación por código (este PR)
 - Cabecera y pie consistentes con EUCLIDIAN, con enlaces a Impressum y privacidad en portada y área de aplicación.
@@ -22,15 +22,15 @@
 | --- | --- | --- |
 | EUCLIDIAN_LEGAL_NAME | SÍ | Nombre real completo de la persona física titular del Gewerbe |
 | EUCLIDIAN_LEGAL_ADDRESS | SÍ | Dirección notificable completa, con código postal, ciudad y país (Deutschland); usuario prefiere usar su domicilio |
-| EUCLIDIAN_LEGAL_EMAIL | SÍ | Correo **que realmente recibe mensajes**, idealmente @euclidianet.com tras crear MX y buzón |
-| EUCLIDIAN_LEGAL_APPROVED | SÍ, igual a 1 solo tras revisión | Bandera de autorización de contenido legal conforme a hechos, datos, privacidad y regulación |
+| EUCLIDIAN_LEGAL_EMAIL | **CONFIGURADO** | `contacto@euclidianet.com`, Vercel `production`/`preview`, Cloudflare Email Routing activo; falta correo de prueba |
+| EUCLIDIAN_LEGAL_APPROVED | **CONFIGURADO EN 0** | El servicio permanece bloqueado hasta Gewerbe, nombre/domicilio comprobados y revisión jurídica de privacidad; elevar a 1 solo tras validación |
 | EUCLIDIAN_LEGAL_PHONE | Condicional | Teléfono o medio de comunicación directo si corresponde y se autoriza |
 | EUCLIDIAN_LEGAL_VAT_ID | Condicional | SOLO si se dispone de USt-IdNr/W-IdNr oficial; **nunca Steuernummer personal** |
 
-**Precaución:** estas variables pueden ocultarse del código pero se harán públicas en el HTML del Impressum al aprobar. Solicitar el consentimiento expreso de la titular para el nombre y domicilio exactos en la web. No confundir Gmail personal y correo propio del dominio.
+**Precaución:** estas variables pueden ocultarse del código pero se harán públicas en el HTML del Impressum al aprobar. Solicitar el consentimiento expreso de la titular para el nombre y domicilio exactos en la web. Cloudflare reenvía correo del dominio a Gmail, no crea por sí solo una bandeja de salida con ese remitente.
 
 ## Revisión legal requerida (antes de EUCLIDIAN_LEGAL_APPROVED=1)
-1. Gewerbeanmeldung prevista 19/10: verificar efectivamente envío/recepción y alcance comercial. Validar condición de empresa individual.
+1. Gewerbeanmeldung: la titular prevé validez desde el **lunes 19/10/2026**. Se deja preparado el campo `expected_effective_date=2026-10-19`, **sin declararlo confirmado antes de verificar justificante, titular, fecha efectiva y alcance**.
 2. Verificar identificación del prestador conforme § 5 DDG; nombre legal, domicilio, correo operativos; revisar si faltan datos de registro/autoridad/ID fiscal cuando correspondan.
 3. Revisar tratamiento y flujo de datos del sitio reales, incluidos Vercel, Supabase en **Brasil (sa-east-1)**, Auth, logs, tokens localStorage, fuentes Google y métodos de soporte.
 4. Obtener/verificar DPA/AVV, transferencias internacionales, retención de datos por categorías y autoridad de control. La privacidad está **borrador factual** y no se puede presentar aún como evaluación final de cumplimiento.
@@ -47,3 +47,8 @@
 - DDG §5: https://www.gesetze-im-internet.de/ddg/__5.html
 - TDDDG §25: https://www.gesetze-im-internet.de/ttdsg/__25.html
 - RGPD: https://eur-lex.europa.eu/eli/reg/2016/679/oj
+
+## Núcleo LEGAL.ia: sincronización y dependencia
+- **Fuente maestra de cumplimiento**: [expediente de EUCLIDIAN](https://github.com/intamar94/EUCLIDIAN-Elementos-Tributarios/blob/ops/legalia-faro-v1/LEGALIA/proyectos/euclidian.json) y [registro de la empresa](https://github.com/intamar94/EUCLIDIAN-Elementos-Tributarios/blob/ops/legalia-faro-v1/LEGALIA/empresa.template.json), todavía en PR #67.
+- **Este proyecto**: [PR #82](https://github.com/intamar94/EUCLIDIAN-Elementos-Tributarios/pull/82). Todo cambio sobre identidad, cookies, autenticación, correo, hosting, proveedores, pagos, nombre, dominio, país o actividad debe anotarse y reevaluarse en LEGAL.ia.
+- **Responsables**: Configurador web mantiene infraestructura; LEGAL.ia mantiene expediente y riesgos; titular valida datos publicables; MIKAI coordina. Un cambio de código no implica aprobación jurídica.
