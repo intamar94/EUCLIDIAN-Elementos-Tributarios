@@ -33,6 +33,17 @@ assert.equal(servidor.fechaHoyColombia(),'2026-10-16');
 assert.equal(servidor.fechaCorteNovedades(),'2026-10-02');
 assert.equal(servidor.fechaReciente('2026-10-16'),true);
 assert.equal(servidor.fechaReciente('2026-10-17'),false,'Un día futuro en Bogotá no es novedad');
+assert.equal(servidor.fechaCivilValida('2025-02-29'),false,'Un año no bisiesto no tiene 29 de febrero');
+assert.equal(servidor.fechaCivilValida('2024-02-29'),true,'Un día bisiesto real es válido');
+assert.equal(servidor.fechaDocumentoCoherente({numero_resolucion:'DIAN-TEST-1-2026',fecha_es_real:true,fecha_publicacion:'2026-04-31'}),false,'El acto con fecha imposible no acredita novedad');
+class FechaMarzo extends Date {
+  constructor(...args){super(...(args.length?args:['2026-03-03T12:00:00.000Z']));}
+}
+const marzo={Date:FechaMarzo,Intl,process:{env:{}},AbortController,console,setTimeout,clearTimeout};
+vm.createContext(marzo);
+vm.runInContext(serverSource,marzo,{filename:'api/documentos.js'});
+assert.equal(marzo.fechaReciente('2026-02-28'),true,'Una fecha válida dentro de la ventana se conserva');
+assert.equal(marzo.fechaReciente('2026-02-31'),false,'Una fecha imposible dentro de la ventana no es novedad');
 console.log('OK: ventana API de novedades coherente con el calendario colombiano');
 
 // Ejecutar el JavaScript real de ingreso con un DOM mínimo y comprobar teclado.
