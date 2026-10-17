@@ -1,5 +1,5 @@
 # Cookie-/Storage-Prüfung und Einwilligung
-**ARBEITSDOKUMENT · NICHT ALS BANNER VERÖFFENTLICHEN**
+**ENTWURF · ARBEITSDOKUMENT · NICHT ALS BANNER VERÖFFENTLICHEN**
 
 | Technik | Provider | Zweck | Zugriff im Endgerät | Notwendig für gewünschten Dienst? | Einwilligung erforderlich? | Haltbarkeit | Nachweis |
 |---|---|---|---|---|---|---|---|
