@@ -1,0 +1,18 @@
+{
+  "_note": "NUR BEISPIEL; NICHT mit echtem Namen, Anschrift, Geburtsdatum oder Steuerdaten ins öffentliche GitHub pushen.",
+  "company": "Faro de Intamar",
+  "verified_legal_name": null,
+  "verified_public_business_address": null,
+  "public_business_email": null,
+  "alternative_direct_contact": null,
+  "gewerbeanmeldung_proof_internal_reference": null,
+  "activity_scope": [],
+  "register_entry_if_any": null,
+  "vat_id_if_issued": null,
+  "domain_confirmed": null,
+  "dns_records_from_vercel_confirmed": false,
+  "approved_privacy_notice": false,
+  "approved_impressum": false,
+  "legal_reviewer": null,
+  "approval_date": null
+}
