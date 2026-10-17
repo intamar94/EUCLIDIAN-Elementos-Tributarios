@@ -11,6 +11,15 @@ on:
       - 'tests/**'
       - 'api/**'
       - 'index.html'
+      - 'vercel.json'
+      - 'robots.txt'
+      - 'sitemap.xml'
+      - 'informacion.css'
+      - 'aportes.html'
+      - 'contacto.html'
+      - 'fuentes-dian.html'
+      - 'fechas-y-vigencia.html'
+      - 'novedades-tributarias.html'
       - 'app.html'
       - 'landing.css'
       - 'identidad-publica.css'
@@ -70,6 +79,13 @@ jobs:
           node --check api/session.js
           node --check api/documentos.js
           node --check lib/auth-server.js
+      - name: "Prelanzamiento: dominio, SEO, cuenta y privacidad"
+        run: |
+          node --check api/aportes.js
+          node tests/lanzamiento_dominio_contract.mjs
+          node tests/seo_public_pages_contract.mjs
+          node tests/prelaunch_access_contract.mjs
+          node tests/aportes_contract.mjs
       - name: Verificar contrato E2E de consulta trazable
         run: |
           node tests/e2e_consulta_contract.mjs

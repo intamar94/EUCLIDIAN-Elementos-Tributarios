@@ -1,0 +1,18 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+const read=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8');
+const home=read('index.html'),app=read('app.html'),robots=read('robots.txt'),sitemap=read('sitemap.xml');
+const vercel=JSON.parse(read('vercel.json'));
+assert.match(home,/rel="canonical" href="https:\/\/euclidianet\.com\/"/);
+assert.match(app,/noindex,nofollow/);
+assert.match(robots,/Sitemap: https:\/\/euclidianet\.com\/sitemap\.xml/);
+assert.match(sitemap,/https:\/\/euclidianet\.com\//);
+for(const route of ['/impressum','/datenschutz','/privacidad'])assert.ok(vercel.rewrites.some(r=>r.source===route));
+const headersGlobal=vercel.headers.find(x=>x.source==='/(.*)')?.headers||[];
+const headersApi=vercel.headers.find(x=>x.source==='/api/(.*)')?.headers||[];
+const valor=(hs,key)=>hs.find(x=>x.key.toLowerCase()===key.toLowerCase())?.value;
+assert.equal(valor(headersGlobal,'X-Content-Type-Options'),'nosniff');
+assert.equal(valor(headersGlobal,'X-Frame-Options'),'DENY');
+assert.equal(valor(headersGlobal,'Referrer-Policy'),'strict-origin-when-cross-origin');
+assert.match(valor(headersApi,'Cache-Control')||'',/no-store/);
+console.log('OK: dominio canónico, rutas legales, noindex privado y cabeceras HTTP.');

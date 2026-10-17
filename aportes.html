@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="es-CO">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f3f0e8"><meta name="robots" content="noindex,nofollow">
+<title>Enviar un aporte | Mi cuenta EUCLIDIAN</title>
+<meta name="description" content="Aporta una corrección, documento faltante o sugerencia al equipo EUCLIDIAN durante una convocatoria abierta.">
+<link rel="icon" type="image/svg+xml" href="/icono-euclidian.svg">
+<link rel="stylesheet" href="/landing.css">
+<link rel="stylesheet" href="/informacion.css">
+</head>
+<body>
+<a class="skip" href="#contenido">Ir al formulario</a>
+<header class="top"><div class="wrap nav"><a class="brand" href="/">EUCL<em>i</em>DIAN<span>Elementos Tributarios</span></a><nav aria-label="Principal"><a href="/app.html">← Mi cuenta</a></nav></div></header>
+<main class="wrap informacion" id="contenido">
+<p class="eyebrow">EUCLIDIAN · PARTICIPA</p><h1>Tu aporte mejora la biblioteca.</h1>
+<p class="introduccion">Ayúdanos a detectar errores, documentos faltantes o mejoras. Los reportes serán revisados; no se publican automáticamente ni son un canal para consultas jurídicas personales.</p>
+<section class="panel-informacion" aria-labelledby="formTitle">
+<h2 id="formTitle">Formulario de aportes</h2>
+<p id="ventanaEstado" role="status" aria-live="polite">Consultando el período de aportes…</p>
+<p id="fechaLimite"></p>
+<form id="formAporte" hidden>
+<label for="tipo">Tipo de aporte</label>
+<select id="tipo" required>
+<option value="" selected disabled>Selecciona una categoría</option>
+<option value="error_plataforma">Error en la plataforma</option>
+<option value="dato_tributario">Dato o fecha tributaria por corregir</option>
+<option value="documento_faltante">Documento DIAN faltante</option>
+<option value="sugerencia">Sugerencia</option>
+</select>
+<label for="referencia">Documento o sección (opcional)</label>
+<input id="referencia" maxlength="180" placeholder="Ej. Oficio 1234 de 2026">
+<label for="detalle">Describe tu aporte</label>
+<textarea id="detalle" minlength="20" maxlength="3000" required rows="7" placeholder="Qué has detectado y cómo podemos comprobarlo…"></textarea>
+<p class="nota-privacidad">No introduzcas contraseñas, identificaciones, datos tributarios confidenciales ni información personal de terceros. Solo se guarda tu identificador de cuenta, el aporte y la fecha. Consulta la <a href="/datenschutz">política de privacidad</a>.</p>
+<label class="consentimiento"><input type="checkbox" id="aceptaPrivacidad" required> He leído la información sobre el tratamiento de mi aporte y acepto enviarlo para su revisión.</label>
+<button type="submit" id="enviarAporte">Enviar aporte</button>
+<p id="resultadoAporte" role="status" aria-live="polite"></p>
+</form>
+</section>
+<p class="pie-informacion">La participación está sujeta a un plazo comunicado en horario de Colombia. Durante la preparación legal y el cierre de cuentas, el formulario permanece deshabilitado. Para asuntos generales escribe a <a href="mailto:contacto@euclidianet.com">contacto@euclidianet.com</a>.</p>
+</main>
+<footer class="wrap pie-informacion"><a href="/impressum">Impressum</a> · <a href="/datenschutz">Privacidad</a> · <a href="/">Inicio</a></footer>
+<script>
+(async()=>{
+ const estado=document.getElementById('ventanaEstado'),limite=document.getElementById('fechaLimite');
+ const form=document.getElementById('formAporte'),resultado=document.getElementById('resultadoAporte');
+ const renderFecha=v=>new Intl.DateTimeFormat('es-CO',{dateStyle:'long',timeZone:'UTC'}).format(new Date(v+'T12:00:00Z'));
+ let ventana;
+ try{
+  const r=await fetch('/api/aportes',{cache:'no-store'});
+  if(!r.ok)throw Error('Consulta no disponible');
+  ventana=await r.json();
+ }catch(_){estado.textContent='No se puede verificar la convocatoria. El formulario queda cerrado.';return;}
+ estado.textContent=ventana.mensaje||'Los aportes están cerrados.';
+ if(ventana.inicio&&ventana.fin)limite.textContent='Período: '+renderFecha(ventana.inicio)+' al '+renderFecha(ventana.fin)+' (hora de Colombia).';
+ if(!ventana.abierto)return;
+ const token=()=>{try{return localStorage.getItem('euclidian_access_token')||''}catch(_){return ''}};
+ if(!token()){estado.textContent='Inicia sesión en EUCLIDIAN para participar durante la convocatoria.';return;}
+ form.hidden=false;
+ form.addEventListener('submit',async e=>{
+  e.preventDefault();if(!form.reportValidity())return;
+  const boton=document.getElementById('enviarAporte');boton.disabled=true;resultado.textContent='Registrando tu aporte…';
+  const payload={tipo:document.getElementById('tipo').value,referencia:document.getElementById('referencia').value.trim(),detalle:document.getElementById('detalle').value.trim(),acepta_privacidad:document.getElementById('aceptaPrivacidad').checked};
+  try{
+   const r=await fetch('/api/aportes',{method:'POST',cache:'no-store',headers:{'Content-Type':'application/json',Authorization:'Bearer '+token()},body:JSON.stringify(payload)});
+   const data=await r.json().catch(()=>({}));
+   if(!r.ok){resultado.textContent= data.mensaje||({convocatoria_cerrada:'El plazo ha terminado.',limite_diario:'Ya recibimos un aporte de esta categoría hoy.',sesion_requerida:'Vuelve a iniciar sesión.',acceso_restringido:'Tu cuenta no tiene acceso autorizado.',aporte_invalido:'Revisa los campos del formulario.'}[data.error]||'No se pudo guardar el aporte. Inténtalo más tarde.');return;}
+   resultado.textContent='Tu aporte quedó registrado para revisión. Gracias por ayudar a mejorar EUCLIDIAN.';
+   form.reset();
+  }catch(_){resultado.textContent='No hay conexión con el servicio de aportes.';}
+  finally{boton.disabled=false;}
+ });
+})();
+</script>
+</body></html>
