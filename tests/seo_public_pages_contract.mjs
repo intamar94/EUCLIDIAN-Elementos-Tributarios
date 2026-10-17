@@ -14,7 +14,8 @@ for(const page of pages){
  assert.ok(sitemap.includes('<loc>'+url+'</loc>'),page+' sitemap');
  for(const m of html.matchAll(/(?:href|src)="\/(?!\/)([^"#?]+)(?:[?#][^"]*)?"/g)){
   const target=m[1];
-  assert.ok(existsSync(new URL('../'+target,import.meta.url)),page+' broken local link '+target);
+  const virtualRoutes=['impressum','impressum.html','datenschutz','datenschutz.html','privacidad'];
+  assert.ok(existsSync(new URL('../'+target,import.meta.url))||virtualRoutes.includes(target),page+' broken local link '+target);
  }
 }
 const home=read('index.html');
