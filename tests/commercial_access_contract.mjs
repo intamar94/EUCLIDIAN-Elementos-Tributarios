@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 process.env.SUPABASE_URL='https://example.supabase.co';
 process.env.SUPABASE_PUBLISHABLE_KEY='publishable-test';
 process.env.SUPABASE_SERVICE_KEY='service-test';
+process.env.EUCLIDIAN_PUBLIC_ACCESS_ENABLED='1';
 process.env.EUCLIDIAN_PRICING_PUBLICADO='false';
 
 const uid='00000000-0000-4000-8000-0000000000aa';
