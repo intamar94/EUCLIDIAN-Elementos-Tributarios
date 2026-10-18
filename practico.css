@@ -26,3 +26,16 @@
 .practico-pie{margin:12px 0 0;font-size:12px;line-height:1.45;color:#647565}
 @media(max-width:650px){.practico-grid{grid-template-columns:1fr}.practico-acciones{display:grid;grid-template-columns:1fr}.practico-interior{padding:0 13px 14px}.practico-30>summary{padding:12px 13px}.practico-grid>div{padding:11px}}
 @media(prefers-reduced-motion:reduce){.practico-30>summary::after{transition:none}}
+
+/* Evidencia por campo: lectura compacta sin inventar certeza jurídica. */
+.practico-evidencia{margin:14px 0;border:1px solid #cfdbcf;border-radius:9px;padding:13px;background:#fffdf7}
+.practico-evidencia>strong{display:block;color:#254b34;font-size:14px;font-weight:700}
+.practico-evidencia>p{margin:5px 0 12px;color:#5b6e60;font-size:12px;line-height:1.55}
+.practico-evidencia ul{margin:0;padding:0;list-style:none;display:grid;gap:0}
+.practico-evidencia li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:5px 12px;padding:10px 0;border-top:1px solid #e3e8df;align-items:center}
+.practico-evidencia-etiqueta{color:#284a35;font-weight:600;font-size:12px}
+.practico-evidencia li small{grid-column:1/-1;font-size:12px;color:#59695b;line-height:1.45;overflow-wrap:anywhere}
+.practico-estado{font:600 10px/1.3 'IBM Plex Mono',monospace;letter-spacing:.02em;border-radius:20px;padding:5px 9px;white-space:nowrap}
+.practico-estado.registrado{color:#375c43;background:#e9f1e8;border:1px solid #cddbcc}
+.practico-estado.pendiente{color:#77583b;background:#f8eee1;border:1px solid #ead7bf}
+@media(max-width:360px){.practico-evidencia{padding:10px}.practico-evidencia li{grid-template-columns:1fr;gap:5px}.practico-estado{justify-self:start}}
