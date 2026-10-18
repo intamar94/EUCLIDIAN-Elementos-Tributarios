@@ -155,3 +155,14 @@ La asignación de issues no significa agentes autónomos activos; las tareas se 
 
 ## 14. Fuentes, versiones y seguimiento
 Internas: [#88](https://github.com/intamar94/EUCLIDIAN-Elementos-Tributarios/issues/88), [#89](https://github.com/intamar94/EUCLIDIAN-Elementos-Tributarios/issues/89), [#90](https://github.com/intamar94/EUCLIDIAN-Elementos-Tributarios/issues/90), [#91](https://github.com/intamar94/EUCLIDIAN-Elementos-Tributarios/issues/91), [#93](https://github.com/intamar94/EUCLIDIAN-Elementos-Tributarios/issues/93), [#95](https://github.com/intamar94/EUCLIDIAN-Elementos-Tributarios/issues/95), [#97](https://github.com/intamar94/EUCLIDIAN-Elementos-Tributarios/issues/97), PR [#92](https://github.com/intamar94/EUCLIDIAN-Elementos-Tributarios/pull/92), [#96](https://github.com/intamar94/EUCLIDIAN-Elementos-Tributarios/pull/96), [#98](https://github.com/intamar94/EUCLIDIAN-Elementos-Tributarios/pull/98), [#100](https://github.com/intamar94/EUCLIDIAN-Elementos-Tributarios/pull/100).
+
+## 15. Complemento competitivo de 50 comparaciones (18/10/2026)
+La dirección aportó una matriz adicional con **50 pares** “lo que hacen los demás → cómo lo mejora EUCLIDIAN”. Está conservada íntegramente y vinculada por número, prioridad, riesgos, puertas de calidad y hito M0–M9 en [`MATRIZ_COMPETITIVA_50_MEJORAS_2026.md`](MATRIZ_COMPETITIVA_50_MEJORAS_2026.md).
+
+**Diferenciar los inventarios:** las 50 comparaciones de mercado no son las 60 necesidades faltantes de la investigación previa de 68. Son **otra perspectiva complementaria**. Deben contrastarse con observación real del contador y no contarse como demanda medida.
+
+**Seis apuestas prioritarias expresas**: búsqueda por preguntas (#1), vigencia e historial (#11), antes/después (#10), relevancia por perfil (#14/#35), informes profesionales con citas (#16/#17/#41) y alertas personalizadas (#4/#5/#33). La implementación requiere el orden **evidencia → comparación → expedientes → informes → perfiles/alertas** y una búsqueda estable. No invertir el orden para generar respuestas no verificadas.
+
+**Reglas de alcance:** no duplicar ERP o causación; para calendario por NIT solicitar solo los dígitos necesarios; trabajar exógena inicialmente con archivos sintéticos; no autorizar automatizaciones de portales DIAN, ni dar por disponibles integraciones de Siigo o Alegra. Los cálculos se publicarán solo con reglas tributarias y períodos revisados. La IA sigue supeditada a citas por afirmación, protección de datos y control de costos.
+
+**Puertas comunes de desarrollo:** necesidad observable, evidencia/fuente oficial, interfaz que conserve la identidad Euclidiana, prueba negativa y de privacidad, revisión tributaria, piloto con contadores y rentabilidad/LEGAL.ia. Ningún ítem queda marcado como construido solo por estar en esta matriz.
