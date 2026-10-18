@@ -206,6 +206,15 @@ if(typeof document!=='undefined'){
     estado('Archivo JSON descargado. Guárdalo en un lugar privado.');}
    if(tipo==='txt'){descargar(informe(),'euclidian-informe-borrador.txt','text/plain;charset=utf-8');
     estado('Informe descargado para revisión profesional.');}
+   if(['docx','cliente-docx','pdf','cliente-pdf'].includes(tipo)){
+    if(!window.EuclidianInformes)throw Error('El generador de informes no está disponible.');
+    const paraCliente=tipo.startsWith('cliente-');
+    const modo=paraCliente?'cliente':'tecnico';
+    if(tipo.endsWith('docx')){window.EuclidianInformes.descargarWord(actual(),modo);
+     estado('Word descargado como borrador sin aprobación. Revisa las fuentes antes de compartir.');}
+    else{window.EuclidianInformes.abrirPDF(actual(),modo);
+     estado('Vista preliminar abierta. En el diálogo de impresión puedes guardar el PDF.');}
+   }
   }catch(err){estado(err.message);}
  });
  window.addEventListener('pagehide',()=>{}); // No persistencia implícita en salida.

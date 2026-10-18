@@ -46,6 +46,8 @@ on:
       - 'comparador.css'
       - 'expedientes.js'
       - 'expedientes.css'
+      - 'informes.js'
+      - 'informes.css'
       - 'fichas.js'
       - 'temas.js'
       - 'estilo.css'
@@ -84,6 +86,7 @@ jobs:
           node --check practico.js
           node --check comparador.js
           node --check expedientes.js
+          node --check informes.js
           node --check api/auth.js
           node --check api/session.js
           node --check api/documentos.js
@@ -99,6 +102,8 @@ jobs:
         run: node tests/comparador_documental_contract.mjs
       - name: Contrato expediente profesional temporal
         run: node tests/expedientes_contract.mjs
+      - name: Contrato exportación profesional Word y PDF
+        run: node tests/informes_profesionales_contract.mjs
       - name: Contrato persistencia RLS de expedientes bloqueada
         run: node tests/expedientes_persistencia_contract.mjs
       - name: Contrato filtro indexado de siglas tributarias
@@ -158,6 +163,7 @@ jobs:
           node tests/ui_onboarding_browser.cjs
           node tests/ui_comparador_browser.cjs
           node tests/ui_expedientes_browser.cjs
+          node tests/ui_informes_browser.cjs
       - name: Contrato identidad visual editorial
         run: node tests/identidad_visual_contract.mjs
       - name: Contrato heroes adaptativos y tamaños de escenas
