@@ -105,6 +105,8 @@ jobs:
         run: node tests/filtro_busqueda_siglas_contract.mjs
       - name: Contrato del evaluador de recuperación MIKAI
         run: node tests/mikai_evaluador_contract.mjs
+      - name: Control de despliegue único al día
+        run: node tests/despliegue_diario_contract.mjs
       - name: "Prelanzamiento: dominio, SEO, cuenta y privacidad"
         run: |
           node --check lib/aportes.js
