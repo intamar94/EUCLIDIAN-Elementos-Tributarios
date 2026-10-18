@@ -5,6 +5,21 @@ const registros=new Map();
 const limpiar=(v,limite=600)=>String(v??'').replace(/\s+/g,' ').trim().slice(0,limite);
 const escapar=v=>limpiar(v,2500).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 const lista=(v,max=4)=>Array.isArray(v)?v.filter(x=>typeof x==='string'&&limpiar(x)).slice(0,max).map(x=>limpiar(x,160)):[];
+
+/* v_bandeja devuelve reconsideraciones como objetos {numero,titulo,accion,enlace}.
+   Son relaciones catalogadas, NO prueba por sí sola de modificación jurídica. */
+function referenciasRelacionadas(valor){
+ if(!Array.isArray(valor))return [];
+ return valor.slice(0,8).flatMap(item=>{
+  if(typeof item==='string')return limpiar(item,160)?[limpiar(item,160)]:[];
+  if(!item||typeof item!=='object'||Array.isArray(item))return [];
+  const numero=limpiar(item.numero,100);
+  if(!numero)return [];
+  const titulo=limpiar(item.titulo,100);
+  return [numero+(titulo?' · '+titulo:'')];
+ }).slice(0,4);
+}
+
 function fuenteSegura(v){try{const u=new URL(String(v||''));return u.protocol==='https:'&&(u.hostname==='dian.gov.co'||u.hostname.endsWith('.dian.gov.co'))?u.href:'';}catch(_){return '';}}
 function fechaValida(v){const s=String(v||'').slice(0,10);if(!/^\d{4}-\d\d-\d\d$/.test(s))return '';const d=new Date(s+'T00:00:00Z');return !Number.isNaN(d.getTime())&&d.toISOString().slice(0,10)===s?s:'';}
 function preparar(d){
@@ -24,7 +39,7 @@ function preparar(d){
   resumen:cotejado?limpiar(d.resumen_humano||'',460):'',
   // El borrador usa campos normalizados: no conserva datos sin revisar ni datos de clientes.
   temas:lista(d.temas).filter(t=>!t.startsWith('dian:')&&t!=='boletin_mensual'),
-  relaciones:lista(d.modifica_a)
+  relaciones:referenciasRelacionadas(d.modifica_a)
  };
 }
 
