@@ -40,13 +40,13 @@ const parcial=muestra({evaluacion_resultado:'REVIEW',estado_fuente_verificacion:
  resumen_humano:'Obligación falsa para todos los contribuyentes',modifica_a:['CONCEPTO-FALSO']});
 const pn=preparar(parcial);
 assert.equal(pn.resumen,'');
-assert.equal(matrizEvidencia(partial,pn).find(x=>x.campo==='sintesis').estado,'pendiente');
+assert.equal(matrizEvidencia(parcial,pn).find(x=>x.campo==='sintesis').estado,'pendiente');
 assert.doesNotMatch(borrador(pn,'tecnico'),/Obligación falsa/);
 assert.doesNotMatch(panel(parcial),/Obligación falsa/);
 const sinEnlace=preparar(muestra({enlace_oficial:'http://evil.com/diAN'}));
 assert.equal(sinEnlace.cotejado,false);
 assert.equal(matrizEvidencia({},sinEnlace).find(x=>x.campo==='fuente').estado,'pendiente');
-const xss=panel(muestra({modifica_a:['"><img src=x onerror=alert(1)>'],titulo:'<script>alert(1)</script>'}));
+const xss=panel(muestra({temas:['<img src=x onerror=alert(1)>'],titulo:'<script>alert(1)</script>'}));
 assert.doesNotMatch(xss,/<script>|<img src=x/);
 assert.match(xss,/&lt;img/);
 assert.equal(fuenteSegura('https://dian.gov.co.evil.invalid/'), '');
