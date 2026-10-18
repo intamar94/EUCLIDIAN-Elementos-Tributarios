@@ -1,6 +1,6 @@
 # EUCLIDIAN — M4/1 | Informes profesionales con Word y PDF
 
-**18/10/2026 · Incremento conectado con Corrector General, MIKAI y Ruta Maestra del Contador**
+**18/10/2026 · Incremento conectado con Corrector General y Ruta Maestra del Contador; coordinación metodológica con el asistente de FARO de Intamar**
 
 ## Resultado visible en el escritorio
 En **Explorar → Mis expedientes de investigación**, tras crear un expediente de trabajo temporal, el contador puede:
@@ -37,4 +37,6 @@ En **Explorar → Mis expedientes de investigación**, tras crear un expediente 
 3. Conectar citas revisadas al expediente y al informe, con alerta cuando cambie el hash de la fuente.
 4. Probar cinco tareas típicas con contadores (tiempo, exactitud de referencia, comprensión y voluntad de pago) (#91).
 
-**Coordinación:** issue [#77 Corrector General](https://github.com/intamar94/EUCLIDIAN-Elementos-Tributarios/issues/77), [#93 Ruta Maestra](https://github.com/intamar94/EUCLIDIAN-Elementos-Tributarios/issues/93), [#102 Expedientes](https://github.com/intamar94/EUCLIDIAN-Elementos-Tributarios/issues/102), [#88 Evidencia](https://github.com/intamar94/EUCLIDIAN-Elementos-Tributarios/issues/88), PR #112 laboratorio MIKAI.
+**Gobernanza:** el asistente de **FARO de Intamar** aporta principios reutilizables de validación, costos, seguridad y articulación con LEGAL.ia. EUCLIDIAN conserva su repositorio, desarrollo y decisiones propios; **no pertenece a la cartera general de proyectos FARO**. Esta referencia recoge decisiones previamente expresadas, no una consulta directa nueva a ese asistente. El laboratorio MIKAI de PR #112 es un trabajo técnico independiente y no representa al asistente de FARO.
+
+**Coordinación técnica:** issue [#77 Corrector General](https://github.com/intamar94/EUCLIDIAN-Elementos-Tributarios/issues/77), [#93 Ruta Maestra](https://github.com/intamar94/EUCLIDIAN-Elementos-Tributarios/issues/93), [#102 Expedientes](https://github.com/intamar94/EUCLIDIAN-Elementos-Tributarios/issues/102), [#88 Evidencia](https://github.com/intamar94/EUCLIDIAN-Elementos-Tributarios/issues/88), PR #112 laboratorio MIKAI.
