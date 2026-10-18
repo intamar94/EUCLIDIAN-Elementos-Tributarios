@@ -31,6 +31,13 @@ assert.equal(p.fechaAplicacion,'2026-06-01');
 assert.match(borrador(p,'tecnico'),/Fecha de aplicación: Por confirmar;/);
 assert.match(borrador(p,'tecnico'),/Cambio de criterio: PENDIENTE/);
 assert.match(borrador(p,'cliente'),/no acredita modificaciones, fecha efectiva ni sujetos afectados/);
+const estructurada=muestra({modifica_a:[{numero:'DIAN-CONCEPTO-77-2025',titulo:'Antecedente documental',accion:'reconsidera',enlace:'https://normograma.dian.gov.co/dian/compilacion/docs/antecedente.htm'}]});
+const rel=preparar(estructurada);
+assert.equal(rel.relaciones.length,1,'Se conserva la relación estructurada del catálogo');
+assert.match(rel.relaciones[0],/DIAN-CONCEPTO-77-2025/);
+assert.match(borrador(rel,'tecnico'),/Relaciones registradas/);
+assert.equal(matrizEvidencia(estructurada,rel).find(x=>x.campo==='cambio').estado,'pendiente',
+ 'Reconsideración catalogada no equivale a cambio jurídicamente demostrado');
 assert.match(panel(muestra()),/Mapa de evidencia/);
 assert.equal((panel(muestra()).match(/class="practico-evidencia-etiqueta"/g)||[]).length,6);
 const invalido=preparar(muestra({numero_resolucion:'DIAN-OFICIO-42-2025'}));
