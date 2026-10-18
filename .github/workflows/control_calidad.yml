@@ -128,6 +128,7 @@ jobs:
           sleep 2
           node tests/ui_public_audit_browser.cjs
           node tests/ui_onboarding_browser.cjs
+          node tests/ui_comparador_browser.cjs
       - name: Contrato identidad visual editorial
         run: node tests/identidad_visual_contract.mjs
       - name: Contrato heroes adaptativos y tamaños de escenas
