@@ -1,0 +1,36 @@
+/* Comparador exploratorio EUCLIDIAN · se integra en fichas sin modificar el diseño global */
+.comparador-selector{margin:11px 0 15px;padding:12px 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;border:1px solid #d4dacd;background:#fcfbf6;border-radius:9px}
+.comparador-selector>span{font:600 12px 'IBM Plex Mono',monospace;color:#34583d;letter-spacing:.02em}
+.comparador-selectores{display:flex;flex-wrap:wrap;gap:7px}
+.comparador-selectores button{min-height:42px;border:1px solid #bbcdbb;border-radius:7px;background:white;color:#254933;font:600 12px 'IBM Plex Sans',sans-serif;padding:9px 11px;cursor:pointer}
+.comparador-selectores button:hover{border-color:#557a59;background:#f3f7ef}
+.comparador-selector>small{width:100%;color:#657464;line-height:1.5;font-size:12px}
+.comparador-mensaje{margin:0;width:100%;color:#254933;font-size:12px;line-height:1.5}
+.eu-comparador-dialog{box-sizing:border-box;width:min(1080px,calc(100vw - 24px));max-height:min(90vh,940px);overflow:auto;margin:auto;border:1px solid #b8c8b8;border-radius:15px;padding:clamp(14px,2.8vw,27px);background:#f9f8f1;color:#233b2b;box-shadow:0 20px 80px rgba(17,37,24,.25)}
+.eu-comparador-dialog::backdrop{background:rgba(15,32,25,.7)}
+.eu-comparador-cab{display:flex;align-items:start;justify-content:space-between;gap:15px;border-bottom:1px solid #d8ddd2;padding-bottom:14px;margin-bottom:14px}
+.eu-comparador-cab span{color:#9a725f;font:600 11px 'IBM Plex Mono',monospace;letter-spacing:.09em}
+.eu-comparador-cab h2{font:600 clamp(25px,4vw,34px)/1.14 'Spectral',Georgia,serif;color:#234632;margin:7px 0 0}
+.eu-comparador-cab button{border:1px solid #bdcabd;background:#fff;border-radius:8px;width:43px;height:43px;flex:none;cursor:pointer;color:#31543a}
+.eu-comparador-alerta{margin:0 0 18px;background:#f1e8d8;border-left:3px solid #a67659;padding:11px 12px;border-radius:5px;color:#5d4b39;font-size:13px;line-height:1.55}
+.eu-comparador-matrices,.eu-comparador-salidas{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}
+.eu-comparador-matrices>section,.eu-comparador-salidas>section{min-width:0;border:1px solid #d6ded3;background:#fffdf8;border-radius:9px;padding:13px;box-sizing:border-box}
+.eu-comparador-matrices h3,.eu-comparador-salidas h4{font:600 17px 'Spectral',Georgia,serif;color:#274934;margin:0 0 7px}
+.eu-comparador-matrices p{font-size:12px;line-height:1.5;color:#657266;margin:0 0 8px;overflow-wrap:anywhere}
+.eu-comparador-matrices a{font-size:12px;color:#245b39;display:inline-block;margin:0 0 12px}
+.eu-comparador-matrices label{font-size:12px;font-weight:650;display:block;margin:0 0 7px;color:#3a5841}
+.eu-comparador-matrices textarea{display:block;width:100%;min-height:168px;max-height:350px;resize:vertical;box-sizing:border-box;border-radius:7px;border:1px solid #bdccbc;background:#fff;color:#28392e;padding:11px;font:13px/1.55 'IBM Plex Mono',monospace}
+.eu-comparador-nota{font-size:12px;color:#657266;line-height:1.55;margin:13px 0}
+.eu-comparador-acciones{display:flex;gap:9px;flex-wrap:wrap}
+.eu-comparador-acciones button{min-height:44px;padding:10px 14px;cursor:pointer;border-radius:8px;font:600 13px 'IBM Plex Sans',sans-serif}
+.eu-comparador-acciones [data-comp-ejecutar]{color:#fff;background:#26553a;border:1px solid #26553a}
+.eu-comparador-acciones [data-comp-limpiar]{color:#26553a;background:#fff;border:1px solid #aac4b1}
+.eu-comparador-estado{font-size:13px;color:#37533c;line-height:1.55;min-height:20px}
+.eu-comparador-resultado>p{font-size:13px;line-height:1.55;color:#5c675a}
+.eu-comparador-salidas>section>div{white-space:pre-wrap;overflow-wrap:anywhere;font:13px/1.85 'IBM Plex Mono',monospace;color:#2b3f30}
+.eu-comparador-cambio{padding:2px 3px;border-radius:3px;background:#f6d3a9;color:#633b25;box-decoration-break:clone}
+.eu-comparador-salidas>section:nth-child(2) .eu-comparador-cambio{background:#d6ebd4;color:#225234}
+.eu-comparador-dialog button:focus-visible,.eu-comparador-dialog a:focus-visible,.eu-comparador-dialog textarea:focus-visible,.comparador-selector button:focus-visible{outline:3px solid #aa745a;outline-offset:2px}
+@media(max-width:700px){.eu-comparador-dialog{width:calc(100vw - 16px);max-height:calc(100dvh - 18px);padding:13px;border-radius:12px}.eu-comparador-matrices,.eu-comparador-salidas{grid-template-columns:1fr;gap:11px}.eu-comparador-matrices textarea{min-height:120px}.comparador-selector{padding:11px;gap:8px}}
+@media(max-width:365px){.comparador-selectores{display:grid;grid-template-columns:1fr;width:100%}.eu-comparador-dialog{padding:10px}}
+@media(prefers-reduced-motion:reduce){.eu-comparador-dialog,.eu-comparador-dialog *{scroll-behavior:auto!important;transition:none!important}}
