@@ -33,6 +33,8 @@ on:
       - 'bloques.js'
       - 'practico.js'
       - 'practico.css'
+      - 'comparador.js'
+      - 'comparador.css'
       - 'fichas.js'
       - 'temas.js'
       - 'estilo.css'
@@ -69,6 +71,7 @@ jobs:
           node --check auth.js
           node --check bloques.js
           node --check practico.js
+          node --check comparador.js
           node --check api/auth.js
           node --check api/session.js
           node --check api/documentos.js
@@ -79,6 +82,8 @@ jobs:
         run: node tests/evidencia_por_campo_contract.mjs
       - name: Contrato de pasajes y hashes oficiales
         run: node tests/evidencia_pasajes_contract.mjs
+      - name: Contrato comparador normativo exploratorio
+        run: node tests/comparador_documental_contract.mjs
       - name: Contrato filtro indexado de siglas tributarias
         run: node tests/filtro_busqueda_siglas_contract.mjs
       - name: Verificar contrato E2E de consulta trazable
