@@ -1,0 +1,12 @@
+{
+  "queries": [
+    {"id":"numero_oficio","text":"DIAN-OFICIO-901025-2020","tipo":"identificador"},
+    {"id":"numero_resolucion","text":"DIAN-RESOLUCION-56-2018","tipo":"identificador"},
+    {"id":"sigla_iva","text":"IVA","tipo":"sigla"},
+    {"id":"sigla_uvt","text":"UVT","tipo":"sigla"},
+    {"id":"factura","text":"factura electrónica","tipo":"técnica"},
+    {"id":"retencion","text":"retención en la fuente","tipo":"técnica"},
+    {"id":"pregunta","text":"¿cuándo debo emitir factura electrónica?","tipo":"coloquial"},
+    {"id":"sin_evidencia","text":"zzqv-no-existe-euclidian-938271","tipo":"negativa"}
+  ]
+}
