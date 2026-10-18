@@ -1,4 +1,5 @@
 import {extractoDelCuerpo} from '../lib/extracto-literal.js';
+import {filtroBusquedaDocumentos} from '../lib/filtro-busqueda-documentos.js';
 import { autorizarConsulta, registrarUsoConsulta } from '../lib/auth-server.js';
 // EUCLIDIAN — catálogo completo de documentos.
 // La vista cliente entrega exclusivamente las versiones publicadas por la puerta documental.
@@ -80,7 +81,7 @@ export default async function handler(req,res){
   filtro+='&publicado_cliente=is.true';
   if(!doc&&estado==='nuevos'){const corte=fechaCorteNovedades();filtro+=`&or=(fecha_publicacion.gte.${corte},fecha_publicacion_web.gte.${corte})`;}
   if(!doc&&tema)filtro+=`&temas=cs.{${encodeURIComponent(tema)}}`;
-  if(!doc&&q){const termino=q.replace(/[(),]/g,' ').replace(/[*]/g,' ').trim();if(/^DIAN-[A-Z_]+-\d+-(?:19|20)\d{2}$/i.test(termino)){filtro+=`&numero_resolucion=eq.${encodeURIComponent(termino)}`;}else if(termino){const sigla=/^[A-ZÁÉÍÓÚÜÑ]{2,8}$/u.test(termino);const busqueda=sigla?`(contenido.plfts(spanish).${termino},descripcion_limpia.plfts(spanish).${termino})`:`(numero_resolucion.ilike.*${termino}*,titulo.ilike.*${termino}*,contenido.ilike.*${termino}*,descripcion_limpia.ilike.*${termino}*)`;filtro+=`&or=${encodeURIComponent(busqueda)}`;}}
+  if(!doc&&q)filtro+=filtroBusquedaDocumentos(q);
   const primera=doc?0:(pagina-1)*POR_PAGINA;
   const controller=new AbortController();
   const timer=setTimeout(()=>controller.abort(),12000);
