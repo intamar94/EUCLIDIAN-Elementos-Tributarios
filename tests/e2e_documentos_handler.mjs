@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 
 assert.ok(process.env.SUPABASE_URL&&process.env.SUPABASE_SERVICE_KEY,'Faltan credenciales Supabase de CI');
 process.env.EUCLIDIAN_CLAVE='ci-euclidian-local';
+process.env.EUCLIDIAN_PUBLIC_ACCESS_ENABLED='1';
 
 const {default:handler}=await import('../api/documentos.js?ci='+Date.now());
 

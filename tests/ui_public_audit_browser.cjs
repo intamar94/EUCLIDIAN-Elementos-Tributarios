@@ -45,6 +45,15 @@ const assert=require('node:assert/strict');
       assert.equal(await page.locator('#muestraConsulta').getAttribute('aria-selected'),'true');
       await page.screenshot({path:`/tmp/euclidian-publica-${width}.png`,fullPage:true});
 
+      for(const ruta of ['fuentes-dian.html','fechas-y-vigencia.html','novedades-tributarias.html','contacto.html','aportes.html']){
+        await page.goto(base+'/'+ruta,{waitUntil:'domcontentloaded'});
+        assert.equal(await page.locator('main h1').count(),1,ruta+' H1 único');
+        assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>window.innerWidth),false,ruta+' sin desbordamiento '+width);
+        assert.equal(await page.locator('.top nav a').first().isVisible(),true,ruta+' navegación accesible '+width);
+        if(width===320&&ruta!=='contacto.html'&&ruta!=='aportes.html')assert.ok((await page.locator('.top nav a:visible').count())>=2,ruta+' navegación visible en móvil');
+        if(ruta==='aportes.html')assert.equal(await page.locator('#formAporte').isVisible(),false,'Aportes cerrados sin verificación');
+      }
+
       await page.goto(base+'/app.html',{waitUntil:'domcontentloaded'});
       await page.locator('#puerta').waitFor({state:'visible'});
       assert.equal(await page.locator('meta[name="robots"]').getAttribute('content'),'noindex,nofollow');

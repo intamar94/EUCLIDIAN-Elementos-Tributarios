@@ -32,8 +32,11 @@ export default async function handler(req,res){
   if(req.method!=='POST')return res.status(405).json({error:'method_not_allowed'});
   if(!SUPABASE_URL||!PUBLISHABLE_KEY)return res.status(503).json({error:'auth_no_configurado'});
   const action=String(req.body?.action||'');
+  // Prelanzamiento: cierre de inicio/renovación de sesión del cliente por defecto.
+  if(['signin','refresh','recover','update_password'].includes(action)&&process.env.EUCLIDIAN_PUBLIC_ACCESS_ENABLED!=='1')
+    return res.status(403).json({error:'acceso_publico_cerrado',message:'El acceso de usuarios está temporalmente cerrado.'});
   // LEGAL.ia: deny sign-up before accessing Supabase, even on direct API requests.
-  if(action==='signup'&&process.env.EUCLIDIAN_SIGNUP_ENABLED!=='true'){
+  if(action==='signup'&&(process.env.EUCLIDIAN_SIGNUP_ENABLED!=='true'||process.env.EUCLIDIAN_PUBLIC_ACCESS_ENABLED!=='1'||process.env.EUCLIDIAN_LEGAL_APPROVED!=='1')){
     return res.status(403).json({error:'registro_cerrado',message:'El registro de nuevos usuarios está temporalmente cerrado.'});
   }
   try{
