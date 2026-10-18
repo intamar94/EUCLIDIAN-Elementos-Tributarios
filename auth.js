@@ -53,7 +53,7 @@ async function authToken(){
   })();
   try{return await authRefreshPendiente;}finally{authRefreshPendiente=null;}
 }
-function authMostrarPuerta(){
+function authMostrarPuerta(){window.EuclidianExpedientes?.limpiar();
   window.euclidianRestablecerVista?.();
   const puerta=document.getElementById('puerta');if(puerta)puerta.hidden=false;
   ['cab','inicioPanel','novedadesCab','controles','barra','cuentaPanel','bienvenida','lista','paginas'].forEach(id=>{const el=document.getElementById(id);if(el)el.hidden=true;});
