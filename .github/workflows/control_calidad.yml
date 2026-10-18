@@ -77,6 +77,8 @@ jobs:
         run: node tests/ficha_practica_contract.mjs
       - name: Contrato de evidencia jurídica por campo
         run: node tests/evidencia_por_campo_contract.mjs
+      - name: Contrato de pasajes y hashes oficiales
+        run: node tests/evidencia_pasajes_contract.mjs
       - name: Verificar contrato E2E de consulta trazable
         run: |
           node tests/e2e_consulta_contract.mjs
