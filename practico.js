@@ -54,7 +54,6 @@ const tareas=[
  'Comprobar sujetos, hechos, períodos y excepciones.',
  'Verificar vigencia y fecha efectiva antes de informar o actuar.'
 ];
-function borrarFalsasCertezas(){} // Contract marker for conservative reports
 function borrador(p,tipo){
  const cabecera=[tipo==='cliente'?'MENSAJE PARA CLIENTE — BORRADOR':'INFORME TÉCNICO — BORRADOR',
   'EUCLIDIAN · Elementos Tributarios','',`Documento: ${p.titulo}`,`Referencia: ${p.referencia}`,
@@ -77,10 +76,10 @@ function borrador(p,tipo){
   `Qué cambió: ${p.relaciones.length?'Relaciones registradas: '+p.relaciones.join('; ')+'. Verificar contenido y alcance.':'No existe un cambio concreto acreditado en esta ficha; comprobar en la fuente.'}`,
   'A quién afecta: por determinar con hechos, sujetos y excepciones.',
   `Vigencia: ${p.estadoVigencia||'Por confirmar'} (dato de catálogo: verificar para el caso).`,
-  `Fecha de aplicación: ${p.fechaAplicacion?p.fechaAplicacion+' (comprobar excepciones)':'Por confirmar'}`,
+  `Fecha de aplicación: ${p.fechaAplicacion?'Por confirmar; fecha '+p.fechaAplicacion+' registrada en catálogo, sin cita individual del efecto':'Por confirmar'}`,
   `Respaldo: ${p.cotejado?'Metadatos cotejados; no constituye análisis de aplicación individual.':'Cotejo pendiente para una conclusión.'}`,'',
   'Matriz de evidencia y límites:',
-  ...matrizEvidencia(p.original||{},p).map(r=>'- '+r.rotulo+': '+r.estado.toUpperCase()+' — '+r.detalle),'',
+  ...matrizEvidencia({},p).map(r=>'- '+r.rotulo+': '+r.estado.toUpperCase()+' — '+r.detalle),'',
   'Checklist del profesional:',...tareas.map(x=>'☐ '+x),'',
   'Conclusión propia: [completar tras comprobación]','',
   'BORRADOR. No acredita por sí solo obligación, cambio, fecha ni vigencia para un cliente.'
@@ -91,7 +90,7 @@ function panel(d){
  const p=preparar(d);if(!p.id)return '';
  registros.set(p.id,p);if(registros.size>250)registros.delete(registros.keys().next().value);
  const cambio=p.relaciones.length?'Hay relaciones documentales registradas; verifica su efecto.':'Cambio concreto pendiente de comprobación.';
- const fecha=p.fechaAplicacion?'Fecha registrada: '+p.fechaAplicacion+'; verificar alcance y excepciones.':'Fecha de aplicación por confirmar.';
+ const fecha=p.fechaAplicacion?'Fecha '+p.fechaAplicacion+' registrada; efecto y excepciones por confirmar.':'Fecha de aplicación por confirmar.';
  const evidencias=matrizEvidencia(d,p);
  return `<details class="practico-30"><summary><span class="practico-signo" aria-hidden="true">◇</span><span><strong>Lectura práctica · 30 segundos</strong><small>Qué sabemos y qué falta comprobar · Preparar informe</small></span></summary>
  <div class="practico-interior"><p class="practico-nota">Guía de revisión, no conclusión jurídica sobre un cliente.</p>
