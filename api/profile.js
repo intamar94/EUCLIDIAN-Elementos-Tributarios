@@ -1,5 +1,6 @@
 import { verificarUsuario } from '../lib/auth-server.js';
 import aportesHandler from '../lib/aportes.js';
+import expedientesHandler from '../lib/expedientes-api.js';
 
 const SUPABASE_URL=process.env.SUPABASE_URL;
 const SERVICE_KEY=process.env.SUPABASE_SERVICE_KEY;
@@ -22,6 +23,7 @@ async function supabase(path,options={}){
 }
 export default async function handler(req,res){
   if(req.query?.accion==='aportes')return aportesHandler(req,res);
+  if(req.query?.accion==='expedientes')return expedientesHandler(req,res);
   res.setHeader('Cache-Control','no-store');
   if(!['GET','PATCH'].includes(req.method))return res.status(405).json({error:'method_not_allowed'});
   if(!SUPABASE_URL||!SERVICE_KEY)return res.status(503).json({error:'falta_configuracion'});
