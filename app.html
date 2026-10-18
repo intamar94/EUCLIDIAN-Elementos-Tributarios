@@ -16,6 +16,7 @@
 <link rel="stylesheet" href="/practico.css">
 <link rel="stylesheet" href="/comparador.css">
 <link rel="stylesheet" href="/expedientes.css">
+<link rel="stylesheet" href="/informes.css">
 <link rel="stylesheet" href="/consulta.css">
 <link rel="stylesheet" href="/bienvenida.css">
 <link rel="stylesheet" href="/identidad-euclidian.css">
@@ -154,6 +155,10 @@
       <div class="exp-exportar">
         <button type="button" data-exp-export="json">Exportar expediente (.json)</button>
         <button type="button" data-exp-export="txt">Informe preliminar (.txt)</button>
+        <button type="button" data-exp-export="pdf">Vista previa · Guardar PDF</button>
+        <button type="button" data-exp-export="docx">Word técnico (.docx)</button>
+        <button type="button" data-exp-export="cliente-docx">Word para cliente (.docx)</button>
+        <button type="button" data-exp-export="cliente-pdf">PDF para cliente</button>
       </div>
     </div>
     <div class="exp-importar">
@@ -234,6 +239,7 @@
 <script src="/guardados.js" defer></script>
 <script src="/practico.js" defer></script>
 <script src="/comparador.js" defer></script>
+<script src="/informes.js" defer></script>
 <script src="/expedientes.js" defer></script>
 <script src="/bloques.js" defer></script>
 <script src="/auth.js" defer></script>
