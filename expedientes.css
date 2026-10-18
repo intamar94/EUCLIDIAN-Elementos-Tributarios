@@ -40,3 +40,7 @@
 @media(max-width:700px){.exp-panel{padding:14px;margin:16px 0;border-radius:13px}.exp-campos{grid-template-columns:1fr}.exp-barra{display:grid;grid-template-columns:1fr 1fr}.exp-barra label,.exp-barra select{grid-column:1/-1}.exp-barra button{min-width:0}.exp-exportar{display:grid;grid-template-columns:1fr}.exp-cab h3{font-size:26px}}
 @media(max-width:380px){.exp-barra{grid-template-columns:1fr}.exp-panel{padding:11px}.exp-fuentes{padding:10px}}
 @media(prefers-reduced-motion:reduce){.exp-panel *{scroll-behavior:auto!important;transition:none!important}}
+
+.exp-exportar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+.exp-exportar button{width:100%}
+@media(max-width:700px){.exp-exportar{grid-template-columns:1fr}}
