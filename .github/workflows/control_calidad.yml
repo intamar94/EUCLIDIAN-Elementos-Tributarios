@@ -88,6 +88,7 @@ jobs:
           node --check api/session.js
           node --check api/documentos.js
           node --check lib/auth-server.js
+          node --check lib/expedientes-api.js
       - name: Contrato ficha práctica y borradores seguros
         run: node tests/ficha_practica_contract.mjs
       - name: Contrato de evidencia jurídica por campo
@@ -98,6 +99,8 @@ jobs:
         run: node tests/comparador_documental_contract.mjs
       - name: Contrato expediente profesional temporal
         run: node tests/expedientes_contract.mjs
+      - name: Contrato persistencia RLS de expedientes bloqueada
+        run: node tests/expedientes_persistencia_contract.mjs
       - name: Contrato filtro indexado de siglas tributarias
         run: node tests/filtro_busqueda_siglas_contract.mjs
       - name: "Prelanzamiento: dominio, SEO, cuenta y privacidad"
