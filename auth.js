@@ -249,11 +249,13 @@ document.getElementById('authInternoForm')?.addEventListener('submit',async e=>{
   catch(err){authStatus(err.message||'Clave interna incorrecta.','error');}
 });
 document.getElementById('cuentaSalir')?.addEventListener('click',async()=>{
+  if(window.EuclidianExpedientes?.confirmarSalida?.()===false)return;
   const access=authGet(AUTH_KEYS.access);authClear();
   if(access)authPost({action:'logout',access_token:access}).catch(()=>{});
   authMostrarPuerta();authCambiarTab(false);authStatus('Sesión cerrada.','ok');
 });
 document.getElementById('cuentaRecuperar')?.addEventListener('click',()=>{
+  if(window.EuclidianExpedientes?.confirmarSalida?.()===false)return;
   const email=document.getElementById('cuentaEmail')?.textContent||'';
   if(email.includes('@'))document.getElementById('authEmail').value=email;
   authMostrarPuerta();authCambiarTab(false);authStatus('Usa “Olvidé mi contraseña” para recibir un enlace seguro.','aviso');

@@ -141,3 +141,25 @@ section[id]{scroll-margin-top:96px}
 
 /* Permite leer las demostraciones con Tab, también cuando no tienen enlaces. */
 .muestra-vista:focus-visible{outline:3px solid var(--green);outline-offset:-4px}
+
+
+/* La portada mantiene una acción principal y explica el estado antes de entrar. */
+.portada-publica .hero-actions{align-items:flex-start}
+.portada-publica .preparacion-aviso{flex-basis:100%;margin:0 0 4px;padding:11px 13px;border-left:3px solid #9a7544;border-radius:0 6px 6px 0;background:#faf6eb;color:#604d31;font-size:13px;line-height:1.6}
+.portada-publica .nav nav a{display:inline-flex;align-items:center;min-height:44px}
+.portada-publica .mini-busqueda-etiqueta{margin:0 0 7px;font-size:12px;color:#405649}
+.portada-publica .mini-buscador>span+span{background:transparent;color:#405649;font-size:18px;padding:6px 13px}
+.portada-publica .mini-estado a{display:inline-flex;align-items:center;gap:6px;min-height:44px}
+.solo-lector{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
+.portada-publica #por-dentro:focus-visible{outline:3px solid #315d77;outline-offset:5px;border-radius:6px}
+@media(max-width:620px){
+ .portada-publica .nav{flex-wrap:wrap;gap:4px 12px;padding-block:10px}
+ .portada-publica .nav nav{width:100%;margin-left:0;display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
+ .portada-publica .nav nav a:not(.login){display:inline-flex;font-size:13px;min-height:44px}
+ .portada-publica .nav .login{justify-content:center;font-size:13px}
+ .portada-publica section[id]{scroll-margin-top:160px}
+ .portada-publica .mini-estado{flex-wrap:wrap;align-items:flex-start}
+ .portada-publica .mini-estado a{justify-content:center}
+ .portada-publica .hero-actions{gap:12px}
+ .portada-publica .preparacion-aviso{font-size:13px;text-align:left}
+}

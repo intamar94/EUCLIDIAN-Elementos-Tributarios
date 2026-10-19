@@ -40,7 +40,13 @@ const fs=require('node:fs');
    assert.equal(await page.locator('#expFuentes li').count(),1);
    const rect=await page.locator('#expedientesPanel').boundingBox();
    assert.ok(rect.x>=0&&rect.x+rect.width<=width+1,'Desborde de expediente '+width);
+   assert.equal(await page.evaluate(()=>{
+    const e=new Event('beforeunload',{cancelable:true});window.dispatchEvent(e);return e.defaultPrevented;
+   }),true,'Avisar de cambios sin exportar antes de salir');
    await page.evaluate(()=>window.EuclidianExpedientes.limpiar());
+   assert.equal(await page.evaluate(()=>{
+    const e=new Event('beforeunload',{cancelable:true});window.dispatchEvent(e);return e.defaultPrevented;
+   }),false,'Sin aviso después de limpieza obligatoria');
    assert.equal(await page.locator('#expEditor').isVisible(),false);
    assert.equal(await page.locator('#expElegir option').count(),0);
    assert.deepEqual(errores,[],'Sin JS errors en '+width);

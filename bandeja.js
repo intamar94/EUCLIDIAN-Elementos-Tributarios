@@ -2,7 +2,8 @@
 let CLAVE = sessionStorage.getItem('euclidian_clave') || '';
 sessionStorage.removeItem('euclidian_revisor_clave');
 let generacionCarga=0;
-window.euclidianCerrarInterno=()=>{generacionCarga++;CLAVE='';sessionStorage.removeItem('euclidian_clave');liberarCarga();};
+let controladorConsulta=null;
+window.euclidianCerrarInterno=()=>{generacionCarga++;controladorConsulta?.abort();CLAVE='';sessionStorage.removeItem('euclidian_clave');liberarCarga();};
 const consultaInicial=new URLSearchParams(window.location.search);
 const docInicial=consultaInicial.get('doc')||'';
 const F = { estado:'todos', periodo:'todo', tema:'', q:(consultaInicial.get('q')||'').trim().slice(0,160), doc:/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(docInicial)?docInicial:'', orden:'recientes', pagina:1 };
@@ -32,11 +33,11 @@ function marcarNavegacion(id){
   if(activo){activo.classList.add('activo');activo.setAttribute('aria-current','page');}
 }
 function vistaVacia(){
-  if(F.doc)return `<section class="estado-vacio" aria-labelledby="estadoVacioTitulo"><span class="estado-vacio-figura" aria-hidden="true">◇</span><div><span class="estado-vacio-kicker">ENLACE DEL CORREO</span><h2 id="estadoVacioTitulo">Esta ficha no está disponible</h2><p>El documento del enlace no está publicado en EUCLIDIAN en este momento. Puedes consultar la fuente DIAN enlazada en el correo.</p></div><div class="estado-vacio-acciones"><button type="button" data-empty-action="todo">Ver documentos disponibles</button></div></section>`;
+  if(F.doc)return `<section class="estado-vacio" aria-labelledby="estadoVacioTitulo"><span class="estado-vacio-figura" aria-hidden="true">◇</span><div><span class="estado-vacio-kicker">DOCUMENTO SELECCIONADO</span><h2 id="estadoVacioTitulo">Esta ficha no está disponible</h2><p>El documento seleccionado no está disponible en EUCLIDIAN en este momento. Si conservas su referencia, puedes consultarla directamente en la fuente DIAN.</p></div><div class="estado-vacio-acciones"><button type="button" data-empty-action="todo">Ver documentos disponibles</button></div></section>`;
   if(F.estado==='nuevos'&&!F.q&&!F.tema)return `<section class="estado-vacio" aria-labelledby="estadoVacioTitulo"><span class="estado-vacio-figura" aria-hidden="true">◇</span><div><h2 id="estadoVacioTitulo">No hay publicaciones listas para mostrar</h2><p>Puedes consultar la biblioteca o comprobar las novedades en la DIAN.</p></div><div class="estado-vacio-acciones"><button type="button" data-empty-action="todo">Ver biblioteca completa</button><a href="https://normograma.dian.gov.co/dian/compilacion/novedades_boletines.html" target="_blank" rel="noopener noreferrer">Ver novedades en la DIAN ↗</a></div></section>`;
   return `<section class="estado-vacio" aria-labelledby="estadoVacioTitulo">
     <span class="estado-vacio-figura" aria-hidden="true">◇</span>
-    <div><span class="estado-vacio-kicker">SIN COINCIDENCIAS</span><h2 id="estadoVacioTitulo">No encontramos algo fiable con estos filtros</h2>
+    <div><span class="estado-vacio-kicker">SIN COINCIDENCIAS</span><h2 id="estadoVacioTitulo">No hay resultados con estos filtros</h2>
     <p>No significa que el tema no exista. Amplía la consulta o entra por una de estas rutas.</p></div>
     <div class="estado-vacio-acciones">
       <button type="button" data-empty-action="todo">Ver todo</button>
@@ -50,7 +51,7 @@ function vistaError(mensaje){
 }
 function describirConsulta(data){
   const partes=[];
-  if(F.doc){document.getElementById('estadoConsulta').textContent=data.documentos?.length?'Documento abierto desde el correo':'Documento del correo no disponible';return;}
+  if(F.doc){document.getElementById('estadoConsulta').textContent=data.documentos?.length?'Documento seleccionado':'Documento seleccionado no disponible';return;}
   if(F.q)partes.push(`“${F.q}”`);
   if(F.tema)partes.push(nombreTema(F.tema));
   if(F.estado==='nuevos')partes.push('publicaciones recientes');
@@ -102,12 +103,20 @@ function aplicarVista(){
 }
 function mostrarVista(vista){
   if(!vistas[vista])return;
+  const focoAnterior=document.activeElement;
   vistaActual=vista;aplicarVista();
+  // Al salir de un panel, el foco no debe quedarse en un botón oculto.
+  // No se mueve al teclear, al cargar resultados ni al restaurar la sesión.
+  if(focoAnterior?.closest('[hidden]')){
+    const panel=(vistas[vistaActual]||[]).map(id=>document.getElementById(id)).find(el=>el&&!el.hidden);
+    const destino=panel?.querySelector('h1,h2')||panel;
+    if(destino){if(!destino.hasAttribute('tabindex'))destino.setAttribute('tabindex','-1');destino.focus({preventScroll:true});}
+  }
   window.scrollTo({top:0,behavior:'instant'});
 }
 window.euclidianCambiarVista=mostrarVista;
 window.euclidianAbrirGuardado=id=>{if(!accesoConsulta)return;reiniciarFiltros();F.doc=id;mostrarVista('consultar');cargar().catch(()=>{});};
-window.euclidianRestablecerVista=()=>{generacionCarga++;ultimaRespuesta=null;catalogoTemas=[];accesoConsulta=false;vistaActual='inicio';window.euclidianVistaActual='inicio';liberarCarga();};
+window.euclidianRestablecerVista=()=>{generacionCarga++;controladorConsulta?.abort();ultimaRespuesta=null;catalogoTemas=[];accesoConsulta=false;vistaActual='inicio';window.euclidianVistaActual='inicio';liberarCarga();};
 function abrirNovedades(){reiniciarFiltros();F.estado='nuevos';document.getElementById('selEstado').value='nuevos';mostrarVista('novedades');return cargar().catch(()=>{});}
 function abrirConsulta(){dejarFicha();if(F.estado==='nuevos')reiniciarFiltros();mostrarVista('consultar');return cargar().catch(()=>{});}
 function configurarNavegacion(){
@@ -154,10 +163,13 @@ async function entrarInterno(valor){
 window.euclidianEntrarInterno=entrarInterno;
 async function cargar(autenticar=false){
   const generacion=++generacionCarga;
+  controladorConsulta?.abort();
+  marcarActivos();
   const lista=document.getElementById('lista'),btn=document.getElementById('btnRecargar'),mal=document.getElementById('mal');
   if(btn)btn.disabled=true;estadoCarga(true,F.q?'Buscando y verificando…':'Ordenando la información…');
   if(lista)lista.innerHTML=skeletonConsulta();document.getElementById('paginas').innerHTML='';
   const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),15000);
+  controladorConsulta=controller;
   try{
     const q=new URLSearchParams({estado:F.estado,orden:F.orden,periodo:F.periodo,pagina:F.pagina});
     if(F.doc)q.set('doc',F.doc);else {if(F.q)q.set('q',F.q);if(F.tema)q.set('tema',F.tema);}
@@ -197,7 +209,7 @@ async function cargar(autenticar=false){
     if(autenticar){if(lista)lista.innerHTML='';throw e;}
     if(document.getElementById('puerta')?.hidden===true){if(vistaActual==='inicio')document.getElementById('inicioDocumentos').innerHTML=vistaError(e.message);else if(lista)lista.innerHTML=vistaError(e.message);}
     throw e;
-  }finally{clearTimeout(timer);if(generacion===generacionCarga){estadoCarga(false);if(btn)btn.disabled=false;}}
+  }finally{clearTimeout(timer);if(generacion===generacionCarga){controladorConsulta=null;estadoCarga(false);if(btn)btn.disabled=false;}}
 }
 function poblarTemas(temas){
   const sel=document.getElementById('selTema');if(!sel)return;
@@ -211,9 +223,50 @@ function poblarTemas(temas){
 function poblarAnios(anios){const sel=document.getElementById('selAnio');if(!sel)return;const actual=/^\d{4}$/.test(F.periodo)?F.periodo:'';sel.innerHTML='<option value="">Todos los años</option>'+anios.filter(x=>Number.isInteger(x.anio)&&x.anio>=1950&&x.anio<=new Date().getFullYear()+1).map(x=>`<option value="${x.anio}">${x.anio} · ${Number(x.total||0).toLocaleString('es-CO')}</option>`).join('');sel.value=actual;}
 function seleccionarAnio(anio){F.periodo=anio||'todo';F.pagina=1;marcarActivos();cargar().catch(()=>{});}
 function paginacion(data){const cont=document.getElementById('paginas'),{pagina,paginas,total,porPagina}=data;if(total===0){cont.innerHTML='';const r=document.getElementById('rango');if(r)r.textContent=F.estado==='nuevos'?'0 publicaciones en los últimos 14 días':'0 resultados con estos filtros';return;}const primero=(pagina-1)*porPagina+1,ultimo=Math.min(pagina*porPagina,total),r=document.getElementById('rango');if(r)r.textContent=`${Number(total).toLocaleString('es-CO')} documentos disponibles · mostrando ${primero}–${ultimo}`;let html='';if(paginas>1){html+=`<button aria-label="Página anterior" onclick="irA(${pagina-1})" ${pagina<=1?'disabled':''}>‹</button>`;const nums=new Set([1,paginas,pagina,pagina-1,pagina+1]),orden=[...nums].filter(n=>n>=1&&n<=paginas).sort((a,b)=>a-b);let previo=0;orden.forEach(n=>{if(n-previo>1)html+='<span style="color:var(--tenue)">…</span>';html+=`<button onclick="irA(${n})" aria-label="Página ${n}" aria-current="${n===pagina?'page':'false'}">${n}</button>`;previo=n;});html+=`<button aria-label="Página siguiente" onclick="irA(${pagina+1})" ${pagina>=paginas?'disabled':''}>›</button>`;}cont.innerHTML=html;}
-function irA(n){F.pagina=n;cargar().catch(()=>{});}
+async function irA(n){
+  F.pagina=n;
+  const data=await cargar().catch(()=>null);
+  if(data&&['consultar','novedades'].includes(vistaActual)){
+    const lista=document.getElementById('lista');
+    lista?.focus({preventScroll:true});lista?.scrollIntoView({block:'start',behavior:'instant'});
+  }
+}
 
-function marcarActivos(){const n=[F.doc,F.q,F.tema,F.estado!=='todos'?F.estado:'',F.periodo!=='todo'?F.periodo:''].filter(Boolean).length;const btn=document.getElementById('btnLimpiar');if(btn)btn.hidden=n===0;}
+function filtrosActivos(){
+  return [
+    ['doc',F.doc,'Documento seleccionado'],
+    ['q',F.q,`Búsqueda: ${F.q}`],
+    ['tema',F.tema,`Tema: ${nombreTema(F.tema)}`],
+    ['estado',F.estado!=='todos', 'Publicaciones recientes'],
+    ['periodo',F.periodo!=='todo',`Año: ${F.periodo}`]
+  ].filter(([,activo])=>activo).map(([campo,,etiqueta])=>({campo,etiqueta}));
+}
+function marcarActivos(){
+  const activos=filtrosActivos(),btn=document.getElementById('btnLimpiar');
+  if(btn)btn.hidden=activos.length===0;
+  let resumen=document.getElementById('filtrosActivos');
+  const estado=document.getElementById('estadoConsulta');
+  if(!resumen&&estado){
+    resumen=document.createElement('div');resumen.id='filtrosActivos';resumen.className='filtros-activos';
+    resumen.setAttribute('role','group');resumen.setAttribute('aria-label','Filtros aplicados. Puedes quitar cada uno.');
+    estado.before(resumen);
+  }
+  if(resumen){
+    resumen.hidden=activos.length===0;
+    resumen.innerHTML=activos.map(({campo,etiqueta})=>`<button type="button" data-quitar-filtro="${campo}" aria-label="Quitar ${esc(etiqueta)}"><span>${esc(etiqueta)}</span><b aria-hidden="true">×</b></button>`).join('');
+  }
+}
+function quitarFiltro(campo){
+  const controles={q:'consulta',tema:'selTema',estado:'selEstado',periodo:'selAnio',doc:'consulta'};
+  if(!Object.hasOwn(controles,campo))return;
+  F[campo]=campo==='estado'?'todos':campo==='periodo'?'todo':'';
+  F.pagina=1;
+  if(campo==='doc')history.replaceState(null,'',location.pathname);
+  const control=document.getElementById(controles[campo]);
+  if(control){if(campo!=='doc')control.value=campo==='periodo'?'':F[campo];control.focus();}
+  if(vistaActual==='novedades')mostrarVista('consultar');
+  cargar().catch(()=>{});
+}
 function reiniciarFiltros(){F.orden='recientes';document.getElementById('selOrden').value='recientes';F.q='';F.doc='';F.tema='';F.estado='todos';F.periodo='todo';F.pagina=1;history.replaceState(null,'',location.pathname);const consulta=document.getElementById('consulta');if(consulta)consulta.value='';document.getElementById('selTema').value='';const anio=document.getElementById('selAnio');if(anio)anio.value='';const estado=document.getElementById('selEstado');if(estado)estado.value='todos';}
 function limpiar(){reiniciarFiltros();mostrarVista('consultar');return cargar();}
 document.getElementById('selAnio').addEventListener('change',e=>{dejarFicha();seleccionarAnio(e.target.value);});document.getElementById('selTema').addEventListener('change',e=>{dejarFicha();F.tema=e.target.value;F.pagina=1;cargar().catch(()=>{});});document.getElementById('selEstado').addEventListener('change',e=>{dejarFicha();F.estado=e.target.value;F.pagina=1;cargar().catch(()=>{});});document.getElementById('selOrden').addEventListener('change',e=>{dejarFicha();F.orden=e.target.value;F.pagina=1;cargar().catch(()=>{});});document.getElementById('formBuscar').addEventListener('submit',e=>{e.preventDefault();dejarFicha();F.q=document.getElementById('consulta').value.trim();F.pagina=1;cargar().catch(()=>{});});
@@ -231,6 +284,7 @@ async function restaurarEntrada(){
 restaurarEntrada();
 
 if(!window.__euclidianRecoveryActions){window.__euclidianRecoveryActions=true;document.addEventListener('click',e=>{
+  const filtro=e.target.closest('[data-quitar-filtro]');if(filtro){quitarFiltro(filtro.dataset.quitarFiltro);return;}
   const accion=e.target.closest('[data-empty-action]');if(accion){const tipo=accion.dataset.emptyAction;if(tipo==='todo'){limpiar().catch(()=>{});return;}if(tipo==='explorar'){mostrarVista('explorar');return;}if(tipo==='nuevos'){abrirNovedades();return;}}
   if(e.target.closest('[data-retry-load]'))cargar().catch(()=>{});
 });}

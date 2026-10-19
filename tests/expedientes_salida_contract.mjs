@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import vm from 'node:vm';
+let confirms=0;
+const context={window:{confirm(){confirms++;return false;}},URL,Date,JSON};
+vm.runInNewContext(readFileSync('expedientes.js','utf8'),context);
+const f=context.window.EuclidianExpedientes;
+f.nuevo();assert.equal(f.hayCambiosSinExportar(),false);assert.equal(f.confirmarSalida(),true);assert.equal(confirms,0);
+f.modificar('pregunta','Pregunta ficticia');assert.equal(f.hayCambiosSinExportar(),true);assert.equal(f.confirmarSalida(),false);assert.equal(confirms,1);
+const backup=f.respaldo();assert.equal(f.hayCambiosSinExportar(),true,'Preparar texto no prueba descarga');
+f.limpiar();f.importar(backup);assert.equal(f.hayCambiosSinExportar(),false,'El original importado ya es recuperable');
+f.modificar('hechos','Cambios después de importar');assert.equal(f.hayCambiosSinExportar(),true);
+f.limpiar();assert.equal(f.hayCambiosSinExportar(),false);assert.equal(f.estadoActual(),null);
+const auth=readFileSync('auth.js','utf8');assert.match(auth,/cuentaSalir[\s\S]*?confirmarSalida[\s\S]*?authClear\(/);
+assert.match(auth,/euclidianAuthExpirada=\(\)=>\{authClear\(\);authMostrarPuerta\(\)/,'Expiración mantiene limpieza obligatoria');
+console.log('Expedientes: aviso solo con cambios no exportados, importación recuperable y limpieza de seguridad preservada.');
