@@ -129,6 +129,7 @@ jobs:
           node tests/portada_ux_keyboard_contract.mjs
           node tests/busqueda_ux_contract.mjs
           node tests/expedientes_salida_contract.mjs
+          node tests/continuidad_flujo_contador_contract.mjs
       - name: Verificar contrato E2E de consulta trazable
         run: |
           node tests/e2e_consulta_contract.mjs
