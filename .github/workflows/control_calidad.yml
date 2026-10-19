@@ -35,6 +35,16 @@ on:
       - 'icono-euclidian.svg'
       - 'geometria-euclidian.svg'
       - 'bandeja.js'
+      - 'cartera.js'
+      - 'cartera.css'
+      - 'agenda.js'
+      - 'agenda.css'
+      - 'exogena.js'
+      - 'exogena.css'
+      - 'asistente.js'
+      - 'asistente.css'
+      - 'herramientas.js'
+      - 'herramientas.css'
       - 'portada.js'
       - 'auth.js'
       - 'lib/**'
@@ -132,6 +142,15 @@ jobs:
           node tests/busqueda_ux_contract.mjs
           node tests/expedientes_salida_contract.mjs
           node tests/continuidad_flujo_contador_contract.mjs
+      - name: Contratos de módulos locales sin Supabase
+        run: |
+          node tests/cartera_local_contract.mjs
+          node tests/agenda_local_contract.mjs
+          node tests/exogena_contract.mjs
+          node tests/asistente_guia_contract.mjs
+          node tests/comparador_cierre_contract.mjs
+          node tests/informes_cierre_contract.mjs
+          node tests/herramientas_integracion_contract.mjs
       - name: Verificar contrato E2E de consulta trazable
         run: |
           node tests/e2e_consulta_contract.mjs
@@ -175,9 +194,12 @@ jobs:
           node tests/ui_public_audit_browser.cjs
           node tests/ui_onboarding_browser.cjs
           node tests/navegacion_ux_browser.cjs
+          node tests/agenda_browser.cjs
+          node tests/herramientas_integracion_browser.cjs
           node tests/ui_comparador_browser.cjs
           node tests/ui_expedientes_browser.cjs
           node tests/ui_informes_browser.cjs
+          node tests/informes_cierre_browser.cjs
       - name: Contrato identidad visual editorial
         run: node tests/identidad_visual_contract.mjs
       - name: Contrato heroes adaptativos y tamaños de escenas

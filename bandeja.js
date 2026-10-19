@@ -116,6 +116,13 @@ function mostrarVista(vista){
 }
 window.euclidianCambiarVista=mostrarVista;
 window.euclidianAbrirGuardado=id=>{if(!accesoConsulta)return;reiniciarFiltros();F.doc=id;mostrarVista('consultar');cargar().catch(()=>{});};
+window.euclidianBuscarTexto=texto=>{
+  if(typeof texto!=='string'||!accesoConsulta||document.getElementById('puerta')?.hidden!==true)return false;
+  const q=texto.trim().slice(0,160);if(!q)return false;
+  reiniciarFiltros();F.q=q;document.getElementById('consulta').value=q;
+  mostrarVista('consultar');document.getElementById('consulta').focus({preventScroll:true});
+  cargar().catch(()=>{});return true;
+};
 window.euclidianRestablecerVista=()=>{generacionCarga++;controladorConsulta?.abort();ultimaRespuesta=null;catalogoTemas=[];accesoConsulta=false;vistaActual='inicio';window.euclidianVistaActual='inicio';liberarCarga();};
 function abrirNovedades(){reiniciarFiltros();F.estado='nuevos';document.getElementById('selEstado').value='nuevos';mostrarVista('novedades');return cargar().catch(()=>{});}
 function abrirConsulta(){dejarFicha();if(F.estado==='nuevos')reiniciarFiltros();mostrarVista('consultar');return cargar().catch(()=>{});}
@@ -183,6 +190,7 @@ async function cargar(autenticar=false){
       throw new Error(token?'Tu sesión terminó. Vuelve a entrar.':'Clave interna incorrecta.');
     }
     if(r.status===402){
+      window.EuclidianHerramientas?.limpiar();window.EuclidianExpedientes?.limpiar();
       accesoConsulta=false;['inicioDocumentos','inicioNovedades','explorarTemas','estadoTemas'].forEach(id=>document.getElementById(id)?.replaceChildren());
       document.getElementById('puerta').hidden=true;
       document.getElementById('cab').hidden=false;

@@ -1,0 +1,18 @@
+/* Preferencias de lectura M5 */
+.cartera-local{max-width:68rem;margin-inline:auto;padding:clamp(1rem,3vw,2rem)}
+.cartera-local p{line-height:1.6;overflow-wrap:anywhere}
+.cartera-aviso{border-inline-start:3px solid currentColor;padding:.65rem 1rem;background:rgba(80,110,140,.08)}
+.cartera-local fieldset{min-width:0;border:1px solid currentColor;border-radius:.5rem;padding:1rem}
+.cartera-local legend{padding-inline:.4rem;font-weight:600}
+.cartera-temas{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,15rem),1fr));gap:.4rem 1rem}
+.cartera-temas label{display:flex;align-items:center;gap:.7rem;min-height:44px;cursor:pointer;font-size:1rem}
+.cartera-temas input{width:20px;height:20px;flex:none;accent-color:currentColor}
+.cartera-acciones{display:flex;flex-wrap:wrap;gap:.6rem;margin-block:.8rem}
+.cartera-acciones button{min-height:44px;padding:.55rem .9rem;font:inherit;font-size:1rem;cursor:pointer;border:1px solid currentColor;border-radius:.4rem;color:inherit;background:transparent}
+.cartera-local :focus-visible{outline:3px solid currentColor;outline-offset:4px}
+.cartera-lista{list-style:none;padding:0;display:grid;gap:1rem}
+.cartera-lista li{border:1px solid currentColor;border-radius:.5rem;padding:1rem;min-width:0}
+.cartera-lista h3{margin-block:.2rem .5rem}
+.cartera-consulta{font-size:.95rem}
+#carteraEstado{min-height:1.6em}
+@media(max-width:700px){.cartera-local{padding:1rem .6rem}.cartera-local input,.cartera-local button{font-size:16px}.cartera-acciones button{flex:1 1 8rem}.cartera-temas{grid-template-columns:1fr}}
