@@ -5,5 +5,14 @@
   "type": "module",
   "dependencies": {
     "stripe": "^23.0.0"
+  },
+  "devDependencies": {
+    "wrangler": "4.151.2"
+  },
+  "scripts": {
+    "cloudflare:build": "node scripts/build_cloudflare.mjs",
+    "cloudflare:check": "npm run cloudflare:build && wrangler deploy --dry-run",
+    "cloudflare:dev": "npm run cloudflare:build && wrangler dev --local",
+    "cloudflare:test": "npm run cloudflare:build && wrangler deploy --dry-run --outdir .wrangler/cloudflare-bundle && node tests/cloudflare_adapter_contract.mjs && node tests/cloudflare_runtime_smoke.mjs"
   }
 }

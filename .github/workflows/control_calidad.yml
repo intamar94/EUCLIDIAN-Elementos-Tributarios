@@ -12,6 +12,8 @@ on:
       - 'api/**'
       - 'index.html'
       - 'vercel.json'
+      - 'cloudflare/**'
+      - 'wrangler.jsonc'
       - 'robots.txt'
       - 'sitemap.xml'
       - 'informacion.css'
@@ -75,6 +77,8 @@ jobs:
         run: |
           pip install -r scripts/requirements.txt
           npm ci
+      - name: Compatibilidad Cloudflare y firma Stripe en workerd
+        run: npm run cloudflare:test
       - name: Verificar sintaxis de todos los scripts Python
         run: python -m compileall -q scripts
       - name: Verificar sintaxis JavaScript de interfaz y Auth

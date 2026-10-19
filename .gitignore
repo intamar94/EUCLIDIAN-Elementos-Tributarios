@@ -4,3 +4,10 @@
 __pycache__/
 *.pyc
 node_modules/
+
+.wrangler/
+dist-cloudflare/
+.dev.vars*
+
+node_modules
+cloudflare/worker-configuration.d.ts
