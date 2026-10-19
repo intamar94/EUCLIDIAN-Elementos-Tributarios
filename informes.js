@@ -135,6 +135,7 @@ function descargarWord(exp,tipo='tecnico'){
 }
 function abrirPDF(exp,tipo='tecnico'){
  const source=html(exp,tipo),dlg=document.getElementById('euInformePreview')||document.createElement('dialog');
+ dlg.setAttribute('aria-label','Vista previa del informe profesional, borrador sin aprobación');
  if(!dlg.id){
   dlg.id='euInformePreview';dlg.className='eu-informe-dialog';
   dlg.innerHTML='<div class="eu-informe-toolbar"><div><strong>Vista previa · Informe no aprobado</strong><small>Imprime o elige «Guardar como PDF» en tu dispositivo.</small></div><button type="button" data-inf-imprimir>Imprimir / PDF</button><button type="button" data-inf-cerrar aria-label="Cerrar vista previa">Cerrar</button></div><iframe id="euInformeMarco" sandbox="allow-same-origin allow-modals" title="Vista previa del informe profesional"></iframe>';
