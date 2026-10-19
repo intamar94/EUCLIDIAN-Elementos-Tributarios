@@ -190,9 +190,20 @@ if(typeof document!=='undefined'){
   finally{e.target.value='';}
  });
  document.addEventListener('click',e=>{
-  const b=e.target.closest?.('[data-exp-adjuntar],[data-exp-export],[data-exp-quitar],#expNuevo,#expCerrar');
+  const b=e.target.closest?.('[data-exp-adjuntar],[data-exp-abrir],[data-exp-export],[data-exp-quitar],#expNuevo,#expCerrar');
   if(!b)return;
   try{
+   if(b.hasAttribute('data-exp-abrir')){
+    // Se navega solo por acción explícita; nunca automáticamente al adjuntar.
+    const nav=document.getElementById('navExplorar');
+    if(nav)nav.click();
+    const panel=document.getElementById('expedientesPanel');
+    if(panel&&!panel.closest('[hidden]')){
+      panel.focus({preventScroll:true});
+      panel.scrollIntoView({block:'start',behavior:'auto'});
+    }
+    return;
+   }
    if(b.id==='expNuevo'){nuevo();estado('Expediente creado en esta pestaña. Exporta antes de salir.');return;}
    if(b.id==='expCerrar'){
     const x=actual();if(!x)return;
@@ -207,8 +218,16 @@ if(typeof document!=='undefined'){
     const caja=b.closest('.exp-adjuntar');
     let aviso=caja?.querySelector('.exp-adjuntar-estado');
     if(!aviso&&caja){aviso=document.createElement('span');aviso.className='exp-adjuntar-estado';aviso.setAttribute('role','status');caja.appendChild(aviso);}
-    if(aviso)aviso.textContent=added?'Referencia añadida. Revisa tu expediente en Explorar.':'La referencia ya está en el expediente.';
-    estado('Fuentes actualizadas. Recuerda exportar antes de salir.');return;
+    if(aviso)aviso.textContent=added?'Referencia incorporada al borrador.':'La fuente ya figura en este expediente.';
+    // El botón aparece tras añadir: no se crea otra pestaña ni se pierde la búsqueda.
+    if(caja&&!caja.querySelector('[data-exp-abrir]')){
+      const ir=document.createElement('button');
+      ir.type='button';ir.dataset.expAbrir='1';
+      ir.textContent='Abrir mi expediente →';
+      ir.setAttribute('aria-label','Abrir el expediente temporal para revisar las fuentes y exportar el borrador');
+      caja.appendChild(ir);
+    }
+    estado('Fuente en el expediente temporal. Exporta a JSON antes de cerrar la pestaña.');return;
    }
    if(b.hasAttribute('data-exp-quitar')){removerFuente(Number(b.dataset.expQuitar));estado('Referencia quitada del expediente.');return;}
    const tipo=b.dataset.expExport;
