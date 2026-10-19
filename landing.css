@@ -138,3 +138,6 @@ section[id]{scroll-margin-top:96px}
   .cierre-acciones .primary{width:100%;justify-content:center;text-align:center;padding:12px;min-height:52px}
   .cierre-entrar{text-align:center;padding:8px 0;min-height:44px}
 }
+
+/* Permite leer las demostraciones con Tab, también cuando no tienen enlaces. */
+.muestra-vista:focus-visible{outline:3px solid var(--green);outline-offset:-4px}

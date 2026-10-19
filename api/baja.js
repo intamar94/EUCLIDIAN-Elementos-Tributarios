@@ -13,7 +13,6 @@ const PAGINA = (titulo, mensaje) => `<!DOCTYPE html>
 <html lang="es"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${titulo}</title>
-<link href="https://fonts.googleapis.com/css2?family=Spectral:wght@400;600&family=IBM+Plex+Mono&display=swap" rel="stylesheet">
 <style>
 body{margin:0;min-height:100vh;display:flex;align-items:center;
   justify-content:center;background:#EDF1E9;color:#17211C;padding:26px;

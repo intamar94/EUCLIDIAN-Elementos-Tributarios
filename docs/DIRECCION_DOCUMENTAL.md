@@ -29,7 +29,7 @@ La base bloquea publicaciones sin evidencia de captura completa, identidad, cont
 
 El primer ciclo tras la instalación completa automáticamente el mapa histórico; luego se refresca semanalmente. Los anclajes de una misma URL se normalizan. Si una URL antigua devuelve 404/410, el recuperador busca alternativas en el mapa oficial y vuelve a contrastar la identidad y el contenido. Cuando la URL recuperada ya tiene ficha, solo cierra el alias después de comprobar que la ficha canónica está publicada con la misma huella de fuente validada; conserva la trazabilidad histórica sin duplicar el catálogo.
 
-GitHub programa las ejecuciones, pero sus horarios pueden retrasarse. `/api/health` separa disponibilidad del servicio de frescura documental y muestra el último latido, antigüedad, etapas y recuentos, sin credenciales. No afirma cobertura completa si quedan pendientes, reintentos o cuarentenas. Las fuentes ya publicadas se contrastan de nuevo al vencer su plazo de refresco semanal; las fuentes nuevas entran desde el mapa periódico.
+GitHub programa las ejecuciones, pero sus horarios pueden retrasarse. `/api/health` informa de disponibilidad. El detalle de frescura documental —último latido, antigüedad, etapas y recuentos— requiere la credencial interna `x-clave`; una sesión de cliente no lo habilita. Ninguna respuesta contiene credenciales. No afirma cobertura completa si quedan pendientes, reintentos o cuarentenas. Las fuentes ya publicadas se contrastan de nuevo al vencer su plazo de refresco semanal; las fuentes nuevas entran desde el mapa periódico.
 
 ## Validación
 

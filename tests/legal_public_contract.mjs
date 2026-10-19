@@ -29,6 +29,11 @@ assert.match(imprint.body,/Ejemplo de Titular/);
 assert.match(imprint.body,/Beispielstrasse 19/);
 assert.match(imprint.body,/mailto:/);
 assert.match(imprint.body,/Faro de Intamar/);
+const economicImprint=render('impressum',{...synthetic,EUCLIDIAN_LEGAL_W_ID:'DE000000000-00001'});
+assert.match(economicImprint.body,/Wirtschafts-Identifikationsnummer<\/h2><p>DE000000000-00001/);
+assert.doesNotMatch(economicImprint.body,/Umsatzsteuer-Identifikationsnummer/);
+const escapedId=render('impressum',{...synthetic,EUCLIDIAN_LEGAL_W_ID:'<img src=x>'});
+assert.ok(escapedId.body.includes('&lt;img src=x&gt;'));
 assert.match(imprint.body,/https:\/\/euclidianet.com\/impressum/);
 assert.match(imprint.headers['Content-Security-Policy'],/default-src 'none'/);
 assert.equal(render('impressum',synthetic,'HEAD').body,'');
@@ -59,3 +64,14 @@ assert.ok(index.includes('<link rel="canonical" href="https://euclidianet.com/">
 assert.ok(read('robots.txt').includes('https://euclidianet.com/sitemap.xml'));
 assert.ok(read('sitemap.xml').includes('https://euclidianet.com/'));
 console.log('LEGAL PUBLIC: endpoints closed by default, mock approved render, security, paths and SEO OK');
+
+// El aviso corresponde a preparación, sin convertir una política en permiso de apertura.
+assert.match(privacy.body,/registro, el acceso de usuarios externos/);
+assert.match(privacy.body,/Cloudflare Email Routing/);
+assert.match(privacy.body,/Gmail \(Google\)/);
+assert.match(privacy.body,/2026\/179/);
+assert.match(privacy.body,/datenschutz.hessen.de/);
+assert.doesNotMatch(privacy.body,/deben evaluarse|deberán cumplir|deben contrastarse/);
+for (const file of ['index.html','app.html','api/baja.js']) {
+ assert.doesNotMatch(read(file),/https:\/\/fonts\.(?:googleapis|gstatic)\.com/);
+}

@@ -21,9 +21,6 @@
 <meta name="twitter:description" content="Documentos tributarios DIAN organizados por fechas, contexto y fuente oficial.">
 <meta name="twitter:image" content="https://euclidianet.com/euclides.png">
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"EUCLIDIAN","applicationCategory":"BusinessApplication","operatingSystem":"Web","description":"Plataforma de consulta de información tributaria DIAN organizada con trazabilidad a fuentes oficiales.","inLanguage":"es-CO"}</script>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/landing.css">
 <link rel="stylesheet" href="/identidad-publica.css">
 <link rel="stylesheet" href="/hero-publico-responsive.css">
@@ -45,7 +42,7 @@ if(location.search.includes('q=')||location.search.includes('doc=')||location.ha
       <a href="#por-dentro">Por dentro</a>
       <a href="#guias">Guías</a>
       <a href="#suscripcion">Suscripción</a>
-      <a class="login" href="/app.html">Entrar</a>
+      <a class="login" href="/app.html">Acceso interno</a>
     </nav>
   </div>
 </header>
@@ -63,7 +60,7 @@ if(location.search.includes('q=')||location.search.includes('doc=')||location.ha
       <p class="hero-remate">Tu apoyo diario para investigar y contrastar. <span class="firma-euclides">Euclides trazaba líneas. Nosotros seguimos las fuentes.</span></p>
       <div class="hero-actions">
         <a class="primary" href="#por-dentro">Echa un vistazo <span aria-hidden="true">↓</span></a>
-        <a class="secondary" href="/app.html">Ya tengo acceso <span aria-hidden="true">→</span></a>
+        <a class="secondary" href="/app.html">Acceso interno <span aria-hidden="true">→</span></a>
       </div>
     </div>
   </section>
@@ -89,7 +86,7 @@ if(location.search.includes('q=')||location.search.includes('doc=')||location.ha
     </div>
     <div class="muestra-marco">
       <div class="muestra-barra"><span class="mini-marca">EUCL<em>i</em>DIAN</span><span>Vista de ejemplo</span><span class="muestra-puntos" aria-hidden="true">○ ○ ○</span></div>
-      <div class="muestra-vista" id="vistaConsulta" role="tabpanel" aria-labelledby="muestraConsulta">
+      <div class="muestra-vista" id="vistaConsulta" role="tabpanel" tabindex="0" aria-labelledby="muestraConsulta">
         <div class="muestra-pantalla">
           <div class="mini-kicker">CONSULTAR</div><h3>Un número, una palabra, un tema.</h3>
           <div class="mini-buscador" aria-label="Ejemplo de búsqueda"><span>16681</span><span>Buscar ⌕</span></div>
@@ -103,7 +100,7 @@ if(location.search.includes('q=')||location.search.includes('doc=')||location.ha
         </div>
         <div class="muestra-explica"><span class="eyebrow">EL DOCUMENTO, A MANO</span><h3>Encuentra. Lee. Contrasta.</h3><p>Busca por número, palabra o tema. La ficha separa la fecha del documento de la fecha en que la DIAN lo publicó en su web.</p><p>Abre los detalles cuando necesites profundidad y consulta siempre la fuente oficial al aplicar un criterio.</p></div>
       </div>
-      <div class="muestra-vista" id="vistaNovedades" role="tabpanel" aria-labelledby="muestraNovedades" hidden>
+      <div class="muestra-vista" id="vistaNovedades" role="tabpanel" tabindex="0" aria-labelledby="muestraNovedades" hidden>
         <div class="muestra-pantalla">
           <div class="mini-kicker">NOVEDADES</div><h3>Lo reciente, con su fecha a la vista.</h3><p class="mini-ayuda">Ejemplo de una publicación incorporada a la biblioteca.</p>
           <article class="mini-ficha"><span class="mini-codigo">PUBLICACIÓN WEB · 5 OCT 2026</span><h4>Oficio 16681 de 2026 DIAN</h4><p>Renta · Recursos de organismos deportivos.</p><div class="mini-fechas"><span>Documento del <b>24 de septiembre de 2026</b></span><span>Publicado en la web el <b>5 de octubre de 2026</b></span></div><span class="mini-ver">Ver detalles y fuente →</span></article>
@@ -111,7 +108,7 @@ if(location.search.includes('q=')||location.search.includes('doc=')||location.ha
         </div>
         <div class="muestra-explica"><span class="eyebrow">SIN MEZCLAR LAS FECHAS</span><h3>¿Nuevo documento o nueva publicación?</h3><p>Novedades reúne las publicaciones de los últimos 14 días según las fechas comprobadas disponibles. Las dos fechas se muestran por separado.</p><p>Esta muestra utiliza una publicación real de octubre de 2026; es un ejemplo de la vista, no un listado en vivo.</p></div>
       </div>
-      <div class="muestra-vista" id="vistaTemas" role="tabpanel" aria-labelledby="muestraTemas" hidden>
+      <div class="muestra-vista" id="vistaTemas" role="tabpanel" tabindex="0" aria-labelledby="muestraTemas" hidden>
         <div class="muestra-pantalla">
           <div class="mini-kicker">EXPLORAR</div><h3>Tus temas. Sin rodeos.</h3><p class="mini-ayuda">Conserva a mano las áreas que consultas.</p>
           <div class="mini-selector">Añadir un tema <span>Elige un tema… ▾</span></div>

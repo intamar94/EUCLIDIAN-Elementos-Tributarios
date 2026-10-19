@@ -61,7 +61,7 @@ SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_KEY")
 RESEND_KEY = os.getenv("RESEND_API_KEY")
 REMITENTE = os.getenv("EUCLIDIAN_REMITENTE",
                       "EUCLIDIAN <onboarding@resend.dev>")
-BASE_URL = os.getenv("EUCLIDIAN_BASE_URL", "https://euclidian.co")
+BASE_URL = os.getenv("EUCLIDIAN_BASE_URL", "https://euclidianet.com")
 
 RESEND_API = "https://api.resend.com/emails"
 DOMINIO_OFICIAL = "normograma.dian.gov.co"
