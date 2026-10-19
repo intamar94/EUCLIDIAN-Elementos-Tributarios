@@ -12,7 +12,7 @@ export default async function handler(req,res){
   if(req.method!=='POST')return res.status(405).json({error:'method_not_allowed'});
   if(process.env.PAYMENT_PROVIDER!=='stripe'||!process.env.STRIPE_SECRET_KEY||!process.env.STRIPE_WEBHOOK_SECRET)return res.status(503).json({error:'webhook_no_configurado'});
   let event,raw;const stripe=stripeClient();
-  try{raw=await rawBody(req);event=stripe.webhooks.constructEvent(raw,req.headers['stripe-signature'],process.env.STRIPE_WEBHOOK_SECRET);}
+  try{raw=await rawBody(req);event=await stripe.webhooks.constructEventAsync(raw,req.headers['stripe-signature'],process.env.STRIPE_WEBHOOK_SECRET);}
   catch(_){return res.status(400).json({error:'firma_o_payload_invalido'});}
   if(event.livemode!==process.env.STRIPE_SECRET_KEY.startsWith('sk_live_'))return res.status(400).json({error:'modo_pago_no_coincide'});
   if(!TIPOS.has(event.type))return res.status(200).json({received:true,ignored:true});
