@@ -291,3 +291,9 @@ article:after{content:"";position:absolute;width:54px;height:54px;right:-29px;to
   .ficha-acciones-lectura{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
   .ficha-acciones-lectura .guardar-documento{min-height:44px}
 }
+
+/* Los campos de al menos 16 px evitan el zoom automático al escribir en iOS. */
+@media(max-width:720px){
+  #puerta .auth-form input,#puerta .acceso-interno input,
+  .buscador input,.perfil-form input,select,textarea{font-size:16px}
+}

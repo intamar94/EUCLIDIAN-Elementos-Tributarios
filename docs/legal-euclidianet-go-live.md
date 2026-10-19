@@ -25,7 +25,8 @@
 | EUCLIDIAN_LEGAL_EMAIL | **CONFIGURADO** | `contacto@euclidianet.com`, Vercel `production`/`preview`, Cloudflare Email Routing activo; falta correo de prueba |
 | EUCLIDIAN_LEGAL_APPROVED | **CONFIGURADO EN 0** | El servicio permanece bloqueado hasta Gewerbe, nombre/domicilio comprobados y revisión jurídica de privacidad; elevar a 1 solo tras validación |
 | EUCLIDIAN_LEGAL_PHONE | Condicional | Teléfono o medio de comunicación directo si corresponde y se autoriza |
-| EUCLIDIAN_LEGAL_VAT_ID | Condicional | SOLO si se dispone de USt-IdNr/W-IdNr oficial; **nunca Steuernummer personal** |
+| EUCLIDIAN_LEGAL_VAT_ID | Condicional | SOLO si se dispone de USt-IdNr oficial; **nunca Steuernummer personal** |
+| EUCLIDIAN_LEGAL_W_ID | Condicional | Wirtschafts-Identifikationsnummer oficial si se posee; etiqueta separada de la USt-IdNr |
 
 **Precaución:** estas variables pueden ocultarse del código pero se harán públicas en el HTML del Impressum al aprobar. Solicitar el consentimiento expreso de la titular para el nombre y domicilio exactos en la web. Cloudflare reenvía correo del dominio a Gmail, no crea por sí solo una bandeja de salida con ese remitente.
 
@@ -84,3 +85,16 @@ Antes de levantar esa compuerta:
 
 Las modificaciones de esta rama todavía deben desplegarse para estar en la web.
 La configuración y las pruebas no constituyen certificación jurídica de cumplimiento.
+
+## Actualización posterior de estado (19/10/2026)
+
+La titular informa confirmación municipal por correo del registro del Gewerbe y
+autoriza avanzar hacia apertura. Esta actualización sustituye únicamente el estado
+administrativo de envío pendiente descrito arriba; la evidencia personal se conserva
+fuera del repositorio. No acredita por sí sola aprobación de privacidad, contratos,
+configuración de cobros ni apertura técnica. El aviso implementado aún describe preparación.
+
+El [expediente de apertura](LEGAL_LANZAMIENTO_20261019.md) detalla brechas por flujo,
+conservación, contratos y transferencias. Incluye la decisión de adecuación para Brasil
+2026/179: la región brasileña no constituye por sí sola un bloqueo; comprobar además
+encargo de tratamiento y operaciones en otros destinos. Ninguna bandera se modifica.
