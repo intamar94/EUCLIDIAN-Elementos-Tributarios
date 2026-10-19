@@ -51,21 +51,49 @@ r=res();await checkout({method:'POST',body:{},headers:{}},r);assert.equal(r.code
 process.env.EUCLIDIAN_APP_URL='https://euclidian.example/';
 global.fetch=async()=>json({},401);r=res();await checkout({method:'POST',body:{user_id:uid,precio:1},headers:{authorization:'Bearer fake'}},r);assert.equal(r.code,401);
 // Compra completa con cliente verificado: ni precio ni identidad del body mandan.
-let sessionBody,existing=false,busy=false;
+let sessionBody,existing=false,busy=false,proveedor='stripe';
+const openSession={id:'cs_existing',status:'open',url:'https://checkout.stripe.com/existing',mode:'subscription',livemode:false,
+ customer:'cus_contract',client_reference_id:uid,metadata:{euclidian_user_id:uid,euclidian_plan:'pro'},
+ line_items:{has_more:false,data:[{price:{id:'price_pro'},quantity:1}]},
+ success_url:'https://euclidian.example/app.html?pago=confirmando',cancel_url:'https://euclidian.example/app.html?pago=cancelado'};
+let previousSession=openSession;
+let unlocks=0;
 global.fetch=async(url,options={})=>{
  const s=String(url);
  if(s.includes('/auth/v1/user'))return json({id:uid,email:'verified@example.com'});
  if(s.includes('/planes_suscripcion'))return json([{codigo:'pro',stripe_price_id:'price_pro',precio_mensual:59900,moneda:'COP'}]);
- if(s.includes('/accesos_suscripcion')&&(!options.method||options.method==='GET'))return json([{proveedor:'stripe',proveedor_customer_id:'cus_contract',estado:'pendiente'}]);
+ if(s.includes('/accesos_suscripcion')&&(!options.method||options.method==='GET'))return json([{proveedor,proveedor_customer_id:'cus_contract',estado:'pendiente'}]);
  if(s.includes('/rpc/euclidian_reservar_checkout'))return json(busy?{ocupado:true}:{clave:uid,session_id:existing?'cs_existing':null});
- if(s.includes('/accesos_suscripcion'))return new Response(null,{status:204});
+ if(s.includes('/accesos_suscripcion')){if(JSON.parse(options.body).checkout_bloqueado_hasta===null)unlocks++;return new Response(null,{status:204});}
  if(s.includes('/v1/prices/'))return json({active:true,type:'recurring',currency:'cop',unit_amount:5990000,recurring:{interval:'month',interval_count:1}});
- if(s.includes('/v1/checkout/sessions/cs_existing'))return json({id:'cs_existing',status:'open',url:'https://checkout.stripe.com/existing'});
+ if(s.includes('/v1/checkout/sessions/cs_existing'))return json(previousSession);
  if(s.includes('/v1/checkout/sessions')){sessionBody=new URLSearchParams(options.body);return json({id:'cs_new',url:'https://checkout.stripe.com/new'});}
  throw new Error('upstream inesperado');
 };
 r=res();await checkout({method:'POST',body:{plan_codigo:'pro',user_id:'otro',precio:1,success_url:'https://attacker.example'},headers:{authorization:'Bearer verified'}},r);
 assert.equal(r.code,200);assert.equal(sessionBody.get('client_reference_id'),uid);assert.equal(sessionBody.get('line_items[0][price]'),'price_pro');assert.equal(sessionBody.get('subscription_data[metadata][euclidian_user_id]'),uid);assert.equal(sessionBody.get('success_url'),'https://euclidian.example/app.html?pago=confirmando');
 existing=true;sessionBody=null;r=res();await checkout({method:'POST',body:{plan_codigo:'pro'},headers:{authorization:'Bearer verified'}},r);assert.equal(r.body.url,'https://checkout.stripe.com/existing');assert.equal(sessionBody,null);
+// La sesión reservada debe corresponder a esta compra exacta. Rechazar sin
+// crear otra sesión evita dos suscripciones cobrables para el mismo usuario.
+for(const altered of [
+ {customer:'cus_other'}, {client_reference_id:'otro'}, {mode:'payment'}, {livemode:true},
+ {metadata:{euclidian_user_id:'otro',euclidian_plan:'pro'}},
+ {metadata:{euclidian_user_id:uid,euclidian_plan:'otro'}},
+ {line_items:{has_more:false,data:[{price:{id:'price_old'},quantity:1}]}},
+ {line_items:{has_more:false,data:[{price:{id:'price_pro'},quantity:2}]}},
+ {line_items:{has_more:true,data:[{price:{id:'price_pro'},quantity:1}]}},
+ {line_items:{has_more:false,data:[]}}, {line_items:null},
+ {success_url:'https://old.example/app.html?pago=confirmando'}, {cancel_url:'https://old.example/'}, {url:null}
+]){
+ previousSession={...openSession,...altered};sessionBody=null;const before=unlocks;
+ r=res();await checkout({method:'POST',body:{plan_codigo:'pro'},headers:{authorization:'Bearer verified'}},r);
+ assert.equal(r.code,409,JSON.stringify(altered));assert.equal(r.body.error,'checkout_existente_no_coincide');
+ assert.equal(sessionBody,null);assert.equal(unlocks,before+1,'La reserva se libera también al rechazar');
+}
+previousSession={...openSession,customer:{id:'cus_contract'}};
+r=res();await checkout({method:'POST',body:{plan_codigo:'pro'},headers:{authorization:'Bearer verified'}},r);assert.equal(r.code,200);
+proveedor='otro';sessionBody=null;r=res();await checkout({method:'POST',body:{plan_codigo:'pro'},headers:{authorization:'Bearer verified'}},r);
+assert.equal(r.code,409);assert.equal(r.body.error,'cliente_pago_no_configurado');assert.equal(sessionBody,null);
+proveedor='stripe';previousSession=openSession;
 busy=true;r=res();await checkout({method:'POST',body:{plan_codigo:'pro'},headers:{authorization:'Bearer verified'}},r);assert.equal(r.code,409);
 console.log('Pagos: firma, modo, factura impagada, cancelación, replay, reintento, período y cierre seguro OK');

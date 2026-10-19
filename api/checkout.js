@@ -20,6 +20,7 @@ export default async function handler(req,res){
     const plan=await planPago(codigo);
     if(!plan)return res.status(409).json({error:'plan_sin_precio_configurado'});
     const acceso=await accesoPago(user.id);
+    if(acceso.proveedor_customer_id&&acceso.proveedor!=='stripe')return res.status(409).json({error:'cliente_pago_no_configurado'});
     if(acceso.proveedor_suscripcion_id&&acceso.estado!=='canceled')return res.status(409).json({error:'gestiona_suscripcion_existente'});
     const stripe=stripeClient();
     const price=await stripe.prices.retrieve(plan.stripe_price_id);
@@ -40,8 +41,23 @@ export default async function handler(req,res){
     if(reserva.existente)return res.status(409).json({error:'gestiona_suscripcion_existente'});
     try{
     if(reserva.session_id){
-      const anterior=await stripe.checkout.sessions.retrieve(reserva.session_id);
-      if(anterior.status==='open')return res.status(200).json({url:anterior.url});
+      const anterior=await stripe.checkout.sessions.retrieve(reserva.session_id,{expand:['line_items']});
+      if(anterior.status==='open'){
+        const items=anterior.line_items;
+        const customerId=typeof anterior.customer==='string'?anterior.customer:anterior.customer?.id;
+        // Una reserva pertenece al usuario, pero puede conservar una compra de
+        // otro plan o una URL anterior. No entregar un checkout distinto al solicitado.
+        if(anterior.mode!=='subscription'||anterior.livemode!==process.env.STRIPE_SECRET_KEY.startsWith('sk_live_')
+          ||customerId!==customer||anterior.client_reference_id!==user.id
+          ||anterior.metadata?.euclidian_user_id!==user.id||anterior.metadata?.euclidian_plan!==plan.codigo
+          ||items?.has_more!==false||items.data?.length!==1
+          ||items.data[0].price?.id!==plan.stripe_price_id||items.data[0].quantity!==1
+          ||anterior.success_url!==`${config.origen}/app.html?pago=confirmando`
+          ||anterior.cancel_url!==`${config.origen}/app.html?pago=cancelado`||!anterior.url){
+          return res.status(409).json({error:'checkout_existente_no_coincide'});
+        }
+        return res.status(200).json({url:anterior.url});
+      }
       if(anterior.status==='complete'&&!(acceso.estado==='canceled'&&anterior.subscription===acceso.proveedor_suscripcion_id))return res.status(409).json({error:'pago_pendiente_confirmacion'});
       reserva=await db('rpc/euclidian_reservar_checkout',{method:'POST',body:JSON.stringify({p_user_id:user.id,p_clave:reserva.clave,p_reiniciar:true})});
     }
