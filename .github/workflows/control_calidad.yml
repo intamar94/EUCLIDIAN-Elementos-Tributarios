@@ -104,6 +104,8 @@ jobs:
         run: node tests/evidencia_pasajes_contract.mjs
       - name: Contrato comparador normativo exploratorio
         run: node tests/comparador_documental_contract.mjs
+      - name: Contrato continuidad de selección del comparador
+        run: node tests/comparador_continuidad_contract.mjs
       - name: Contrato expediente profesional temporal
         run: node tests/expedientes_contract.mjs
       - name: Contrato exportación profesional Word y PDF
