@@ -55,6 +55,7 @@ async function authToken(){
 }
 function authMostrarPuerta(){window.EuclidianExpedientes?.limpiar();
   window.EuclidianHerramientas?.limpiar();
+  window.EuclidianComparador?.limpiar();window.EuclidianInformes?.limpiar();
   window.euclidianRestablecerVista?.();
   const puerta=document.getElementById('puerta');if(puerta)puerta.hidden=false;
   ['cab','inicioPanel','novedadesCab','controles','barra','cuentaPanel','bienvenida','lista','paginas'].forEach(id=>{const el=document.getElementById(id);if(el)el.hidden=true;});
@@ -189,7 +190,9 @@ window.addEventListener('storage',e=>{
 window.euclidianAuthExpirada=()=>{authClear();authMostrarPuerta();authStatus('Tu sesión terminó. Vuelve a entrar.','aviso');};
 window.euclidianMostrarCuenta=authCuenta;
 window.euclidianAuthSinSuscripcion=async info=>{
+  const generacion=authGeneracion;
   const data=await authCuenta();
+  if(generacion!==authGeneracion||!data)return null;
   authOcultarPuerta();
   const estado=document.getElementById('cuentaEstado');
   if(estado&&info?.access?.estado)estado.textContent=String(info.access.estado).replaceAll('_',' ');

@@ -125,8 +125,10 @@ function limpiarSeleccion(){
  pasajesEditados.clear();
  const dlg=typeof document!=='undefined'?document.getElementById('euComparadorDialog'):null;
  if(dlg?.open)dlg.close();
+ dlg?.remove();
  mostrarSeleccion();
 }
+function limpiarSesion(){limpiarSeleccion();catalogo.clear();}
 function crearVentana(){
  let dlg=document.getElementById('euComparadorDialog');
  if(dlg)return dlg;
@@ -227,5 +229,5 @@ if(typeof document!=='undefined'){
   else avisar('Texto '+lado.toUpperCase()+' seleccionado. Elige el otro documento, también puede ser de otra búsqueda.',boton);
  });
 }
-window.EuclidianComparador={panel,preparar,marcado,fuenteOficial,borrador};
+window.EuclidianComparador={panel,preparar,marcado,fuenteOficial,borrador,limpiar:limpiarSesion};
 })();

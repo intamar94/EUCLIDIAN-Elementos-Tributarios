@@ -48,4 +48,12 @@ print('3 DOCX: ZIP CRC, XML válido, saltos y jerarquía accesible OK')
 `,dir],{encoding:'utf8'});
  console.log(result.trim());
 }finally{rmSync(dir,{recursive:true,force:true});}
+api.limpiar(); // Sin DOM en evaluación local: no falla.
+let cerrado=false,retirado=false,marcoRetirado=false;
+const marco={srcdoc:'contenido del expediente',removeAttribute(nombre){assert.equal(nombre,'src');},remove(){marcoRetirado=true;}};
+const dialogo={open:true,close(){cerrado=true;this.open=false;},remove(){retirado=true;}};
+context.document={getElementById:id=>id==='euInformePreview'?dialogo:id==='euInformeMarco'?marco:null};
+api.limpiar();
+assert.equal(marco.srcdoc,'');assert.ok(cerrado&&retirado&&marcoRetirado,'Eliminar documento y ventana al limpiar sesión');
+context.document.getElementById=()=>null;api.limpiar();
 console.log('M4 cierre: checklist, borradores, HTML seguro, nombres y OOXML válidos OK');

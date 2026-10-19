@@ -26,8 +26,19 @@ const assert=require('node:assert/strict');
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,'Sin desbordamiento '+width);
   await page.locator('#labTabAsistente').focus();await page.keyboard.press('Home');assert.equal(await page.locator('#labTabCartera').getAttribute('aria-selected'),'true');await page.keyboard.press('End');assert.equal(await page.locator('#labTabAsistente').getAttribute('aria-selected'),'true');
   await page.getByRole('button',{name:'Buscar estas palabras',exact:true}).click();await page.locator('#controles').waitFor({state:'visible'});assert.ok((await page.locator('#consulta').inputValue()).length>0);
-  await page.evaluate(()=>window.euclidianAuthExpirada());await page.locator('#puerta').waitFor({state:'visible'});
+  await page.evaluate(async()=>{
+   const d={id:'session-a',titulo:'Pasaje confidencial temporal',numero_resolucion:'PRUEBA-A',enlace_oficial:'https://normograma.dian.gov.co/dian/compilacion/docs/prueba.htm',texto_completo:'Texto temporal de una investigación que debe borrarse al terminar la sesión de acceso del usuario.'};
+   const slot=document.createElement('div');slot.innerHTML=window.EuclidianComparador.panel(d)+window.EuclidianComparador.panel({...d,id:'session-b',numero_resolucion:'PRUEBA-B'});document.body.appendChild(slot);
+   slot.querySelector('[data-comp-lado="a"]').click();slot.querySelectorAll('[data-comp-lado="b"]')[1].click();
+   window.EuclidianExpedientes.nuevo('Informe temporal que debe borrarse');
+   window.EuclidianInformes.abrirPDF(window.EuclidianExpedientes.estadoActual());
+   const pending=window.euclidianAuthSinSuscripcion({access:{estado:'pendiente'}});
+   window.euclidianAuthExpirada();await pending;slot.remove();
+  });await page.locator('#puerta').waitFor({state:'visible'});
   assert.equal(await page.evaluate(()=>window.EuclidianCartera.estadoActual().length),0);assert.equal(await page.evaluate(()=>window.EuclidianAgenda.tieneDatos()),false);assert.equal(await page.locator('#agendaTarea').inputValue(),'','El borrador del formulario también se borra al expirar');assert.equal(await page.locator('#asistentePregunta').inputValue(),'');assert.equal(await page.locator('#exogenaPanel input[type="file"]').inputValue(),'');
+  assert.equal(await page.locator('#euComparadorDialog').count(),0,'El comparador no retiene pasajes después de expirar');
+  assert.equal(await page.locator('#euInformePreview').count(),0,'El informe no retiene datos en iframe después de expirar');
+  assert.equal(await page.locator('#puerta').isVisible(),true,'Una respuesta tardía no vuelve a abrir el acceso');
   assert.deepEqual(errors,[]);await context.close();console.log('Laboratorio integrado '+width+'px: perfiles, agenda, CSV ficticio, guía, teclado, búsqueda y limpieza de sesión OK');
  }}finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});

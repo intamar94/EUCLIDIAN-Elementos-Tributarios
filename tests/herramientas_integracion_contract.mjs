@@ -12,3 +12,6 @@ assert.match(auth,/function authMostrarPuerta\(\)[\s\S]*?EuclidianHerramientas\?
 assert.match(bandeja,/if\(r.status===402\)\{\s*window.EuclidianHerramientas\?\.limpiar\(\)/);
 assert.match(bandeja,/euclidianBuscarTexto=texto=>\{\s*if\(typeof texto!=='string'\|\|!accesoConsulta/);
 console.log('Integración local: módulos, limpieza, salida voluntaria y búsqueda detrás de acceso comprobados.');
+
+for(const api of ['EuclidianComparador','EuclidianInformes']){assert.match(auth,new RegExp(api+'\\?\\.limpiar\\(\\)'));assert.match(bandeja,new RegExp(api+'\\?\\.limpiar\\(\\)'));}
+assert.match(auth,/const generacion=authGeneracion;\s*const data=await authCuenta\(\);\s*if\(generacion!==authGeneracion\|\|!data\)return null;/);

@@ -25,6 +25,11 @@ function agregar(v){const x=normalizar(v);if(items.size>=MAX)throw Error('Máxim
 function listar(){return [...items.values()].sort((a,b)=>a.fecha.localeCompare(b.fecha)||a.id.localeCompare(b.id)).map(x=>({...x}));}
 function completar(id,valor){if(!items.has(id)||typeof valor!=='boolean')return false;items.get(id).completada=valor;render();return true;}
 function eliminar(id){const ok=items.delete(id);render();return ok;}
+function tieneDatos(){
+ if(items.size)return true;
+ const formulario=document.getElementById('agendaFormulario');
+ return !!formulario&&['titulo','fecha','referencia','url'].some(k=>String(formulario.elements[k]?.value||'').trim().length>0);
+}
 function limpiar(){items.clear();secuencia=0;document.getElementById('agendaFormulario')?.reset();mensaje='Agenda vaciada. No se guardaron datos en el servidor.';render();}
 // Prefix even whitespace-separated formula triggers: spreadsheet programs may strip it.
 function celdaCSV(v){let s=String(v).replace(/[\r\n]+/g,' ');if(/^[\s]*[=+\-@\t]/.test(s))s="'"+s;return '"'+s.replace(/"/g,'""')+'"';}
@@ -44,7 +49,7 @@ function render(){
  p.querySelectorAll('[data-eliminar]').forEach(el=>el.addEventListener('click',()=>{eliminar(el.dataset.eliminar);document.getElementById('agendaTarea')?.focus();}));
  if(foco?.startsWith('agendaCheck-'))document.getElementById(foco)?.focus();
 }
-window.EuclidianAgenda=Object.freeze({agregar,listar,completar,eliminar,limpiar,csv,fechaValida,render,tieneDatos:()=>items.size>0});
-window.addEventListener('beforeunload',e=>{if(items.size){e.preventDefault();e.returnValue='';}});
+window.EuclidianAgenda=Object.freeze({agregar,listar,completar,eliminar,limpiar,csv,fechaValida,render,tieneDatos});
+window.addEventListener('beforeunload',e=>{if(tieneDatos()){e.preventDefault();e.returnValue='';}});
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',render);else render();
 })();

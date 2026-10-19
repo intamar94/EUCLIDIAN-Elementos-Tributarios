@@ -190,7 +190,7 @@ async function cargar(autenticar=false){
       throw new Error(token?'Tu sesión terminó. Vuelve a entrar.':'Clave interna incorrecta.');
     }
     if(r.status===402){
-      window.EuclidianHerramientas?.limpiar();window.EuclidianExpedientes?.limpiar();
+      window.EuclidianHerramientas?.limpiar();window.EuclidianExpedientes?.limpiar();window.EuclidianComparador?.limpiar();window.EuclidianInformes?.limpiar();
       accesoConsulta=false;['inicioDocumentos','inicioNovedades','explorarTemas','estadoTemas'].forEach(id=>document.getElementById(id)?.replaceChildren());
       document.getElementById('puerta').hidden=true;
       document.getElementById('cab').hidden=false;
@@ -222,96 +222,22 @@ async function cargar(autenticar=false){
 function poblarTemas(temas){
   const sel=document.getElementById('selTema');if(!sel)return;
   const actual=sel.value;
-  const orden=[...temas].filter(t=>typeof t==='string'&&!t.startsWith('dian:')).sort((a,b)=>nombreTema(a).localeCompare(nombreTema(b),'es'));
-  const grupo=(nombre,items)=>items.length?`<optgroup label="${nombre}">${items.map(t=>`<option value="${esc(t)}">${esc(nombreTema(t))}</option>`).join('')}</optgroup>`:'';
-  sel.innerHTML='<option value="">Todos los temas y publicaciones</option>'+grupo('Temas de trabajo',orden.filter(esTemaDeTrabajo))+grupo('Publicaciones DIAN',orden.filter(t=>!esTemaDeTrabajo(t)));
-  sel.value=actual;
-}
-
-function poblarAnios(anios){const sel=document.getElementById('selAnio');if(!sel)return;const actual=/^\d{4}$/.test(F.periodo)?F.periodo:'';sel.innerHTML='<option value="">Todos los años</option>'+anios.filter(x=>Number.isInteger(x.anio)&&x.anio>=1950&&x.anio<=new Date().getFullYear()+1).map(x=>`<option value="${x.anio}">${x.anio} · ${Number(x.total||0).toLocaleString('es-CO')}</option>`).join('');sel.value=actual;}
-function seleccionarAnio(anio){F.periodo=anio||'todo';F.pagina=1;marcarActivos();cargar().catch(()=>{});}
-function paginacion(data){const cont=document.getElementById('paginas'),{pagina,paginas,total,porPagina}=data;if(total===0){cont.innerHTML='';const r=document.getElementById('rango');if(r)r.textContent=F.estado==='nuevos'?'0 publicaciones en los últimos 14 días':'0 resultados con estos filtros';return;}const primero=(pagina-1)*porPagina+1,ultimo=Math.min(pagina*porPagina,total),r=document.getElementById('rango');if(r)r.textContent=`${Number(total).toLocaleString('es-CO')} documentos disponibles · mostrando ${primero}–${ultimo}`;let html='';if(paginas>1){html+=`<button aria-label="Página anterior" onclick="irA(${pagina-1})" ${pagina<=1?'disabled':''}>‹</button>`;const nums=new Set([1,paginas,pagina,pagina-1,pagina+1]),orden=[...nums].filter(n=>n>=1&&n<=paginas).sort((a,b)=>a-b);let previo=0;orden.forEach(n=>{if(n-previo>1)html+='<span style="color:var(--tenue)">…</span>';html+=`<button onclick="irA(${n})" aria-label="Página ${n}" aria-current="${n===pagina?'page':'false'}">${n}</button>`;previo=n;});html+=`<button aria-label="Página siguiente" onclick="irA(${pagina+1})" ${pagina>=paginas?'disabled':''}>›</button>`;}cont.innerHTML=html;}
-async function irA(n){
-  F.pagina=n;
-  const data=await cargar().catch(()=>null);
-  if(data&&['consultar','novedades'].includes(vistaActual)){
-    const lista=document.getElementById('lista');
-    lista?.focus({preventScroll:true});lista?.scrollIntoView({block:'start',behavior:'instant'});
+  const orde…5425 tokens truncated…cerrar')){crearVentana().close();return;}
+  if(boton.hasAttribute('data-comp-ejecutar')){resultado();return;}
+  if(boton.hasAttribute('data-comp-exportar')){exportar();return;}
+  if(boton.hasAttribute('data-comp-limpiar')||boton.hasAttribute('data-comp-limpiar-global')){
+   limpiarSeleccion();return;
   }
-}
-
-function filtrosActivos(){
-  return [
-    ['doc',F.doc,'Documento seleccionado'],
-    ['q',F.q,`Búsqueda: ${F.q}`],
-    ['tema',F.tema,`Tema: ${nombreTema(F.tema)}`],
-    ['estado',F.estado!=='todos', 'Publicaciones recientes'],
-    ['periodo',F.periodo!=='todo',`Año: ${F.periodo}`]
-  ].filter(([,activo])=>activo).map(([campo,,etiqueta])=>({campo,etiqueta}));
-}
-function marcarActivos(){
-  const activos=filtrosActivos(),btn=document.getElementById('btnLimpiar');
-  if(btn)btn.hidden=activos.length===0;
-  let resumen=document.getElementById('filtrosActivos');
-  const estado=document.getElementById('estadoConsulta');
-  if(!resumen&&estado){
-    resumen=document.createElement('div');resumen.id='filtrosActivos';resumen.className='filtros-activos';
-    resumen.setAttribute('role','group');resumen.setAttribute('aria-label','Filtros aplicados. Puedes quitar cada uno.');
-    estado.before(resumen);
+  const lado=boton.dataset.compLado,id=boton.dataset.compId,p=catalogo.get(id);
+  if(!p)return;
+  if(seleccion[lado==='a'?'b':'a']?.id===p.id){
+   avisar('Elige dos documentos distintos para comparar.',boton);return;
   }
-  if(resumen){
-    resumen.hidden=activos.length===0;
-    resumen.innerHTML=activos.map(({campo,etiqueta})=>`<button type="button" data-quitar-filtro="${campo}" aria-label="Quitar ${esc(etiqueta)}"><span>${esc(etiqueta)}</span><b aria-hidden="true">×</b></button>`).join('');
-  }
+  seleccion[lado]=p;
+  mostrarSeleccion();
+  if(seleccion.a&&seleccion.b)abrir();
+  else avisar('Texto '+lado.toUpperCase()+' seleccionado. Elige el otro documento, también puede ser de otra búsqueda.',boton);
+ });
 }
-function quitarFiltro(campo){
-  const controles={q:'consulta',tema:'selTema',estado:'selEstado',periodo:'selAnio',doc:'consulta'};
-  if(!Object.hasOwn(controles,campo))return;
-  F[campo]=campo==='estado'?'todos':campo==='periodo'?'todo':'';
-  F.pagina=1;
-  if(campo==='doc')history.replaceState(null,'',location.pathname);
-  const control=document.getElementById(controles[campo]);
-  if(control){if(campo!=='doc')control.value=campo==='periodo'?'':F[campo];control.focus();}
-  if(vistaActual==='novedades')mostrarVista('consultar');
-  cargar().catch(()=>{});
-}
-function reiniciarFiltros(){F.orden='recientes';document.getElementById('selOrden').value='recientes';F.q='';F.doc='';F.tema='';F.estado='todos';F.periodo='todo';F.pagina=1;history.replaceState(null,'',location.pathname);const consulta=document.getElementById('consulta');if(consulta)consulta.value='';document.getElementById('selTema').value='';const anio=document.getElementById('selAnio');if(anio)anio.value='';const estado=document.getElementById('selEstado');if(estado)estado.value='todos';}
-function limpiar(){reiniciarFiltros();mostrarVista('consultar');return cargar();}
-document.getElementById('selAnio').addEventListener('change',e=>{dejarFicha();seleccionarAnio(e.target.value);});document.getElementById('selTema').addEventListener('change',e=>{dejarFicha();F.tema=e.target.value;F.pagina=1;cargar().catch(()=>{});});document.getElementById('selEstado').addEventListener('change',e=>{dejarFicha();F.estado=e.target.value;F.pagina=1;cargar().catch(()=>{});});document.getElementById('selOrden').addEventListener('change',e=>{dejarFicha();F.orden=e.target.value;F.pagina=1;cargar().catch(()=>{});});document.getElementById('formBuscar').addEventListener('submit',e=>{e.preventDefault();dejarFicha();F.q=document.getElementById('consulta').value.trim();F.pagina=1;cargar().catch(()=>{});});
-configurarNavegacion();
-async function restaurarEntrada(){
-  const puerta=document.getElementById('puerta');
-  if(!window.euclidianEnRecuperacion&&(CLAVE||window.euclidianTieneSesion?.())){
-    try{await cargar();}catch(err){
-      puerta.hidden=false;
-      const mal=document.getElementById('mal');if(mal)mal.textContent=err.message||'No se pudo recuperar el acceso. Inténtalo de nuevo.';
-    }
-  }else puerta.hidden=false;
-  document.getElementById('restaurandoSesion')?.remove();
-}
-restaurarEntrada();
-
-if(!window.__euclidianRecoveryActions){window.__euclidianRecoveryActions=true;document.addEventListener('click',e=>{
-  const filtro=e.target.closest('[data-quitar-filtro]');if(filtro){quitarFiltro(filtro.dataset.quitarFiltro);return;}
-  const accion=e.target.closest('[data-empty-action]');if(accion){const tipo=accion.dataset.emptyAction;if(tipo==='todo'){limpiar().catch(()=>{});return;}if(tipo==='explorar'){mostrarVista('explorar');return;}if(tipo==='nuevos'){abrirNovedades();return;}}
-  if(e.target.closest('[data-retry-load]'))cargar().catch(()=>{});
-});}
-
-async function actualizarNovedadesGlobales(headers,generacion){
-  const panel=document.getElementById('inicioNovedades');if(!panel)return;
-  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),15000);
-  try{
-    const r=await fetch('/api/documentos?estado=nuevos&periodo=todo&pagina=1&orden=recientes&resumen=1',{headers,cache:'no-store',signal:controller.signal});
-    if(generacion!==generacionCarga||!document.getElementById('puerta').hidden)return;
-    if(!r.ok)throw new Error('sin_resumen');
-    const data=await r.json();if(generacion!==generacionCarga)return;
-    panel.innerHTML=Number(data.total)>0?`<button type="button">${Number(data.total).toLocaleString('es-CO')} publicaciones recientes <span aria-hidden="true">→</span></button>`:'<p>Sin publicaciones recientes listas para consulta.</p>';
-    panel.hidden=false;
-  }catch(_){if(generacion===generacionCarga){panel.innerHTML='<p>No pudimos comprobar las novedades. Reintenta con Actualizar.</p>';panel.hidden=false;}}finally{clearTimeout(timer);}
-}
-
-// Reserva espacio real para la barra inferior, también al ampliar el texto.
-if(typeof ResizeObserver!=='undefined'){
-  const nav=document.querySelector('.nav-principal');
-  if(nav)new ResizeObserver(()=>document.documentElement.style.setProperty('--altura-nav',`${nav.getBoundingClientRect().height}px`)).observe(nav);
-}
+window.EuclidianComparador={panel,preparar,marcado,fuenteOficial,borrador,limpiar:limpiarSesion};
+})();

@@ -151,6 +151,7 @@ jobs:
           node tests/comparador_cierre_contract.mjs
           node tests/informes_cierre_contract.mjs
           node tests/herramientas_integracion_contract.mjs
+          node tests/cierre_sesion_lecturas_contract.mjs
       - name: Verificar contrato E2E de consulta trazable
         run: |
           node tests/e2e_consulta_contract.mjs

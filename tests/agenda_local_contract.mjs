@@ -14,5 +14,13 @@ a.agregar({...base,titulo:'=HYPERLINK("https://evil")',fecha:'2026-10-19'});a.ag
 a.agregar({...base,titulo:'<img src=x onerror=alert(1)>'});assert.ok(a.csv().includes('<img')); // CSV is data, no HTML execution path.
 assert.equal(a.eliminar(id),true);assert.equal(a.eliminar(id),false);a.limpiar();assert.equal(a.listar().length,0);
 for(let i=0;i<40;i++)a.agregar(base);assert.throws(()=>a.agregar(base),/40 tareas/);a.limpiar();
+const borrador={elements:Object.fromEntries(['titulo','fecha','referencia','url'].map(k=>[k,{value:''}]))};
+borrador.reset=()=>Object.values(borrador.elements).forEach(el=>el.value='');
+context.document.getElementById=id=>id==='agendaFormulario'?borrador:null;
+assert.equal(a.tieneDatos(),false);
+for(const campo of ['titulo','fecha','referencia','url']){
+ borrador.elements[campo].value='Dato sin añadir';assert.equal(a.tieneDatos(),true,campo+' pendiente');
+ a.limpiar();assert.equal(a.tieneDatos(),false,'Limpiar elimina también '+campo);
+}
 assert.ok(!/localStorage|sessionStorage|fetch\(|XMLHttpRequest|sendBeacon/.test(code));
 console.log('Agenda local: validación de fecha/fuente, tareas, aislamiento, límites y CSV seguro aprobados.');

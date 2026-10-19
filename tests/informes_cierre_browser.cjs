@@ -21,6 +21,13 @@ const {readFileSync}=require('node:fs');
    const downloadPromise=page.waitForEvent('download');
    await page.evaluate(exp=>EuclidianInformes.descargarWord(exp,'cliente'),exp);
    assert.match((await downloadPromise).suggestedFilename(),/^euclidian-\d{4}-\d{2}-\d{2}-iva-bogota-cliente-borrador\.docx$/);
+   await page.evaluate(()=>EuclidianInformes.limpiar());
+   assert.equal(await page.locator('#euInformePreview').count(),0,'Sin diálogo al limpiar la sesión');
+   assert.equal(await page.locator('#euInformeMarco').count(),0,'Sin documento sensible retenido en iframe');
+   await page.evaluate(()=>EuclidianInformes.limpiar()); // Idempotente.
+   await page.evaluate(exp=>EuclidianInformes.abrirPDF(exp),exp);
+   await page.frameLocator('#euInformeMarco').locator('h1').waitFor();
+   await page.evaluate(()=>EuclidianInformes.limpiar());
    const source=await page.evaluate(exp=>EuclidianInformes.html(exp),exp);
    await page.setContent(source);
    assert.equal(await page.locator('html').getAttribute('lang'),'es');

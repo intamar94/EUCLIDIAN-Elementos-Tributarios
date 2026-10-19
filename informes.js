@@ -165,5 +165,12 @@ function abrirPDF(exp,tipo='tecnico'){
  dlg.querySelector('#euInformeMarco').srcdoc=source;
  if(!dlg.open)dlg.showModal();
 }
-window.EuclidianInformes={extraer,html,docx,fuenteValida,nombreArchivo,descargarWord,abrirPDF};
+function limpiar(){
+ if(typeof document==='undefined')return;
+ const dlg=document.getElementById('euInformePreview');
+ const marco=document.getElementById('euInformeMarco');
+ if(marco){marco.srcdoc='';marco.removeAttribute('src');marco.remove();}
+ if(dlg){if(dlg.open)dlg.close();dlg.remove();}
+}
+window.EuclidianInformes={extraer,html,docx,fuenteValida,nombreArchivo,descargarWord,abrirPDF,limpiar};
 })();
