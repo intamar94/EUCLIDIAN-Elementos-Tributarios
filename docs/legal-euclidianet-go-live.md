@@ -52,3 +52,35 @@
 - **Fuente maestra de cumplimiento**: [expediente de EUCLIDIAN](https://github.com/intamar94/EUCLIDIAN-Elementos-Tributarios/blob/ops/legalia-faro-v1/LEGALIA/proyectos/euclidian.json) y [registro de la empresa](https://github.com/intamar94/EUCLIDIAN-Elementos-Tributarios/blob/ops/legalia-faro-v1/LEGALIA/empresa.template.json), todavía en PR #67.
 - **Este proyecto**: [PR #82](https://github.com/intamar94/EUCLIDIAN-Elementos-Tributarios/pull/82). Todo cambio sobre identidad, cookies, autenticación, correo, hosting, proveedores, pagos, nombre, dominio, país o actividad debe anotarse y reevaluarse en LEGAL.ia.
 - **Responsables**: Configurador web mantiene infraestructura; LEGAL.ia mantiene expediente y riesgos; titular valida datos publicables; MIKAI coordina. Un cambio de código no implica aprobación jurídica.
+
+## Revisión de preparación del 19 de octubre de 2026
+
+La titular pidió configurar textos claros manteniendo el acceso público bloqueado.
+La solicitud firmada de Gewerbeanmeldung fue enviada al Gewerbeamt; esto acredita
+el envío, no una resolución de alta recibida. No guardar el formulario, identificación,
+domicilio ni otros datos personales en este repositorio.
+
+Comprobaciones de esta revisión:
+- Nombre y dirección legal configurados como variables cifradas solo en Production.
+- El correo de contacto ya está configurado; recepción real todavía pendiente de prueba.
+- `EUCLIDIAN_LEGAL_APPROVED=0`, `EUCLIDIAN_PUBLIC_ACCESS_ENABLED=0`,
+  `EUCLIDIAN_SIGNUP_ENABLED=false` y `EUCLIDIAN_APORTES_ENABLED=0`.
+- Vercel mantiene protección SSO. La visita anónima condujo al login de Vercel.
+- La lectura autenticada devolvió 503 en `/impressum` y `/datenschutz`.
+
+El cambio aclara la privacidad de la fase de preparación, servicios de correo,
+bases jurídicas por finalidad, criterios de conservación sin prometer borrados
+automáticos, derechos y autoridad de Hessen. Retira Google Fonts de portada,
+aplicación y página de baja, usando las alternativas ya definidas en CSS.
+No modifica Auth, pagos, SSO ni la compuerta de aprobación legal.
+
+Antes de levantar esa compuerta:
+1. Confirmar alcance contractual de DPA/AVV y transferencias de Vercel,
+   Cloudflare, Google (incluida la modalidad de cuenta Gmail) y Supabase.
+2. Verificar categorías y conservación efectivas de logs, correo y cuentas internas.
+3. Probar recepción del contacto con autorización para ese envío.
+4. Revisar el aviso frente al flujo real y registrar aprobación humana.
+5. Obtener CI del SHA final y publicar en el lote autorizado manteniendo el cierre.
+
+Las modificaciones de esta rama todavía deben desplegarse para estar en la web.
+La configuración y las pruebas no constituyen certificación jurídica de cumplimiento.
