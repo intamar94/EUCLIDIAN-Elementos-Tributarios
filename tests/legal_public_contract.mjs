@@ -59,3 +59,13 @@ assert.ok(index.includes('<link rel="canonical" href="https://euclidianet.com/">
 assert.ok(read('robots.txt').includes('https://euclidianet.com/sitemap.xml'));
 assert.ok(read('sitemap.xml').includes('https://euclidianet.com/'));
 console.log('LEGAL PUBLIC: endpoints closed by default, mock approved render, security, paths and SEO OK');
+
+// El aviso corresponde a preparación, sin convertir una política en permiso de apertura.
+assert.match(privacy.body,/registro, el acceso de usuarios externos/);
+assert.match(privacy.body,/Cloudflare Email Routing/);
+assert.match(privacy.body,/Gmail \(Google\)/);
+assert.match(privacy.body,/datenschutz.hessen.de/);
+assert.doesNotMatch(privacy.body,/deben evaluarse|deberán cumplir|deben contrastarse/);
+for (const file of ['index.html','app.html','api/baja.js']) {
+ assert.doesNotMatch(read(file),/https:\/\/fonts\.(?:googleapis|gstatic)\.com/);
+}
