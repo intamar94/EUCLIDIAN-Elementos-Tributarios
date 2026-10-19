@@ -50,6 +50,17 @@ function fechaDocumentoCoherente(d){const anio=String(d.numero_resolucion||'').m
 function fechaReciente(fecha){const valor=String(fecha||'').slice(0,10);return fechaCivilValida(valor)&&valor>=fechaCorteNovedades()&&valor<=fechaHoyColombia();}
 function esNovedadOficial(d){return fechaReciente(d.fecha_publicacion_web)||(fechaDocumentoCoherente(d)&&fechaReciente(d.fecha_publicacion));}
 function fechaNovedad(d){const web=fechaReciente(d.fecha_publicacion_web)?d.fecha_publicacion_web:'';const acto=fechaDocumentoCoherente(d)&&fechaReciente(d.fecha_publicacion)?d.fecha_publicacion:'';return web>acto?web:acto;}
+// El timeout puede producirse en cualquiera de las lecturas necesarias para
+// una ficha completa. No devolver resultados parciales ni diagnósticos SQL.
+async function responderFalloLectura(res, respuesta, error, mensaje){
+  const fallo=await respuesta.json().catch(e=>{if(e.name==='AbortError')throw e;return null;});
+  const lento=respuesta.status===504||fallo?.code==='57014';
+  console.error('catalogo_dependencia',{etapa:error,status:respuesta.status,tipo:lento?'timeout':'upstream'});
+  return res.status(lento?504:502).json(lento?{
+    error:'consulta_lenta',
+    mensaje:'La biblioteca tardó demasiado en responder. Inténtalo de nuevo.'
+  }:{error,...(mensaje?{mensaje}:{})});
+}
 export default async function handler(req,res){
   res.setHeader('Cache-Control','no-store');
   if(req.method&&req.method!=='GET')return res.status(405).json({error:'method_not_allowed'});
@@ -96,12 +107,7 @@ export default async function handler(req,res){
     // los candidatos del intervalo antes de elegir la página solicitada.
     for(let offset=inicio;;offset+=lote){
       const rDocs=await leer(`${SUPABASE_URL}/rest/v1/v_bandeja?select=${CAMPOS}&${filtro}&order=${orden}`,{headers:{...cabeceras,Prefer:'count=exact',Range:`${offset}-${offset+lote-1}`}});
-      if(!rDocs.ok){
-        const fallo=await rDocs.json().catch(()=>({}));
-        const lento=fallo.code==='57014';
-        console.error('catalogo_documentos',{status:rDocs.status,codigo:fallo.code||'sin_codigo'});
-        return res.status(502).json({error:lento?'consulta_lenta':'biblioteca_no_disponible',mensaje:lento?'La biblioteca tardó demasiado en responder. Inténtalo de nuevo.':'No pudimos abrir la biblioteca. Inténtalo de nuevo.'});
-      }
+      if(!rDocs.ok)return await responderFalloLectura(res,rDocs,'biblioteca_no_disponible','No pudimos abrir la biblioteca. Inténtalo de nuevo.');
       const grupo=await rDocs.json();
       if(offset===inicio){const rango=rDocs.headers.get('content-range')||'*/0';total=parseInt(rango.split('/')[1],10)||0;}
       documentos.push(...grupo);
@@ -115,7 +121,7 @@ export default async function handler(req,res){
       for(let i=0;i<ids.length;i+=50){
         const inFilter=`in.(${ids.slice(i,i+50).join(',')})`;
         const rTexto=await leer(`${SUPABASE_URL}/rest/v1/documentos_tributarios?select=id,texto_completo,notas_verificacion,estado_fuente_verificacion,fuente_verificada_en,hash_contenido&id=${encodeURIComponent(inFilter)}`,{headers:cabeceras});
-        if(!rTexto.ok)return res.status(502).json({error:'evidencia_no_disponible'});
+        if(!rTexto.ok)return await responderFalloLectura(res,rTexto,'evidencia_no_disponible');
         if(rTexto.ok)for(const x of await rTexto.json())porTexto.set(x.id,x);
       }
       for(const d of documentos){const x=porTexto.get(d.id)||{};const nota=String(x.notas_verificacion||'');const raiz=nota.match(/raiz:\s*(https:\/\/[^\s|]+)/i);const indice=nota.match(/indice:\s*(https:\/\/[^\s|]+)/i);d.texto_completo=x.texto_completo||null;d.estado_fuente_verificacion=x.estado_fuente_verificacion||null;d.fuente_verificada_en=x.fuente_verificada_en||null;d.fuente_raiz=(raiz&&raiz[1])||((d.temas||[]).includes('boletin_mensual')||d.tipo_documento==='boletin'?FUENTES.novedades:FUENTES.tributario);d.fuente_indice=(indice&&indice[1])||null;}
@@ -126,7 +132,7 @@ export default async function handler(req,res){
         for(let i=0;i<boletines.length;i+=50){
           const inFilter=`in.(${boletines.slice(i,i+50).map(d=>d.id).join(',')})`;
           const rRefs=await leer(`${SUPABASE_URL}/rest/v1/boletin_referencias?select=boletin_id,pagina,tipo,referencia,url_oficial,pdf_hash&boletin_id=${encodeURIComponent(inFilter)}&order=pagina.asc`,{headers:cabeceras});
-          if(!rRefs.ok)return res.status(502).json({error:'referencias_no_disponibles'});
+          if(!rRefs.ok)return await responderFalloLectura(res,rRefs,'referencias_no_disponibles');
           for(const ref of await rRefs.json()){
             const boletin=porBoletin.get(ref.boletin_id);
             if(boletin?.estado_fuente_verificacion==='pdf_oficial_con_texto'&&ref.pdf_hash===porTexto.get(boletin.id)?.hash_contenido&&String(ref.url_oficial||'').startsWith('https://normograma.dian.gov.co/dian/compilacion/docs/'))
@@ -138,7 +144,7 @@ export default async function handler(req,res){
       for(let i=0;i<ids.length;i+=50){
         const inFilter=`in.(${ids.slice(i,i+50).join(',')})`;
         const rEvaluaciones=await leer(`${SUPABASE_URL}/rest/v1/revisor_fiscal_euclidian_evaluaciones?select=documento_id,resultado&documento_id=${encodeURIComponent(inFilter)}`,{headers:cabeceras});
-        if(!rEvaluaciones.ok)return res.status(502).json({error:'evaluacion_no_disponible'});
+        if(!rEvaluaciones.ok)return await responderFalloLectura(res,rEvaluaciones,'evaluacion_no_disponible');
         for(const x of await rEvaluaciones.json())evaluaciones.set(x.documento_id,x.resultado);
       }
       for(const d of documentos){
@@ -174,7 +180,7 @@ export default async function handler(req,res){
       if(novedades){const elegibles=documentos.filter(d=>d.es_nuevo&&String(d.texto_completo||'').trim().length>=200&&String(d.enlace_oficial||'').startsWith('https://normograma.dian.gov.co/dian/compilacion/'));elegibles.sort((a,b)=>fechaNovedad(b).localeCompare(fechaNovedad(a))||String(b.numero_resolucion||'').localeCompare(String(a.numero_resolucion||'')));total=elegibles.length;documentos.splice(0,documentos.length,...elegibles.slice(primera,primera+POR_PAGINA));}
     }
     const rMeta=await leer(`${SUPABASE_URL}/rest/v1/rpc/metadatos_catalogo_cliente`,{method:'POST',headers:{...cabeceras,'Content-Type':'application/json'},body:JSON.stringify({p_periodo:doc?'todo':periodo})});
-    if(!rMeta.ok)return res.status(502).json({error:'metadatos_no_disponibles'});
+    if(!rMeta.ok)return await responderFalloLectura(res,rMeta,'metadatos_no_disponibles');
     const meta=await rMeta.json();
     // El resumen de Inicio no consume una consulta adicional del cliente.
     if(req.query.resumen==='1')return res.status(200).json({total,actualizado:meta.actualizado||null});
