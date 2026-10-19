@@ -295,5 +295,15 @@ article:after{content:"";position:absolute;width:54px;height:54px;right:-29px;to
 /* Los campos de al menos 16 px evitan el zoom automático al escribir en iOS. */
 @media(max-width:720px){
   #puerta .auth-form input,#puerta .acceso-interno input,
-  .buscador input,.perfil-form input,select,textarea{font-size:16px}
+  .buscador input,.perfil-form input,.exp-campos input,.exp-campos textarea,
+  .eu-comparador-matrices input,.eu-comparador-matrices textarea,select,textarea{font-size:16px}
 }
+
+/* Filtros visibles y retirables de uno en uno sin perder la consulta. */
+.filtros-activos{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 6px}
+.filtros-activos[hidden]{display:none}
+.filtros-activos button{display:inline-flex;align-items:center;gap:10px;max-width:100%;min-height:44px;padding:8px 12px;border:1px solid #a9bbaf;border-radius:20px;background:#edf3ee;color:#294b36;font:500 13px/1.4 'IBM Plex Sans',sans-serif;text-align:left;cursor:pointer}
+.filtros-activos button span{min-width:0;overflow-wrap:anywhere}
+.filtros-activos button b{flex:none;font-size:19px;line-height:1;font-weight:400}
+.filtros-activos button:hover{background:#e0ebe2;border-color:#6d8c77}
+@media(max-width:620px){.filtros-activos{gap:7px}.filtros-activos button{padding:8px 11px}}

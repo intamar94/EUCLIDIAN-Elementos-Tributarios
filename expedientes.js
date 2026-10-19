@@ -4,7 +4,7 @@
 (function(){
 'use strict';
 const MAX_CASOS=8,MAX_FUENTES=18,MAX_ARCHIVO=200000;
-const coleccion=new Map(),documentos=new Map();
+const coleccion=new Map(),documentos=new Map(),exportaciones=new Map();
 let activo='',contador=0;
 const campos={titulo:140,pregunta:1800,hechos:3000,hipotesis:3000,salvedades:3000,conclusion:3000};
 const limite=(v,n)=>typeof v==='string'?v.trim().slice(0,n):'';
@@ -81,7 +81,7 @@ function importar(texto){
  const obj=normalizar(JSON.parse(texto));
  if(coleccion.size>=MAX_CASOS)throw Error('Máximo de ocho expedientes: exporta o cierra uno antes de importar.');
  const id='exp-'+(++contador);
- coleccion.set(id,{...obj,id});activo=id;render();return id;
+ coleccion.set(id,{...obj,id});exportaciones.set(id,huellaLocal(coleccion.get(id)));activo=id;render();return id;
 }
 function informe(){
  const x=actual();if(!x)throw Error('No hay expediente.');
@@ -158,7 +158,17 @@ function panel(d){
  return '<div class="exp-adjuntar"><button type="button" data-exp-adjuntar="'+escape(id)+'">＋ Añadir a expediente</button>'+
   '<small>Guarda la referencia para tu investigación; no determina una obligación.</small></div>';
 }
-function limpiar(){coleccion.clear();documentos.clear();activo='';contador=0;render();}
+function huellaLocal(x){return JSON.stringify({campos:x.campos,fuentes:x.fuentes});}
+function hayCambiosSinExportar(){
+ return [...coleccion.values()].some(x=>{
+  const contenido=x.fuentes.length>0||Object.entries(x.campos).some(([k,v])=>v&&(k!=='titulo'||v!=='Investigación sin título'));
+  return contenido&&exportaciones.get(x.id)!==huellaLocal(x);
+ });
+}
+function confirmarSalida(){
+ return !hayCambiosSinExportar()||window.confirm('Hay cambios en expedientes temporales sin exportar a JSON. Si sales, se perderán. Cancela para exportarlos o acepta para salir.');
+}
+function limpiar(){coleccion.clear();documentos.clear();exportaciones.clear();activo='';contador=0;render();}
 if(typeof document!=='undefined'){
  document.addEventListener('input',e=>{
   const f=e.target.closest?.('[data-exp-campo]');
@@ -187,7 +197,7 @@ if(typeof document!=='undefined'){
    if(b.id==='expCerrar'){
     const x=actual();if(!x)return;
     if(!window.confirm('¿Cerrar este expediente sin guardar automáticamente? Exporta primero si deseas conservarlo.'))return;
-    coleccion.delete(x.id);activo=coleccion.keys().next().value||'';render();
+    coleccion.delete(x.id);exportaciones.delete(x.id);activo=coleccion.keys().next().value||'';render();
     estado('Expediente cerrado y retirado de la memoria de esta pestaña.');return;
    }
    if(b.hasAttribute('data-exp-adjuntar')){
@@ -203,7 +213,8 @@ if(typeof document!=='undefined'){
    if(b.hasAttribute('data-exp-quitar')){removerFuente(Number(b.dataset.expQuitar));estado('Referencia quitada del expediente.');return;}
    const tipo=b.dataset.expExport;
    if(tipo==='json'){descargar(respaldo(),'euclidian-expediente-borrador.json','application/json;charset=utf-8');
-    estado('Archivo JSON descargado. Guárdalo en un lugar privado.');}
+    exportaciones.set(activo,huellaLocal(actual()));
+    estado('JSON preparado. Comprueba la descarga y guárdalo en un lugar privado para poder recuperar el expediente.');}
    if(tipo==='txt'){descargar(informe(),'euclidian-informe-borrador.txt','text/plain;charset=utf-8');
     estado('Informe descargado para revisión profesional.');}
    if(['docx','cliente-docx','pdf','cliente-pdf'].includes(tipo)){
@@ -217,7 +228,10 @@ if(typeof document!=='undefined'){
    }
   }catch(err){estado(err.message);}
  });
- window.addEventListener('pagehide',()=>{}); // No persistencia implícita en salida.
+ window.addEventListener('beforeunload',e=>{
+  if(!hayCambiosSinExportar())return;
+  e.preventDefault();e.returnValue='';
+ }); // Solo aviso: no guarda ni envía notas.
 }
-window.EuclidianExpedientes={panel,nuevo,seleccionar,agregarFuente,removerFuente,modificar,respaldo,importar,informe,limpiar,urlDian,estadoActual:actual,normalizar};
+window.EuclidianExpedientes={panel,nuevo,seleccionar,agregarFuente,removerFuente,modificar,respaldo,importar,informe,limpiar,urlDian,estadoActual:actual,normalizar,hayCambiosSinExportar,confirmarSalida};
 })();

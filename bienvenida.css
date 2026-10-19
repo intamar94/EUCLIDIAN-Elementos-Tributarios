@@ -90,3 +90,13 @@ body{padding-bottom:24px}
 .inicio-documento-ref .fecha-principal{font:12px/1.4 'IBM Plex Sans',sans-serif;color:#526257;letter-spacing:normal}
 .inicio-documento-ref b{margin-left:auto;font-weight:600;color:#203a2b;white-space:nowrap}
 @media(max-width:620px){.temas-personales{grid-template-columns:1fr}.tema-personal-abrir{min-height:76px}.inicio-documento-tipo{letter-spacing:.03em;line-height:1.5}}
+/* Tres tareas reales, visibles desde el inicio sin recorrer el catálogo. */
+.inicio-atajos{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:24px 0}
+.inicio-atajo{display:flex;flex-direction:column;gap:8px;min-width:0;min-height:112px;padding:18px;text-align:left;border:1px solid #9fb0a2;border-radius:9px;background:#fffefa;color:#203a2b;cursor:pointer;overflow-wrap:anywhere}
+.inicio-atajo strong{display:flex;justify-content:space-between;gap:10px;font:600 16px/1.4 'IBM Plex Sans',sans-serif}
+.inicio-atajo>span{font:14px/1.5 'IBM Plex Sans',sans-serif;color:#526257}
+.inicio-atajo:hover{background:#edf3ee;border-color:#526f5b}
+.inicio-atajo-principal{background:#203a2b;color:#fffefa;border-color:#203a2b}
+.inicio-atajo-principal>span{color:#e0eae1}.inicio-atajo-principal:hover{background:#2d4b38}
+#guiaPasoTitulo:focus{outline:3px solid #28638e;outline-offset:5px}
+@media(max-width:760px){.inicio-atajos{grid-template-columns:1fr}.inicio-atajo{min-height:88px;padding:16px}}

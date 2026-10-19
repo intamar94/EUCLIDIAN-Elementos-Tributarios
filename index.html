@@ -33,15 +33,15 @@ if(location.search.includes('q=')||location.search.includes('doc=')||location.ha
 <link rel="stylesheet" href="/legal-links.css">
 <link rel="stylesheet" href="/informacion.css">
 </head>
-<body>
+<body class="portada-publica">
 <a class="skip" href="#contenido">Ir al contenido</a>
 <header class="top">
   <div class="wrap nav">
     <a class="brand" href="/" aria-label="EUCLIDIAN inicio">EUCL<em>i</em>DIAN<span>Elementos Tributarios</span></a>
     <nav aria-label="Principal">
-      <a href="#por-dentro">Por dentro</a>
+      <a class="nav-demostracion" href="#por-dentro">Demostración</a>
       <a href="#guias">Guías</a>
-      <a href="#suscripcion">Suscripción</a>
+      <a href="#suscripcion">Plan y estado</a>
       <a class="login" href="/app.html">Acceso interno</a>
     </nav>
   </div>
@@ -55,12 +55,12 @@ if(location.search.includes('q=')||location.search.includes('doc=')||location.ha
     </figure>
     <div class="hero-copy">
       <span class="eyebrow">01 · QUÉ ES EUCLIDIAN</span>
-      <h1>La normativa ya es complicada.<br><em>Encontrarla no debería serlo.</em></h1>
-      <p class="lead">Una plataforma para contadores y revisores fiscales que reúne normas, doctrina y novedades de la DIAN. Encuentra cada documento con sus fechas, su fuente oficial y el contexto disponible.</p>
-      <p class="hero-remate">Tu apoyo diario para investigar y contrastar. <span class="firma-euclides">Euclides trazaba líneas. Nosotros seguimos las fuentes.</span></p>
+      <h1>Normas y conceptos DIAN.<br><em>Con la fuente a la vista.</em></h1>
+      <p class="lead">Investiga documentos tributarios en un solo lugar. Busca por número, palabra o tema y comprueba las fechas, el contexto disponible y la fuente oficial antes de aplicar un criterio.</p>
+      <p class="hero-remate">Para contadores y revisores fiscales que necesitan investigar y contrastar. <span class="firma-euclides">Euclides trazaba líneas. Nosotros seguimos las fuentes.</span></p>
       <div class="hero-actions">
-        <a class="primary" href="#por-dentro">Echa un vistazo <span aria-hidden="true">↓</span></a>
-        <a class="secondary" href="/app.html">Acceso interno <span aria-hidden="true">→</span></a>
+        <p class="preparacion-aviso"><strong>En preparación.</strong> Puedes explorar la demostración sin cuenta. El registro y los cobros siguen cerrados.</p>
+        <a class="primary" href="#por-dentro">Ver demostración <span aria-hidden="true">↓</span></a>
       </div>
     </div>
   </section>
@@ -74,10 +74,10 @@ if(location.search.includes('q=')||location.search.includes('doc=')||location.ha
     </div>
   </section>
 
-  <section class="muestra wrap" id="por-dentro" aria-labelledby="muestraTitulo">
+  <section class="muestra wrap" id="por-dentro" aria-labelledby="muestraTitulo" tabindex="-1">
     <div class="section-title">
       <span class="section-index">02</span>
-      <div><span class="eyebrow">ANTES DE ENTRAR, MIRA POR DENTRO</span><h2 id="muestraTitulo">Del documento al dato que buscas.</h2><p>Explora estas vistas de ejemplo para conocer la biblioteca.</p></div>
+      <div><span class="eyebrow">ANTES DE ENTRAR, MIRA POR DENTRO</span><h2 id="muestraTitulo">Del documento al dato que buscas.</h2><p>Elige una vista para conocer la biblioteca. Son ejemplos de lectura: no ejecutan búsquedas ni requieren una cuenta.</p></div>
     </div>
     <div class="muestra-tabs" role="tablist" aria-label="Vistas de ejemplo de EUCLIDIAN">
       <button type="button" role="tab" id="muestraConsulta" aria-selected="true" aria-controls="vistaConsulta" tabindex="0">Consultar</button>
@@ -89,13 +89,14 @@ if(location.search.includes('q=')||location.search.includes('doc=')||location.ha
       <div class="muestra-vista" id="vistaConsulta" role="tabpanel" tabindex="0" aria-labelledby="muestraConsulta">
         <div class="muestra-pantalla">
           <div class="mini-kicker">CONSULTAR</div><h3>Un número, una palabra, un tema.</h3>
-          <div class="mini-buscador" aria-label="Ejemplo de búsqueda"><span>16681</span><span>Buscar ⌕</span></div>
+          <p class="mini-busqueda-etiqueta">Ejemplo de búsqueda por número</p>
+          <div class="mini-buscador" aria-label="Búsqueda ilustrativa del número 16681"><span>16681</span><span aria-hidden="true">⌕</span></div>
           <div class="mini-filtros"><span>Año · 2026</span><span>Tema · Renta</span></div>
           <article class="mini-ficha">
             <span class="mini-codigo">DIAN-OFICIO-16681-2026</span><h4>Oficio 16681 de 2026 DIAN</h4>
             <p>Impuesto sobre la Renta y Complementarios · Recursos pertenecientes a organismos deportivos.</p>
             <div class="mini-fechas"><span>Publicación web DIAN <b>5 de octubre de 2026</b></span><span>Fecha del documento <b>24 de septiembre de 2026</b></span></div>
-            <div class="mini-estado"><span>Vigencia <b>Por confirmar</b></span><a href="https://normograma.dian.gov.co/dian/compilacion/docs/oficio_dian_16681_2026.htm" target="_blank" rel="noopener noreferrer">Fuente DIAN ↗</a></div>
+            <div class="mini-estado"><span>Vigencia <b>Por confirmar</b></span><a href="https://normograma.dian.gov.co/dian/compilacion/docs/oficio_dian_16681_2026.htm" target="_blank" rel="noopener noreferrer">Abrir fuente DIAN <span class="solo-lector">(se abre en otra pestaña)</span><span aria-hidden="true">↗</span></a></div>
           </article>
         </div>
         <div class="muestra-explica"><span class="eyebrow">EL DOCUMENTO, A MANO</span><h3>Encuentra. Lee. Contrasta.</h3><p>Busca por número, palabra o tema. La ficha separa la fecha del documento de la fecha en que la DIAN lo publicó en su web.</p><p>Abre los detalles cuando necesites profundidad y consulta siempre la fuente oficial al aplicar un criterio.</p></div>
@@ -133,6 +134,7 @@ if(location.search.includes('q=')||location.search.includes('doc=')||location.ha
   <section class="preguntas wrap" id="preguntas" aria-labelledby="preguntasTitulo">
     <div class="section-title"><span class="section-index" aria-hidden="true">04</span><div><span class="eyebrow">PREGUNTAS FRECUENTES</span><h2 id="preguntasTitulo">Lo que conviene saber.</h2><p>Respuestas claras antes de decidir si esta biblioteca es para ti.</p></div></div>
     <div class="preguntas-lista">
+      <details><summary>¿Puedo empezar a usarla ahora?</summary><p>La plataforma está en preparación. Puedes recorrer la demostración y las guías sin cuenta. El acceso a la biblioteca es interno; el registro y la contratación aún están cerrados.</p></details>
       <details><summary>¿Qué puedo buscar en EUCLIDIAN?</summary><p>Conceptos, oficios y otros documentos DIAN disponibles en la biblioteca. Busca por número, palabra o tema y utiliza los filtros para acotar los resultados.</p></details>
       <details><summary>¿Es el normograma oficial de la DIAN?</summary><p>No. EUCLIDIAN es una herramienta independiente que organiza documentos y enlaza su fuente oficial. El normograma de la DIAN se puede consultar directamente sin suscripción a EUCLIDIAN.</p></details>
       <details><summary>¿Una publicación reciente está vigente?</summary><p>La fecha de publicación y la vigencia son datos distintos. Las fichas muestran la información disponible; cuando no está comprobada, la vigencia queda por confirmar.</p></details>

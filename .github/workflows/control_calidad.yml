@@ -123,6 +123,12 @@ jobs:
           node tests/seo_public_pages_contract.mjs
           node tests/prelaunch_access_contract.mjs
           node tests/aportes_contract.mjs
+      - name: Contratos de experiencia y salida segura
+        run: |
+          node tests/navegacion_ux_contract.mjs
+          node tests/portada_ux_keyboard_contract.mjs
+          node tests/busqueda_ux_contract.mjs
+          node tests/expedientes_salida_contract.mjs
       - name: Verificar contrato E2E de consulta trazable
         run: |
           node tests/e2e_consulta_contract.mjs
@@ -165,6 +171,7 @@ jobs:
           sleep 2
           node tests/ui_public_audit_browser.cjs
           node tests/ui_onboarding_browser.cjs
+          node tests/navegacion_ux_browser.cjs
           node tests/ui_comparador_browser.cjs
           node tests/ui_expedientes_browser.cjs
           node tests/ui_informes_browser.cjs
