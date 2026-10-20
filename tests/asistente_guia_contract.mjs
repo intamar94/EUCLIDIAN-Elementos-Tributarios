@@ -37,6 +37,14 @@ ctx.window.euclidianBuscarTexto=()=>false;buttons().find(n=>n.textContent==='Bus
 ctx.window.euclidianBuscarTexto=()=>{throw Error('secret db error');};buttons().find(n=>n.textContent==='Buscar estas palabras').click();assert.match(status(),/No se pudo/);assert.doesNotMatch(status(),/secret/);
 const checks=panel.querySelectorAll('[data-asistente-check]');assert.equal(checks.length,5);checks.forEach(n=>{n.checked=true;n.emit('change');});assert.match(panel.querySelector('[data-asistente-pendientes]').textContent,/no ha comprobado/);assert.match(api.hoja(),/no acredita aprobación profesional/);assert.equal((api.hoja().match(/Marcado por el usuario/g)||[]).length,5);
 panel.querySelector('[data-asistente-consulta]').emit('input');assert(checks.every(n=>!n.checked));assert.equal((api.hoja().match(/\[Pendiente\]/g)||[]).length,5);
+assert(contadorChecks.every(n=>!n.checked));assert.equal(api.estadoEvidencia(),'pendiente_de_cotejo');
+const query=panel.querySelector('[data-asistente-consulta]');
+query.value='NIT 123456789';query.emit('input');assert.equal(query.value,'');assert.equal(steps().hidden,true);assert.equal(api.estadoEvidencia(),'abstencion');
+sent='';ctx.window.euclidianBuscarTexto=q=>{sent=q;return true;};buttons().find(n=>n.textContent==='Buscar estas palabras').click();assert.equal(sent,'');
+submit();assert.equal(steps().hidden,false);
+query.value='cliente@example.com';buttons().find(n=>n.textContent==='Buscar estas palabras').click();assert.equal(sent,'');assert.equal(query.value,'');assert.equal(api.estadoEvidencia(),'abstencion');
+submit();assert.equal(steps().hidden,false);
+query.value='cliente@example.com';buttons().find(n=>n.textContent==='Descargar hoja de investigación · borrador').click();assert.equal(query.value,'');assert.equal(api.estadoEvidencia(),'abstencion');
 field().value='<img src=x onerror=alert(1)> https://evil.invalid <script>hack</script> '+ 'x'.repeat(700);confirmation().checked=true;submit();assert.equal(field().value.length,600);assert.equal(panel.querySelectorAll('img').length,0);assert.equal(panel.querySelectorAll('script').length,0);assert(api.palabras(field().value).length<=180);assert.match(api.hoja(),/BORRADOR/);assert.doesNotMatch(api.palabras(field().value),/[<>]/);
 field().value='tema cambiado';field().emit('input');assert.equal(steps().hidden,true);assert.match(status(),/Prepara de nuevo/);assert.doesNotMatch(api.hoja(),/evil/);
 field().value='NIT 123456789';confirmation().checked=true;submit();assert.equal(api.estadoEvidencia(),'abstencion');assert.equal(field().value,'');assert.equal(steps().hidden,true);
