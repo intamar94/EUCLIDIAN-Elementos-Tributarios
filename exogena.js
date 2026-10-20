@@ -53,6 +53,13 @@ function revisar(texto){
  if(filas.length===1)error(filas[0].numero,'registros','El archivo solo contiene encabezados.','Añade al menos un registro ficticio siguiendo el ejemplo.');
  return {registros:filas.length-1,errores,totalErrores,valido:totalErrores===0};
 }
+function revisarBytes(bytes){
+ if(bytes.byteLength>MAX_BYTES)throw Error('El archivo supera 200 KB.');
+ let texto;
+ try{texto=new TextDecoder('utf-8',{fatal:true}).decode(bytes);}
+ catch{throw Error('El archivo no es UTF-8 válido. Exporta el CSV como UTF-8 y vuelve a cargarlo.');}
+ return revisar(texto);
+}
 function nodo(etiqueta,texto,clase){const e=document.createElement(etiqueta);if(texto!==undefined)e.textContent=texto;if(clase)e.className=clase;return e;}
 function limpiar(){
  generacion++;
@@ -87,12 +94,12 @@ function panel(){
  entrada.addEventListener('change',async()=>{
   const turno=++generacion,archivo=entrada.files&&entrada.files[0];resultado.replaceChildren();if(!archivo)return;
   estado.textContent='Revisando estructura localmente…';
-  try{if(archivo.size>MAX_BYTES)throw Error('El archivo supera 200 KB.');const texto=await archivo.text();if(turno!==generacion)return;mostrar(raiz,revisar(texto));}
+  try{if(archivo.size>MAX_BYTES)throw Error('El archivo supera 200 KB.');const bytes=new Uint8Array(await archivo.arrayBuffer());if(turno!==generacion)return;mostrar(raiz,revisarBytes(bytes));}
   catch(e){if(turno===generacion)estado.textContent=e.message;}
   finally{if(turno===generacion)entrada.value='';}
  });
  raiz.append(etiqueta,entrada,estado,resultado);
 }
-window.EuclidianExogena={panel,limpiar,revisar,parsearCSV,ejemplo:EJEMPLO};
+window.EuclidianExogena={panel,limpiar,revisar,revisarBytes,parsearCSV,ejemplo:EJEMPLO};
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',panel);else panel();
 })();

@@ -16,13 +16,14 @@ Invocar `window.EuclidianExogena.limpiar()` al salir de la cuenta o descartar el
 | `concepto_ficticio` | Solo `DEMO_SERVICIO` o `DEMO_BIEN` |
 | `importe` | No negativo; hasta 12 cifras enteras sin ceros iniciales salvo cero; punto y exactamente dos decimales |
 
-Cabecera exacta y orden fijo, coma como separador y texto UTF-8. Se aceptan comillas CSV, comillas dobles escapadas, BOM, CRLF y celdas multilínea; la tabla identifica la línea física inicial de cada registro. Límite 200000 bytes, 1000 registros y 20 columnas como límite de lectura defensivo. La validación exige tres columnas. Máximo 100 observaciones renderizadas, con total completo indicado. Un archivo solo con encabezados es inválido.
+Cabecera exacta y orden fijo, coma como separador y texto UTF-8 válido. La lectura de bytes rechaza secuencias UTF-8 mal formadas en lugar de sustituirlas silenciosamente por caracteres de reemplazo. Se aceptan comillas CSV, comillas dobles escapadas, BOM, CRLF y celdas multilínea; la tabla identifica la línea física inicial de cada registro. Límite 200000 bytes, 1000 registros y 20 columnas como límite de lectura defensivo. La validación exige tres columnas. Máximo 100 observaciones renderizadas, con total completo indicado. Un archivo solo con encabezados es inválido.
 
 No cargar NIT, datos de clientes ni documentos personales. La estructura rechaza identificadores y conceptos fuera del esquema ficticio; esto no constituye detección universal de datos personales.
 
 ## Privacidad y seguridad
 
 - Revisión en memoria y ninguna llamada de red ni persistencia.
+- La lectura comprueba el tamaño antes y después de obtener los bytes; la decodificación UTF-8 es estricta.
 - El CSV no se conserva en estado global; solo se muestran motivos genéricos de error, sin repetir valores cargados.
 - Render mediante nodos DOM y `textContent`; no interpreta HTML del CSV.
 - Detecta prefijos de fórmula `=`, `+`, `@`, `-`, incluyendo espacios iniciales. No exporta contenido cargado.
