@@ -5,7 +5,7 @@
 'use strict';
 const MAX_CASOS=8,MAX_FUENTES=18,MAX_ARCHIVO=200000;
 const coleccion=new Map(),documentos=new Map(),exportaciones=new Map();
-let activo='',contador=0;
+let activo='',contador=0,generacionImportacion=0;
 const campos={titulo:140,pregunta:1800,hechos:3000,hipotesis:3000,salvedades:3000,conclusion:3000};
 const limite=(v,n)=>typeof v==='string'?v.trim().slice(0,n):'';
 const escape=v=>String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
@@ -168,7 +168,18 @@ function hayCambiosSinExportar(){
 function confirmarSalida(){
  return !hayCambiosSinExportar()||window.confirm('Hay cambios en expedientes temporales sin exportar a JSON. Si sales, se perderán. Cancela para exportarlos o acepta para salir.');
 }
-function limpiar(){coleccion.clear();documentos.clear();exportaciones.clear();activo='';contador=0;render();}
+function limpiar(){
+ generacionImportacion++;
+ coleccion.clear();documentos.clear();exportaciones.clear();activo='';contador=0;
+ if(typeof document!=='undefined'){
+  document.querySelectorAll('[data-exp-campo]').forEach(n=>n.value='');
+  const archivo=document.getElementById('expImportar');if(archivo)archivo.value='';
+  document.getElementById('expFuentes')?.replaceChildren();
+  const cuenta=document.getElementById('expContador');if(cuenta)cuenta.textContent='0 / 18 fuentes';
+  estado('');
+ }
+ render();
+}
 if(typeof document!=='undefined'){
  document.addEventListener('input',e=>{
   const f=e.target.closest?.('[data-exp-campo]');
@@ -181,13 +192,13 @@ if(typeof document!=='undefined'){
  document.addEventListener('change',async e=>{
   if(e.target.id==='expElegir'){seleccionar(e.target.value);return;}
   if(e.target.id!=='expImportar')return;
-  const archivo=e.target.files?.[0];if(!archivo)return;
+  const turno=++generacionImportacion,archivo=e.target.files?.[0];if(!archivo)return;
   try{
    if(archivo.size>MAX_ARCHIVO)throw Error('El archivo supera los 200 KB.');
-   const contenido=await archivo.text();importar(contenido);
+   const contenido=await archivo.text();if(turno!==generacionImportacion)return;importar(contenido);
    estado('Expediente importado como borrador sin revisar. Comprueba las fuentes.');
-  }catch(err){estado('No se pudo importar: '+err.message);}
-  finally{e.target.value='';}
+  }catch(err){if(turno===generacionImportacion)estado('No se pudo importar: '+err.message);}
+  finally{if(turno===generacionImportacion)e.target.value='';}
  });
  document.addEventListener('click',e=>{
   const b=e.target.closest?.('[data-exp-adjuntar],[data-exp-abrir],[data-exp-export],[data-exp-quitar],#expNuevo,#expCerrar');

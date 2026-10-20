@@ -44,6 +44,11 @@ const assert=require('node:assert/strict');
    assert.ok(await page.locator('#euComparadorAntes mark').count()>0);
    assert.ok(await page.locator('#euComparadorDespues mark').count()>0);
    assert.match(await page.locator('#euComparadorEstado').textContent(),/diferencias de redacción/);
+   const exportPromise=page.waitForEvent('download');
+   await page.locator('[data-comp-exportar]').click();
+   const exportFile=await exportPromise;assert.match(exportFile.suggestedFilename(),/borrador.*\.txt$/);
+   await page.locator('#euComparadorTextoA').fill('Un nuevo pasaje modificado para revisar.');
+   assert.equal(await page.locator('#euComparadorResultado').isVisible(),false,'Editar invalida diferencias anteriores');
    const geometry=await page.evaluate(()=>{
     const dialog=document.getElementById('euComparadorDialog').getBoundingClientRect();
     return {window:window.innerWidth,left:dialog.left,right:dialog.right,
@@ -54,7 +59,7 @@ const assert=require('node:assert/strict');
    assert.equal(await dlg.evaluate(el=>el.open),false);
    await page.locator('[data-comp-limpiar-global]').click();
    assert.equal(await page.locator('#euComparadorSeleccion').count(),0,'Limpiar no deja datos locales');
-   assert.equal(await dlg.evaluate(el=>el.open),false);
+   assert.equal(await dlg.count(),0,'Limpiar elimina los pasajes del modal del DOM');
    await page.close();
    assert.deepEqual(errors,[],'Sin errores JavaScript '+width);
   }

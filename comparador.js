@@ -56,6 +56,49 @@ function marcado(a,b){
   String(b??'').trim().split(/\s+/u).length>MAX_TOKENS,
   cambios:anterior.some(x=>x.cambio)||posterior.some(x=>x.cambio)};
 }
+// Borrador local: la referencia identifica un registro, nunca una versión jurídica.
+function borrador(aDoc,bDoc,aTexto,bTexto,fecha=new Date()){
+ if(!aDoc||!bDoc||aDoc.id===bDoc.id)throw new Error('Selecciona dos documentos distintos.');
+ const a=String(aTexto??'').slice(0,LIMITE),b=String(bTexto??'').slice(0,LIMITE);
+ if(!a.trim()||!b.trim())throw new Error('Necesitas dos fragmentos para exportar.');
+ const r=marcado(a,b),instante=new Date(fecha);
+ if(!Number.isFinite(instante.getTime()))throw new Error('Fecha de exportación inválida.');
+ const lineas=['EUCLIDIAN · BORRADOR DE COMPARACIÓN TEXTUAL',
+  'Generado (UTC): '+instante.toISOString(),
+  'Revisión jurídica: PENDIENTE. Citas y versiones jurídicas: NO APROBADAS.',
+  'Una diferencia de redacción no acredita vigencia, derogación ni relación normativa.',
+  'El archivo contiene pasajes editables; no es una copia íntegra ni certificada de las fuentes.',
+  'Los pasajes completos incluidos abajo se limitan a 2.200 caracteres por texto.',
+  'Diferencias calculadas sobre las primeras 320 palabras de cada pasaje.',
+  r.recortado?'ATENCIÓN: comparación recortada; existen palabras que no se compararon.':'No se excedió el límite de palabras de comparación.'];
+ for(const [lado,d,texto,tokens] of [['A',aDoc,a,r.anterior],['B',bDoc,b,r.posterior]]){
+  const url=fuenteOficial(d.url);
+  if(!url)throw new Error('La fuente debe ser un enlace oficial DIAN.');
+  lineas.push('', 'TEXTO '+lado,
+   'Referencia de catálogo (no identificador de versión jurídica): '+limpio(d.ref,110),
+   'Registro EUCLIDIAN: '+limpio(d.id,120),
+   'Título de catálogo: '+limpio(d.titulo,180),
+   'Fuente oficial: '+url,
+   'Pasaje editado respecto del extracto cargado: '+(texto!==d.fragmento?'SÍ':'NO'),
+   'Cotejo de metadatos de catálogo: '+(d.cotejo?'registrado; no equivale a aprobación jurídica':'pendiente'),
+   'PASAJE INCLUIDO:',texto,
+   'PALABRAS AUSENTES EN EL OTRO PASAJE (orden textual, sin inferir efectos jurídicos):',
+   tokens.filter(t=>t.cambio).map(t=>t.texto).join(' ')||'(Ninguna en el tramo evaluado)');
+ }
+ return lineas.join('\n');
+}
+function exportar(){
+ const dlg=crearVentana();let texto;
+ try{texto=borrador(seleccion.a,seleccion.b,
+  dlg.querySelector('#euComparadorTextoA').value,dlg.querySelector('#euComparadorTextoB').value);}
+ catch(error){estado(error.message);return;}
+ const url=URL.createObjectURL(new Blob([texto],{type:'text/plain;charset=utf-8'}));
+ const enlace=document.createElement('a');enlace.href=url;
+ enlace.download='EUCLIDIAN-comparacion-borrador.txt';
+ document.body.appendChild(enlace);enlace.click();enlace.remove();
+ setTimeout(()=>URL.revokeObjectURL(url),1000);
+ estado('Borrador descargado en este dispositivo. Revisión jurídica y aprobación de citas pendientes.');
+}
 function mostrarSeleccion(){
  if(typeof document==='undefined')return;
  let barra=document.getElementById('euComparadorSeleccion');
@@ -82,8 +125,10 @@ function limpiarSeleccion(){
  pasajesEditados.clear();
  const dlg=typeof document!=='undefined'?document.getElementById('euComparadorDialog'):null;
  if(dlg?.open)dlg.close();
+ dlg?.remove();
  mostrarSeleccion();
 }
+function limpiarSesion(){limpiarSeleccion();catalogo.clear();}
 function crearVentana(){
  let dlg=document.getElementById('euComparadorDialog');
  if(dlg)return dlg;
@@ -93,8 +138,8 @@ function crearVentana(){
   '<p class="eu-comparador-alerta">Comparación textual exploratoria, <strong>no conclusión jurídica</strong>. Una redacción diferente no acredita derogación, reconsideración, vigencia ni efectos para un cliente. Confirma documentos, fechas y excepciones en la DIAN.</p>'+
   '<div class="eu-comparador-matrices"><section><h3>Texto A</h3><p id="euComparadorMetaA"></p><a id="euComparadorLinkA" target="_blank" rel="noopener noreferrer">Ver fuente DIAN ↗</a><label for="euComparadorTextoA">Fragmento editable (máximo 2.200 caracteres)</label><textarea id="euComparadorTextoA" maxlength="2200" spellcheck="false"></textarea></section>'+
   '<section><h3>Texto B</h3><p id="euComparadorMetaB"></p><a id="euComparadorLinkB" target="_blank" rel="noopener noreferrer">Ver fuente DIAN ↗</a><label for="euComparadorTextoB">Fragmento editable (máximo 2.200 caracteres)</label><textarea id="euComparadorTextoB" maxlength="2200" spellcheck="false"></textarea></section></div>'+
-  '<p class="eu-comparador-nota">Se carga solo el fragmento inicial disponible en el catálogo. Para comparar el apartado relevante, pega el pasaje de cada documento tras cotejar sus fuentes. No se guarda ni transmite este texto.</p>'+
-  '<div class="eu-comparador-acciones"><button type="button" data-comp-ejecutar>Resaltar diferencias</button><button type="button" data-comp-limpiar>Limpiar selección</button></div>'+
+  '<p class="eu-comparador-nota">Se carga solo el fragmento inicial disponible en el catálogo. Para comparar el apartado relevante, pega el pasaje de cada documento tras cotejar sus fuentes. No se guarda ni transmite este texto. Al descargar el borrador, se crea un archivo en tu dispositivo con los pasajes y sus fuentes.</p>'+
+  '<div class="eu-comparador-acciones"><button type="button" data-comp-ejecutar>Resaltar diferencias</button><button type="button" data-comp-exportar>Descargar borrador con fuentes</button><button type="button" data-comp-limpiar>Limpiar selección</button></div>'+
   '<p class="eu-comparador-estado" id="euComparadorEstado" role="status" aria-live="polite"></p>'+
   '<div id="euComparadorResultado" class="eu-comparador-resultado" hidden><p><strong>Diferencias de redacción</strong> (resaltadas). El resultado no establece relación normativa.</p>'+
   '<div class="eu-comparador-salidas"><section><h4>Texto A · fragmentos ausentes en B</h4><div id="euComparadorAntes"></div></section><section><h4>Texto B · fragmentos ausentes en A</h4><div id="euComparadorDespues"></div></section></div></div>';
@@ -157,13 +202,19 @@ function avisar(mensaje,elemento){
 if(typeof document!=='undefined'){
  document.addEventListener('input',e=>{
   const lado=e.target.id==='euComparadorTextoA'?'a':e.target.id==='euComparadorTextoB'?'b':null;
-  if(lado&&seleccion[lado])pasajesEditados.set(seleccion[lado].id,e.target.value.slice(0,LIMITE));
+  if(lado&&seleccion[lado]){
+   pasajesEditados.set(seleccion[lado].id,e.target.value.slice(0,LIMITE));
+   const salida=document.getElementById('euComparadorResultado');
+   if(salida)salida.hidden=true;
+   estado('Pasaje actualizado. Vuelve a resaltar diferencias para ver el resultado actual.');
+  }
  });
  document.addEventListener('click',e=>{
-  const boton=e.target.closest?.('[data-comp-lado],[data-comp-ejecutar],[data-comp-limpiar],[data-comp-limpiar-global],[data-comp-cerrar]');
+  const boton=e.target.closest?.('[data-comp-lado],[data-comp-ejecutar],[data-comp-exportar],[data-comp-limpiar],[data-comp-limpiar-global],[data-comp-cerrar]');
   if(!boton)return;
   if(boton.hasAttribute('data-comp-cerrar')){crearVentana().close();return;}
   if(boton.hasAttribute('data-comp-ejecutar')){resultado();return;}
+  if(boton.hasAttribute('data-comp-exportar')){exportar();return;}
   if(boton.hasAttribute('data-comp-limpiar')||boton.hasAttribute('data-comp-limpiar-global')){
    limpiarSeleccion();return;
   }
@@ -178,5 +229,5 @@ if(typeof document!=='undefined'){
   else avisar('Texto '+lado.toUpperCase()+' seleccionado. Elige el otro documento, también puede ser de otra búsqueda.',boton);
  });
 }
-window.EuclidianComparador={panel,preparar,marcado,fuenteOficial};
+window.EuclidianComparador={panel,preparar,marcado,fuenteOficial,borrador,limpiar:limpiarSesion};
 })();

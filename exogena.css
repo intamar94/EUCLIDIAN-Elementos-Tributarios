@@ -1,0 +1,16 @@
+/* M7 · Conserva la tipografía y los colores heredados de EUCLIDIAN. */
+.exogena-lab { max-width: 72rem; margin: 1rem auto; padding: clamp(1rem,3vw,2rem); line-height: 1.6; }
+.exogena-lab h2 { margin-top: 0; }
+.exogena-aviso { border-left: 4px solid currentColor; padding: .75rem 1rem; font-weight: 600; }
+.exogena-acciones { display: flex; flex-wrap: wrap; gap: .75rem; margin: 1rem 0; }
+.exogena-lab button, .exogena-lab input { font: inherit; font-size: 16px; min-height: 44px; max-width: 100%; }
+.exogena-lab button { padding: .6rem 1rem; cursor: pointer; }
+.exogena-lab label { display: block; font-weight: 600; margin-bottom: .5rem; }
+.exogena-lab input[type=file] { display: block; width: 100%; padding: .5rem 0; }
+.exogena-lab input[type=file]::file-selector-button { min-height: 44px; font: inherit; cursor: pointer; }
+.exogena-lab :focus-visible { outline: 3px solid currentColor; outline-offset: 3px; }
+.exogena-tabla { overflow-x: auto; max-width: 100%; }
+.exogena-tabla table { width: 100%; border-collapse: collapse; font-size: 1rem; }
+.exogena-tabla caption { text-align: left; font-weight: 600; padding: .75rem 0; }
+.exogena-tabla th, .exogena-tabla td { padding: .75rem; text-align: left; vertical-align: top; border-bottom: 1px solid currentColor; overflow-wrap: anywhere; }
+@media(max-width: 560px) { .exogena-acciones { flex-direction: column; } .exogena-lab button { width: 100%; } .exogena-tabla table { min-width: 35rem; } }

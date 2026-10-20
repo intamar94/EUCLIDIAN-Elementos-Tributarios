@@ -54,6 +54,8 @@ async function authToken(){
   try{return await authRefreshPendiente;}finally{authRefreshPendiente=null;}
 }
 function authMostrarPuerta(){window.EuclidianExpedientes?.limpiar();
+  window.EuclidianHerramientas?.limpiar();
+  window.EuclidianComparador?.limpiar();window.EuclidianInformes?.limpiar();
   window.euclidianRestablecerVista?.();
   const puerta=document.getElementById('puerta');if(puerta)puerta.hidden=false;
   ['cab','inicioPanel','novedadesCab','controles','barra','cuentaPanel','bienvenida','lista','paginas'].forEach(id=>{const el=document.getElementById(id);if(el)el.hidden=true;});
@@ -188,7 +190,9 @@ window.addEventListener('storage',e=>{
 window.euclidianAuthExpirada=()=>{authClear();authMostrarPuerta();authStatus('Tu sesión terminó. Vuelve a entrar.','aviso');};
 window.euclidianMostrarCuenta=authCuenta;
 window.euclidianAuthSinSuscripcion=async info=>{
+  const generacion=authGeneracion;
   const data=await authCuenta();
+  if(generacion!==authGeneracion||!data)return null;
   authOcultarPuerta();
   const estado=document.getElementById('cuentaEstado');
   if(estado&&info?.access?.estado)estado.textContent=String(info.access.estado).replaceAll('_',' ');
@@ -249,13 +253,13 @@ document.getElementById('authInternoForm')?.addEventListener('submit',async e=>{
   catch(err){authStatus(err.message||'Clave interna incorrecta.','error');}
 });
 document.getElementById('cuentaSalir')?.addEventListener('click',async()=>{
-  if(window.EuclidianExpedientes?.confirmarSalida?.()===false)return;
+  if((window.EuclidianHerramientas?.confirmarSalida||window.EuclidianExpedientes?.confirmarSalida)?.()===false)return;
   const access=authGet(AUTH_KEYS.access);authClear();
   if(access)authPost({action:'logout',access_token:access}).catch(()=>{});
   authMostrarPuerta();authCambiarTab(false);authStatus('Sesión cerrada.','ok');
 });
 document.getElementById('cuentaRecuperar')?.addEventListener('click',()=>{
-  if(window.EuclidianExpedientes?.confirmarSalida?.()===false)return;
+  if((window.EuclidianHerramientas?.confirmarSalida||window.EuclidianExpedientes?.confirmarSalida)?.()===false)return;
   const email=document.getElementById('cuentaEmail')?.textContent||'';
   if(email.includes('@'))document.getElementById('authEmail').value=email;
   authMostrarPuerta();authCambiarTab(false);authStatus('Usa “Olvidé mi contraseña” para recibir un enlace seguro.','aviso');

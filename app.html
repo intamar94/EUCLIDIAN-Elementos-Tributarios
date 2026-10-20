@@ -15,6 +15,12 @@
 <link rel="stylesheet" href="/expedientes.css">
 <link rel="stylesheet" href="/informes.css">
 <link rel="stylesheet" href="/consulta.css">
+<link rel="stylesheet" href="/cartera.css">
+<link rel="stylesheet" href="/agenda.css">
+<link rel="stylesheet" href="/exogena.css">
+<link rel="stylesheet" href="/asistente.css">
+<link rel="stylesheet" href="/herramientas.css">
+
 <link rel="stylesheet" href="/bienvenida.css">
 <link rel="stylesheet" href="/identidad-euclidian.css">
 <link rel="stylesheet" href="/heroes-euclidian-responsive.css">
@@ -169,6 +175,21 @@
       <p>Los archivos importados siempre vuelven a estado «Borrador sin revisión»; verifica las referencias DIAN.</p>
     </div>
   </section>
+  <section class="herramientas-locales" aria-labelledby="herramientasTitulo">
+    <h2 id="herramientasTitulo">Laboratorio de trabajo</h2>
+    <p id="herramientasAviso">Practica con datos ficticios. Estas herramientas funcionan en esta pestaña y se vacían al recargar o cerrar sesión. No introduzcas datos personales ni de clientes.</p>
+    <div class="herramientas-menu" role="tablist" aria-label="Herramientas locales">
+      <button type="button" id="labTabCartera" role="tab" aria-selected="true" aria-controls="carteraPanel" tabindex="0">Perfiles de lectura</button>
+      <button type="button" id="labTabAgenda" role="tab" aria-selected="false" aria-controls="agendaPanel" tabindex="-1">Agenda manual</button>
+      <button type="button" id="labTabExogena" role="tab" aria-selected="false" aria-controls="exogenaPanel" tabindex="-1">Revisar CSV ficticio</button>
+      <button type="button" id="labTabAsistente" role="tab" aria-selected="false" aria-controls="asistentePanel" tabindex="-1">Guía de investigación</button>
+    </div>
+    <div id="carteraPanel" role="tabpanel" aria-labelledby="labTabCartera" tabindex="0"></div>
+    <div id="agendaPanel" role="tabpanel" aria-labelledby="labTabAgenda" tabindex="0" hidden></div>
+    <div id="exogenaPanel" role="tabpanel" aria-labelledby="labTabExogena" tabindex="0" hidden></div>
+    <div id="asistentePanel" role="tabpanel" aria-labelledby="labTabAsistente" tabindex="0" hidden></div>
+  </section>
+
 </section>
 
 <section class="cuenta-panel marco" hidden id="cuentaPanel" aria-labelledby="cuentaTitulo" tabindex="-1">
@@ -244,6 +265,11 @@
 <script src="/informes.js" defer></script>
 <script src="/expedientes.js" defer></script>
 <script src="/bloques.js" defer></script>
+<script src="/cartera.js" defer></script>
+<script src="/agenda.js" defer></script>
+<script src="/exogena.js" defer></script>
+<script src="/asistente.js" defer></script>
+<script src="/herramientas.js" defer></script>
 <script src="/auth.js" defer></script>
 <script src="/bienvenida.js" defer></script>
 <script src="/bandeja.js" defer></script>

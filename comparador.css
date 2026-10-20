@@ -41,3 +41,6 @@
 .eu-comparador-seleccion button{min-height:40px;cursor:pointer;border:1px solid #b5cab8;border-radius:7px;padding:8px 12px;background:#fffefa;color:#294f39;font:600 12px 'IBM Plex Sans',sans-serif}
 .eu-comparador-seleccion button:focus-visible{outline:3px solid #aa745a;outline-offset:2px}
 @media(max-width:390px){.eu-comparador-seleccion{flex-direction:column;align-items:stretch}.eu-comparador-seleccion>span{min-width:0}}
+
+.eu-comparador-acciones [data-comp-exportar]{color:#26553a;background:#f4f7ee;border:1px solid #aac4b1}
+@media(max-width:700px){.eu-comparador-matrices textarea{font-size:16px}.eu-comparador-acciones button{flex:1 1 180px}}
