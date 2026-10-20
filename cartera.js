@@ -27,16 +27,24 @@ function eliminar(id){
  if(editando===id)editando='';
  estado='Perfil eliminado de esta sesión.';render();return true;
 }
-function consulta(id){
+function consulta(id,tema){
  const perfil=perfiles.get(id);
- return perfil?perfil.temas.map(t=>TEMAS[t]).join(' '):'';
+ if(!perfil)return '';
+ // Una consulta por tema evita la intersección accidental de áreas distintas.
+ const seleccionado=tema===undefined&&perfil.temas.length===1?perfil.temas[0]:tema;
+ return perfil.temas.includes(seleccionado)?TEMAS[seleccionado]:'';
 }
-function buscar(id){
- const q=consulta(id);
- if(!q)return false;
+function buscar(id,tema){
+ const q=consulta(id,tema);
+ if(!q){
+  estado='Elige un tema del perfil para consultar por separado.';
+  const mensaje=typeof document!=='undefined'?document.getElementById('carteraEstado'):null;
+  if(mensaje)mensaje.textContent=estado;
+  return false;
+ }
  let aceptada=false;
  try{aceptada=typeof window.euclidianBuscarTexto==='function'&&window.euclidianBuscarTexto(q)===true;}catch(_){aceptada=false;}
- estado=aceptada?'Consulta enviada. Revisa los resultados y sus fuentes; una coincidencia no acredita una obligación.':'La consulta requiere acceso disponible. Puedes seguir organizando las preferencias de lectura.';
+ estado=aceptada?'Consulta de '+q+' enviada por separado. Revisa los resultados y sus fuentes; una coincidencia no acredita una obligación.':'La consulta de '+q+' requiere acceso disponible. Puedes seguir organizando las preferencias de lectura.';
  const mensaje=typeof document!=='undefined'?document.getElementById('carteraEstado'):null;
  if(mensaje)mensaje.textContent=estado;
  return aceptada;
@@ -48,7 +56,7 @@ function render(){
  if(typeof document==='undefined')return;
  const panel=document.getElementById('carteraPanel');if(!panel)return;
  const activo=perfiles.get(editando),seleccion=activo?activo.temas:[];
- panel.innerHTML='<div class="cartera-local"><h2 id="carteraTitulo">Perfiles de lectura</h2><p id="carteraAyuda">Organiza temas de investigación con alias automáticos. Solo se conservan en esta sesión; se borran al salir o recargar. No introduzcas clientes, NIT, importes ni datos personales.</p><p class="cartera-aviso">Son preferencias de lectura: no generan alertas, correos ni obligaciones tributarias.</p><form id="carteraFormulario" aria-describedby="carteraAyuda"><fieldset><legend>'+ (activo?'Editar '+escapar(activo.alias):'Nuevo perfil') +' · elige de uno a tres temas</legend><div class="cartera-temas">'+Object.entries(TEMAS).map(([id,label])=>'<label><input type="checkbox" name="carteraTema" value="'+id+'"'+(seleccion.includes(id)?' checked':'')+'>'+escapar(label)+'</label>').join('')+'</div></fieldset><div class="cartera-acciones"><button type="submit">'+(activo?'Guardar preferencias':'Crear perfil')+'</button>'+(activo?'<button type="button" id="carteraCancelar">Cancelar edición</button>':'')+'</div></form><p id="carteraEstado" role="status" aria-live="polite">'+escapar(estado)+'</p><p>'+perfiles.size+' de '+MAX_PERFILES+' perfiles en esta sesión.</p><ul class="cartera-lista">'+[...perfiles.values()].map(p=>'<li><h3>'+escapar(p.alias)+'</h3><p>'+p.temas.map(t=>escapar(TEMAS[t])).join(' · ')+'</p><p class="cartera-consulta">Consulta: '+escapar(consulta(p.id))+'</p><div class="cartera-acciones"><button type="button" data-cartera="buscar" data-id="'+p.id+'" aria-label="Consultar temas de '+escapar(p.alias)+'">Consultar temas</button><button type="button" data-cartera="editar" data-id="'+p.id+'" aria-label="Editar '+escapar(p.alias)+'">Editar</button><button type="button" data-cartera="eliminar" data-id="'+p.id+'" aria-label="Eliminar '+escapar(p.alias)+'">Eliminar</button></div></li>').join('')+'</ul>'+(perfiles.size?'':'<p>Crea un perfil para reunir tus temas y consultarlos juntos.</p>')+'</div>';
+ panel.innerHTML='<div class="cartera-local"><h2 id="carteraTitulo">Perfiles de lectura</h2><p id="carteraAyuda">Organiza temas de investigación con alias automáticos. Solo se conservan en esta sesión; se borran al salir o recargar. No introduzcas clientes, NIT, importes ni datos personales.</p><p class="cartera-aviso">Son preferencias de lectura: consulta cada tema por separado. Una coincidencia puede ser irrelevante y no genera alertas, correos ni obligaciones tributarias.</p><form id="carteraFormulario" aria-describedby="carteraAyuda"><fieldset><legend>'+ (activo?'Editar '+escapar(activo.alias):'Nuevo perfil') +' · elige de uno a tres temas</legend><div class="cartera-temas">'+Object.entries(TEMAS).map(([id,label])=>'<label><input type="checkbox" name="carteraTema" value="'+id+'"'+(seleccion.includes(id)?' checked':'')+'>'+escapar(label)+'</label>').join('')+'</div></fieldset><div class="cartera-acciones"><button type="submit">'+(activo?'Guardar preferencias':'Crear perfil')+'</button>'+(activo?'<button type="button" id="carteraCancelar">Cancelar edición</button>':'')+'</div></form><p id="carteraEstado" role="status" aria-live="polite">'+escapar(estado)+'</p><p>'+perfiles.size+' de '+MAX_PERFILES+' perfiles en esta sesión.</p><ul class="cartera-lista">'+[...perfiles.values()].map(p=>'<li><h3>'+escapar(p.alias)+'</h3><p>'+p.temas.map(t=>escapar(TEMAS[t])).join(' · ')+'</p><p class="cartera-consulta">Consulta un tema cada vez para distinguir sus resultados. Comprueba el contexto y descarta coincidencias ajenas.</p><div class="cartera-acciones">'+p.temas.map(t=>'<button type="button" data-cartera="buscar" data-id="'+p.id+'" data-tema="'+t+'" aria-label="Consultar '+escapar(TEMAS[t])+' de '+escapar(p.alias)+'">Consultar '+escapar(TEMAS[t])+'</button>').join('')+'<button type="button" data-cartera="editar" data-id="'+p.id+'" aria-label="Editar '+escapar(p.alias)+'">Editar</button><button type="button" data-cartera="eliminar" data-id="'+p.id+'" aria-label="Eliminar '+escapar(p.alias)+'">Eliminar</button></div></li>').join('')+'</ul>'+(perfiles.size?'':'<p>Crea un perfil para reunir tus temas y consultarlos juntos.</p>')+'</div>';
  panel.querySelector('#carteraFormulario').addEventListener('submit',e=>{
   e.preventDefault();const temas=[...panel.querySelectorAll('input[name="carteraTema"]:checked')].map(input=>input.value);
   try{if(editando)actualizar(editando,temas);else nuevo(temas);foco('carteraEstado');}catch(error){estado=error.message;const mensaje=document.getElementById('carteraEstado');mensaje.textContent=estado;}
@@ -56,8 +64,8 @@ function render(){
  const cancelar=panel.querySelector('#carteraCancelar');
  if(cancelar)cancelar.addEventListener('click',()=>{editando='';estado='Edición cancelada.';render();foco('carteraFormulario');});
  panel.querySelectorAll('[data-cartera]').forEach(button=>button.addEventListener('click',()=>{
-  const {cartera:accion,id}=button.dataset;
-  if(accion==='buscar'){buscar(id);return;}
+  const {cartera:accion,id,tema}=button.dataset;
+  if(accion==='buscar'){buscar(id,tema);return;}
   if(accion==='editar'){editando=id;estado='';render();foco('carteraFormulario');return;}
   if(accion==='eliminar'){eliminar(id);foco('carteraFormulario');}
  }));
