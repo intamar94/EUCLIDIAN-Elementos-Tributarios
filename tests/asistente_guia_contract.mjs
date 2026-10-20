@@ -29,6 +29,8 @@ assert.equal(api.montar(),true);assert.equal(panel.querySelectorAll('form').leng
 field().value='IVA';confirmation().checked=true;submit();assert.equal(steps().hidden,true);assert.match(status(),/8 caracteres/);
 field().value='Cómo aplica la retención sobre servicios';confirmation().checked=false;submit();assert.match(status(),/Confirma/);assert.equal(steps().hidden,true);
 confirmation().checked=true;submit();assert.equal(steps().hidden,false);assert.equal(panel.querySelector('[data-asistente-consulta]').value,'retención servicios');
+const contadorChecks=panel.querySelectorAll('[data-contador-evidencia-check]');assert.equal(contadorChecks.length,3);assert.equal(api.estadoEvidencia(),'pendiente_de_cotejo');contadorChecks.forEach(n=>{n.checked=true;n.emit('change');});assert.equal(api.estadoEvidencia(),'requiere_revisor');
+const revision=panel.querySelectorAll('[data-asistente-check]').find(n=>n.attrs['data-asistente-check']==='revision');revision.checked=true;revision.emit('change');assert.equal(api.estadoEvidencia(),'documentado');
 assert.match(status(),/no se ha consultado/);buttons().find(n=>n.textContent==='Buscar estas palabras').click();assert.match(status(),/no está disponible/);
 let sent='';ctx.window.euclidianBuscarTexto=q=>{sent=q;return true;};buttons().find(n=>n.textContent==='Buscar estas palabras').click();assert.equal(sent,'retención servicios');assert.match(status(),/no se ha verificado/);
 ctx.window.euclidianBuscarTexto=()=>false;buttons().find(n=>n.textContent==='Buscar estas palabras').click();assert.match(status(),/no confirmó/);
@@ -37,7 +39,8 @@ const checks=panel.querySelectorAll('[data-asistente-check]');assert.equal(check
 panel.querySelector('[data-asistente-consulta]').emit('input');assert(checks.every(n=>!n.checked));assert.equal((api.hoja().match(/\[Pendiente\]/g)||[]).length,5);
 field().value='<img src=x onerror=alert(1)> https://evil.invalid <script>hack</script> '+ 'x'.repeat(700);confirmation().checked=true;submit();assert.equal(field().value.length,600);assert.equal(panel.querySelectorAll('img').length,0);assert.equal(panel.querySelectorAll('script').length,0);assert(api.palabras(field().value).length<=180);assert.match(api.hoja(),/BORRADOR/);assert.doesNotMatch(api.palabras(field().value),/[<>]/);
 field().value='tema cambiado';field().emit('input');assert.equal(steps().hidden,true);assert.match(status(),/Prepara de nuevo/);assert.doesNotMatch(api.hoja(),/evil/);
-api.limpiar();assert.equal(field().value,'');assert.equal(confirmation().checked,false);assert(checks.every(n=>!n.checked));assert.equal(steps().hidden,true);assert.match(status(),/limpiada/);
+field().value='NIT 123456789';confirmation().checked=true;submit();assert.equal(api.estadoEvidencia(),'abstencion');assert.equal(field().value,'');assert.equal(steps().hidden,true);
+api.limpiar();assert.equal(field().value,'');assert.equal(confirmation().checked,false);assert(checks.every(n=>!n.checked));assert.equal(api.estadoEvidencia(),'pendiente_de_cotejo');assert.equal(steps().hidden,true);assert.match(status(),/limpiada/);
 assert.doesNotMatch(code,/localStorage|sessionStorage|fetch\(|XMLHttpRequest|sendBeacon|innerHTML|SUPABASE/);
 // No fuente/cita inventada, ni dominios arbitrarios navegables: únicamente invoca el buscador existente.
 assert.doesNotMatch(code,/window\.open|location\s*=|https?:\/\//);assert.match(code,/ok===true/);

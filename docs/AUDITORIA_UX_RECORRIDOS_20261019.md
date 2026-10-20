@@ -9,11 +9,15 @@ expedientes e informes. Auditoría de solo lectura: no modifica la aplicación,
 la base de datos, la publicación ni las opciones comerciales.
 
 Los hallazgos identifican recorridos y funciones concretos; las consecuencias
-de foco y presentación móvil deben confirmarse en navegador real. Playwright
-está disponible en este entorno, pero su ejecutable Chromium no está instalado.
-No se realizó ni se afirma revisión visual de esta base. La prueba Node aislada
-sí confirmó que `EuclidianExpedientes.limpiar()` elimina el expediente actual y
-que ningún JavaScript de raíz registra `beforeunload`.
+de foco y presentación móvil requieren evidencia de navegador vinculada al SHA
+que se publique. Esta nota original corresponde a una inspección de solo
+lectura de `ef8c519`; no afirma una revisión visual de esa base concreta.
+Posteriormente, la CI ejecutó Chromium en recorridos móvil y escritorio para
+versiones posteriores. Esa evidencia no cierra por sí sola los hallazgos de
+esta nota: debe registrarse con SHA, ejecución, fecha y entorno en el Auditor
+Profesional. La prueba Node aislada sí confirmó que
+`EuclidianExpedientes.limpiar()` elimina el expediente actual y que ningún
+JavaScript de raíz registra `beforeunload`.
 
 P1: pérdida de trabajo o bloqueo de un recorrido principal. P2: fricción
 importante de uso o accesibilidad. P3: claridad o acabado, sin impedir la tarea.
@@ -113,4 +117,4 @@ antes de publicar o afirmar que están resueltos.
 
 ## Integración posterior
 
-Los cinco hallazgos se abordaron en el bloque UX consolidado: guardia de salida voluntaria y beforeunload con cambios no exportados; foco de navegación/paginación; campos móviles específicos; y origen neutral de ficha. La expiración de sesión siempre limpia memoria sin pedir autorización. Guardar un texto o abrir impresión no equivale a recuperar un expediente: el formato JSON es el respaldo recuperable. Validación visual integrada en CI pendiente al registrar esta nota.
+Los cinco hallazgos se abordaron en el bloque UX consolidado: guardia de salida voluntaria y beforeunload con cambios no exportados; foco de navegación/paginación; campos móviles específicos; y origen neutral de ficha. La expiración de sesión siempre limpia memoria sin pedir autorización. Guardar un texto o abrir impresión no equivale a recuperar un expediente: el formato JSON es el respaldo recuperable. La CI posterior ejecutó recorridos Chromium para versiones posteriores; la revalidación de cada hallazgo exige anotar el SHA y el run que lo demuestra.

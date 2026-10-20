@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "euclidian-contador-fuente-v1",
+  "title": "Ficha de fuente del Contador de Evidencia",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["origen_raiz", "url_final", "tipo_documento", "capturado_en", "documento_sha256", "pasaje", "pasaje_sha256", "localizador", "estado", "version"],
+  "properties": {
+    "origen_raiz": {"type": "string", "format": "uri"},
+    "url_final": {"type": "string", "format": "uri"},
+    "tipo_documento": {"type": "string", "minLength": 2, "maxLength": 80},
+    "fecha_acto": {"type": "string", "format": "date"},
+    "fecha_publicacion": {"type": "string", "format": "date"},
+    "capturado_en": {"type": "string", "format": "date-time"},
+    "documento_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "pasaje": {"type": "string", "minLength": 1, "maxLength": 6000},
+    "pasaje_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "localizador": {"type": "string", "minLength": 2, "maxLength": 240},
+    "version": {"type": "string", "minLength": 1, "maxLength": 120},
+    "estado": {"enum": ["pendiente_de_cotejo", "requiere_revisor", "documentado", "rechazado"]},
+    "revisor": {"type": "string", "minLength": 3, "maxLength": 120}
+  }
+}

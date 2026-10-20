@@ -1,5 +1,13 @@
 # EUCLIDIAN ET · implementación legal en euclidianet.com
-**17 octubre 2026 — BORRADOR. No publicar ni fusionar sin la lista de aprobación.**
+**17 octubre 2026 — borrador histórico.**
+
+## Actualización factual de publicación — 20 octubre 2026
+
+- `https://euclidianet.com` está publicado en Vercel con la versión de `main` comprobada en producción.
+- `https://www.euclidianet.com` redirige al dominio principal.
+- Las rutas `https://euclidianet.com/impressum` y `https://euclidianet.com/datenschutz` respondieron HTTP 200, con CSP restrictiva y sin caché.
+- La protección SSO de Vercel fue retirada únicamente para permitir la lectura pública de la portada y de las rutas legales. El acceso externo, registro, aportes y facturación siguen deshabilitados por sus banderas de aplicación; esta publicación no autoriza actividad comercial.
+- `EUCLIDIAN_LEGAL_APPROVED=1` habilita los textos legales configurados en Vercel. No convierte la guía en una certificación jurídica ni elimina los pendientes de revisión humana, prueba de correo entrante y DMARC descritos más abajo.
 
 ## Estado comprobado de infraestructura
 - Dominio real **euclidianet.com**, comprado y verificado con Vercel; configurado para el proyecto euclidian-elementos-tributarios.
