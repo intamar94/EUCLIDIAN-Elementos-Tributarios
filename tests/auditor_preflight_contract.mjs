@@ -3,6 +3,9 @@ import {validarEvidencia,informe} from '../scripts/auditar_release.mjs';
 
 const base={release:{sha:'15c392c20345ae13a4b3dd4661a65fa58e1dad6f',environment:'CI',checked_at:'2026-10-20T09:00:00Z',ci:{run:'39395598723',conclusion:'success'}},controls:[{id:'PRE-REL-01',class:'operación',severity:'P0',status:'PASS',owner:'Auditor',sha:'15c392c20345ae13a4b3dd4661a65fa58e1dad6f',environment:'CI',checked_at:'2026-10-20T09:00:00Z',evidence:{reference:'CI 39395598723'}}]};
 assert.equal(validarEvidencia(base).valid,true);
+const mixed=structuredClone(base);
+mixed.release.environment='production';
+assert.equal(validarEvidencia(mixed).valid,true,'Evidencia CI puede acreditar el mismo SHA para producción si se declara su entorno propio');
 for(const mutate of [
  value=>{value.release.sha='no-sha';},
  value=>{value.release.ci.conclusion='failure';},
@@ -11,7 +14,6 @@ for(const mutate of [
  value=>{delete value.controls[0].sha;},
  value=>{delete value.controls[0].checked_at;},
  value=>{value.controls[0].sha='438692a533ea5bc304ffadae980c720f235f928e';},
- value=>{value.controls[0].environment='production';},
  value=>{value.controls[0].checked_at='2026-10-21T09:00:00Z';},
  value=>{delete value.controls[0].evidence.reference;}
 ]){
