@@ -59,7 +59,7 @@ const assert=require('node:assert/strict');
    assert.equal(await dlg.evaluate(el=>el.open),false);
    await page.locator('[data-comp-limpiar-global]').click();
    assert.equal(await page.locator('#euComparadorSeleccion').count(),0,'Limpiar no deja datos locales');
-   assert.equal(await dlg.evaluate(el=>el.open),false);
+   assert.equal(await dlg.count(),0,'Limpiar elimina los pasajes del modal del DOM');
    await page.close();
    assert.deepEqual(errors,[],'Sin errores JavaScript '+width);
   }

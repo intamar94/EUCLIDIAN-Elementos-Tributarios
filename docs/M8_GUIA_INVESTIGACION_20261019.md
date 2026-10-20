@@ -6,7 +6,7 @@
 
 Recorrido: tema breve sin datos personales → confirmación expresa de exclusión de información confidencial → propuesta de palabras mediante reglas → edición → botón que invoca `window.euclidianBuscarTexto(q)` → cinco comprobaciones autodeclaradas → hoja TXT opcional marcada como borrador.
 
-La pregunta se limita a 600 caracteres y la consulta a 180. No existen peticiones de red, almacenamiento persistente, modelo de IA, citas ni respuestas tributarias en este módulo. Únicamente la consulta editable pasa al buscador por acción expresa; la privacidad y el procesamiento posterior dependen del buscador existente. La confirmación de ausencia de datos sensibles es autodeclarada, no un detector automático. No pegar información de clientes.
+La pregunta se limita a 600 caracteres y la consulta a 160. No existen peticiones de red, almacenamiento persistente, modelo de IA, citas ni respuestas tributarias en este módulo. Únicamente la consulta editable pasa al buscador por acción expresa; la privacidad y el procesamiento posterior dependen del buscador existente. La confirmación de ausencia de datos sensibles es autodeclarada, no un detector automático. No pegar información de clientes.
 
 Las casillas recuerdan cotejar fuente oficial, publicación/período, condiciones/excepciones, versión y revisión profesional. Marcarlas no constituye evidencia acreditada. La hoja exportada lo explica incluso cuando todas están marcadas. Las comprobaciones se reinician cuando se modifica la consulta; cambiar el tema exige preparar de nuevo. Limpiar elimina el estado de memoria; no puede borrar una descarga que el usuario ya guardó.
 
