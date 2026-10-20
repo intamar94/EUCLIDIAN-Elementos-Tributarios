@@ -5,5 +5,6 @@
 .eu-asistente button{max-width:100%;min-height:44px;padding:.65rem 1rem;margin:.5rem .5rem .5rem 0;border:1px solid #315e61;border-radius:8px;background:#214d50;color:#fff;font:inherit;cursor:pointer;white-space:normal}
 .eu-asistente button.eu-asistente-limpiar{background:transparent;color:#214d50}.eu-asistente fieldset{min-width:0;margin-top:1.3rem;padding:1rem;border:1px solid #a6bbb5;border-radius:8px}.eu-asistente legend{padding:0 .4rem;font-weight:650}
 .eu-asistente .eu-asistente-casilla{display:flex;align-items:flex-start;gap:.65rem;min-height:44px;margin:.7rem 0;cursor:pointer}.eu-asistente input[type=checkbox]{flex-shrink:0;width:20px;height:20px;margin-top:.25rem;accent-color:#214d50}
+.eu-asistente .eu-contador-estados{margin:.65rem 0;padding-left:1.3rem}.eu-asistente .eu-contador-estados li{margin:.45rem 0}.eu-asistente [data-contador-evidencia-actual]{padding:.8rem 1rem;border:1px solid #a6bbb5;border-radius:8px;background:#f3f8f5;font-weight:650}
 .eu-asistente [data-asistente-estado]{overflow-wrap:anywhere}.eu-asistente :focus-visible{outline:3px solid #b47420;outline-offset:3px}.eu-asistente [hidden]{display:none!important}
 @media(max-width:480px){.eu-asistente{margin:.5rem;padding:1rem}.eu-asistente button{width:100%;margin-right:0}.eu-asistente fieldset{padding:.65rem}}

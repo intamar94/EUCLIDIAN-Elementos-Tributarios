@@ -110,6 +110,10 @@ jobs:
         run: node tests/ficha_practica_contract.mjs
       - name: Contrato de evidencia jurídica por campo
         run: node tests/evidencia_por_campo_contract.mjs
+      - name: Contrato del Contador de Evidencia
+        run: node tests/contador_evidencia_contract.mjs
+      - name: Contrato del Auditor Profesional
+        run: node tests/auditor_preflight_contract.mjs
       - name: Contrato de pasajes y hashes oficiales
         run: node tests/evidencia_pasajes_contract.mjs
       - name: Contrato comparador normativo exploratorio

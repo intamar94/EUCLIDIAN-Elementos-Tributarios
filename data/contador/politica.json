@@ -1,0 +1,21 @@
+{
+  "id": "euclidian-contador-evidencia-v1",
+  "nombre": "EUCLIDIAN · Contador de Evidencia",
+  "version": "1.0.0",
+  "estado": "documental_sin_ia_externa",
+  "proposito": "Preparar investigación tributaria trazable a partir de fuentes oficiales DIAN, sin emitir un concepto aplicable a un cliente.",
+  "reglas": {
+    "datos_prohibidos": ["NIT", "nombre de cliente", "correo de cliente", "saldo", "declaración", "contraseña", "documento de identidad"],
+    "estados_salida": ["documentado", "pendiente_de_cotejo", "requiere_revisor", "abstencion"],
+    "afirmaciones_restringidas": ["vigente", "obligatorio", "modifica", "deroga", "aplica a tu caso"],
+    "fuentes_permitidas": [
+      "https://normograma.dian.gov.co/dian/compilacion/novedades_boletines.html",
+      "https://normograma.dian.gov.co/dian/compilacion/tributario.html?q=TRIBUTARIO"
+    ]
+  },
+  "salvaguardas": [
+    "Sin modelo, proveedor de IA ni transmisión de consultas.",
+    "Sin Supabase, almacenamiento persistente ni datos de clientes.",
+    "Una afirmación tributaria requiere URL DIAN, pasaje, hash, versión y revisión humana antes de presentarse como conclusión."
+  ]
+}
