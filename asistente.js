@@ -42,6 +42,15 @@ function actualizarEstadoEvidencia(){
  return codigo;
 }
 function hayDatoNoPermitido(texto){return PATRONES_DATOS_PROHIBIDOS.some(patron=>patron.test(texto));}
+function abstenerConsulta(){
+ abstencion=true;consulta='';checks.clear();evidencia.clear();
+ raiz.querySelector('[data-asistente-consulta]').value='';
+ raiz.querySelectorAll('[data-asistente-check]').forEach(n=>n.checked=false);
+ raiz.querySelectorAll('[data-contador-evidencia-check]').forEach(n=>n.checked=false);
+ raiz.querySelector('[data-asistente-pasos]').hidden=true;
+ actualizarEstadoEvidencia();
+ aviso('No incluyas datos personales ni confidenciales en la consulta. Se retiró de esta guía local; prepara de nuevo la investigación.');
+}
 function hoja(){
  return ['EUCLIDIAN · Hoja de investigación · BORRADOR',
  'EUCLIDIAN · Contador de Evidencia. Guía basada en reglas, sin modelo de IA ni respuesta jurídica.',
@@ -75,14 +84,18 @@ function generar(){
  aviso(consulta?'Palabras propuestas mediante reglas. Edítalas antes de buscar. Todavía no se ha consultado ninguna fuente.':'No pude extraer palabras útiles. Escribe una consulta antes de buscar.');resumen();return true;
 }
 function buscar(){
+ if(!pregunta||!confirmado||abstencion){aviso('Prepara primero el tema sin datos personales.');return;}
  const campo=raiz.querySelector('[data-asistente-consulta]');consulta=limpiarTexto(campo.value,MAX_CONSULTA);campo.value=consulta;
+ if(hayDatoNoPermitido(consulta)){abstenerConsulta();return;}
  if(consulta.length<3){aviso('La consulta debe tener al menos 3 caracteres.');return;}
  if(typeof window.euclidianBuscarTexto!=='function'){aviso('El buscador no está disponible. Copia las palabras al buscador cuando tengas acceso.');return;}
  try{const ok=window.euclidianBuscarTexto(consulta);aviso(ok===true?'Consulta enviada al buscador. Revisa los resultados y abre la fuente oficial; no se ha verificado su contenido.':'El buscador no confirmó la consulta. No se ha comprobado ninguna fuente.');}
  catch(_){aviso('No se pudo abrir la consulta. Conserva estas palabras e inténtalo de nuevo.');}
 }
 function exportar(){
+ if(abstencion){aviso('Prepara primero el tema sin datos personales.');return;}
  consulta=limpiarTexto(raiz.querySelector('[data-asistente-consulta]').value,MAX_CONSULTA);
+ if(hayDatoNoPermitido(consulta)){abstenerConsulta();return;}
  if(!pregunta||!confirmado){aviso('Prepara primero el tema sin datos personales.');return;}
  const blob=new Blob([hoja()],{type:'text/plain;charset=utf-8'}),url=URL.createObjectURL(blob),a=el('a',null,{href:url,download:'euclidian-investigacion-borrador.txt'});
  document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);aviso('Borrador descargado en tu dispositivo. No acredita verificación ni revisión profesional.');
@@ -100,7 +113,14 @@ function montar(){
  form.append(label,input,ayuda,conf,el('button','Preparar investigación',{type:'submit'}));form.addEventListener('submit',e=>{e.preventDefault();generar();});panel.append(form);
  const pasos=el('div',null,{'data-asistente-pasos':''});pasos.hidden=true;
  const queryLabel=el('label','2. Revisa las palabras para el buscador',{for:'asistenteConsulta'}),query=el('input',null,{id:'asistenteConsulta',type:'text',maxlength:String(MAX_CONSULTA),'data-asistente-consulta':''});
- query.addEventListener('input',()=>{consulta=limpiarTexto(query.value,MAX_CONSULTA);checks.clear();pasos.querySelectorAll('[data-asistente-check]').forEach(n=>n.checked=false);resumen();});
+ query.addEventListener('input',()=>{
+  consulta=limpiarTexto(query.value,MAX_CONSULTA);
+  if(hayDatoNoPermitido(consulta)){abstenerConsulta();return;}
+  checks.clear();evidencia.clear();
+  pasos.querySelectorAll('[data-asistente-check]').forEach(n=>n.checked=false);
+  pasos.querySelectorAll('[data-contador-evidencia-check]').forEach(n=>n.checked=false);
+  resumen();
+ });
  const btn=el('button','Buscar estas palabras',{type:'button','data-contador-evidencia-buscar':''});btn.addEventListener('click',buscar);pasos.append(queryLabel,query,el('p','Solo las palabras de este campo se envían al buscador autorizado ya disponible al pulsar Buscar. No uses datos confidenciales.',{class:'eu-asistente-ayuda'}),btn);
  const fieldset=el('fieldset',null);fieldset.append(el('legend','3. Comprueba la evidencia por tu cuenta'));
  for(const[id,txt]of CONTROLES){const lbl=el('label',null,{class:'eu-asistente-casilla'}),check=el('input',null,{type:'checkbox','data-asistente-check':id});check.addEventListener('change',()=>{if(check.checked)checks.add(id);else checks.delete(id);resumen();});lbl.append(check,document.createTextNode(txt));fieldset.append(lbl);}
