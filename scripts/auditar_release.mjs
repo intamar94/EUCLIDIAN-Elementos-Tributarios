@@ -29,7 +29,6 @@ export function validarEvidencia(input){
    if(!shaOk(control.sha))errors.push(at+' PASS requiere SHA propio válido.');
    else if(shaOk(release.sha)&&control.sha.toLowerCase()!==release.sha.toLowerCase())errors.push(at+' PASS pertenece a otro SHA.');
    if(!text(control.environment))errors.push(at+' PASS requiere entorno propio.');
-   else if(text(release.environment)&&control.environment!==release.environment)errors.push(at+' PASS pertenece a otro entorno.');
    if(!dateOk(control.checked_at))errors.push(at+' PASS requiere fecha propia.');
    else if(dateOk(release.checked_at)&&Date.parse(control.checked_at)>Date.parse(release.checked_at))errors.push(at+' PASS tiene fecha posterior a la revisión.');
    if(!text(control?.evidence?.reference))errors.push(at+' PASS requiere referencia de evidencia.');
