@@ -13,6 +13,7 @@ assert.match(api.html(exp),/Completar pregunta de investigación/);
 assert.match(api.html(exp),/Adjuntar documentos oficiales DIAN/);
 const completo={...exp,estado:'aprobado',campos:{titulo:'IVA / Bogotá: revisión 2026',pregunta:'Pregunta',hechos:'Línea uno\r\nLínea dos\rLínea tres\nLínea cuatro',hipotesis:'Hipótesis',salvedades:'Salvedades',conclusion:'Conclusión <script> & "cita"'},fuentes:[{url:'https://normograma.dian.gov.co/dian/compilacion/docs/ejemplo.htm',ref:'Referencia de prueba',titulo:'Prueba'}]};
 assert.equal(api.extraer(completo).pendientes.length,4,'Completar no aprueba la revisión');
+assert.match(api.html(completo),/Línea uno<br>Línea dos<br>Línea tres<br>Línea cuatro/,'HTML y Word conservan los mismos saltos de línea');
 for(const tipo of ['tecnico','cliente']){
  assert.match(api.html(completo,tipo),/Obtener revisión profesional/);
  assert.match(api.html(completo,tipo),/Estado: borrador sin revisión/);
@@ -35,6 +36,14 @@ for path in Path(sys.argv[1]).glob('*.docx'):
   assert z.testzip() is None, 'CRC inválida'
   for part in z.namelist(): ET.fromstring(z.read(part))
   doc=ET.fromstring(z.read('word/document.xml'))
+  rels=ET.fromstring(z.read('word/_rels/document.xml.rels'))
+  relns={'p':'http://schemas.openxmlformats.org/package/2006/relationships'}
+  external={r.attrib['Id']:r.attrib['Target'] for r in rels.findall('p:Relationship',relns) if r.attrib.get('TargetMode')=='External'}
+  for link in doc.findall('.//w:hyperlink',ns):
+   rid=link.attrib['{http://schemas.openxmlformats.org/officeDocument/2006/relationships}id']
+   assert rid in external, 'Referencia Word rota'
+   assert ''.join(t.text or '' for t in link.findall('.//w:t',ns))==external[rid], 'URL visible diferente al destino'
+   assert external[rid].startswith('https://normograma.dian.gov.co/'), 'Enlace no oficial'
   txt=' '.join(n.text or '' for n in doc.findall('.//w:t',ns))
   assert 'BORRADOR SIN REVISIÓN JURÍDICA' in txt
   assert 'Obtener revisión profesional' in txt

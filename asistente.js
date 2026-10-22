@@ -15,12 +15,12 @@ const EVIDENCIA_CONTADOR=[
  ['hash','Conservé hash e identificación de la versión o captura']
 ];
 const ESTADOS_CONTADOR=Object.freeze({
- documentado:'Documentado: los datos de evidencia están declarados y se marcó la solicitud de revisión. La aplicación no valida ni aprueba el contenido.',
+ documentado:'Documentado: reservado para evidencia cotejada por un revisor. Esta guía de casillas no puede otorgar ese estado.',
  pendiente_de_cotejo:'Pendiente de cotejo: falta registrar o contrastar evidencia con la fuente DIAN.',
  requiere_revisor:'Requiere revisor: la ficha está completa, pero una persona competente debe verificar fuente, pasaje, hash y alcance.',
  abstencion:'Abstención: se detectó un posible dato no permitido. No se prepara búsqueda ni conclusión.'
 });
-const PATRONES_DATOS_PROHIBIDOS=[/\b(?:nit|c[eé]dula|contrase(?:ñ|n)a|saldo)\b/iu,/\b(?:correo\s+de\s+cliente|nombre\s+de\s+cliente|documento\s+de\s+identidad)\b/iu,/\b[\w.+-]+@[\w.-]+\.[a-z]{2,}\b/iu];
+const PATRONES_DATOS_PROHIBIDOS=[/\b(?:nit|c[eé]dula|contrase(?:ñ|n)a|saldo)\b/iu,/\b(?:correo\s+de\s+cliente|nombre\s+de\s+cliente|documento\s+de\s+identidad)\b/iu,/\b[\w.+-]+@[\w.-]+\.[a-z]{2,}\b/iu,/(?<!\d)(?:\d[ .-]?){9,13}(?!\d)/u];
 let raiz=null, pregunta='',consulta='',confirmado=false,abstencion=false;
 const checks=new Set();
 const evidencia=new Set();
@@ -32,7 +32,6 @@ function palabras(v){
 function pendientes(){return CONTROLES.filter(([id])=>!checks.has(id)).map(([,texto])=>texto);}
 function estadoEvidencia(){
  if(abstencion)return 'abstencion';
- if(evidencia.size===EVIDENCIA_CONTADOR.length&&checks.has('revision'))return 'documentado';
  if(evidencia.size===EVIDENCIA_CONTADOR.length)return 'requiere_revisor';
  return 'pendiente_de_cotejo';
 }
@@ -43,7 +42,8 @@ function actualizarEstadoEvidencia(){
 }
 function hayDatoNoPermitido(texto){return PATRONES_DATOS_PROHIBIDOS.some(patron=>patron.test(texto));}
 function abstenerConsulta(){
- abstencion=true;consulta='';checks.clear();evidencia.clear();
+ abstencion=true;consulta='';confirmado=false;checks.clear();evidencia.clear();
+ raiz.querySelector('[data-asistente-sin-datos]').checked=false;
  raiz.querySelector('[data-asistente-consulta]').value='';
  raiz.querySelectorAll('[data-asistente-check]').forEach(n=>n.checked=false);
  raiz.querySelectorAll('[data-contador-evidencia-check]').forEach(n=>n.checked=false);
@@ -71,7 +71,9 @@ function resumen(){
  actualizarEstadoEvidencia();
 }
 function generar(){
- const campo=raiz.querySelector('[data-asistente-pregunta]');pregunta=limpiarTexto(campo.value,MAX_PREGUNTA);campo.value=pregunta;
+ const campo=raiz.querySelector('[data-asistente-pregunta]');
+ if(hayDatoNoPermitido(campo.value)){campo.value='';pregunta='';abstenerConsulta();return false;}
+ pregunta=limpiarTexto(campo.value,MAX_PREGUNTA);campo.value=pregunta;
  confirmado=raiz.querySelector('[data-asistente-sin-datos]').checked;
  if(pregunta.length<8){aviso('Escribe un tema de al menos 8 caracteres.');return false;}
  if(!confirmado){aviso('Confirma que has omitido datos personales y confidenciales.');return false;}
@@ -84,8 +86,10 @@ function generar(){
  aviso(consulta?'Palabras propuestas mediante reglas. Edítalas antes de buscar. Todavía no se ha consultado ninguna fuente.':'No pude extraer palabras útiles. Escribe una consulta antes de buscar.');resumen();return true;
 }
 function buscar(){
- if(!pregunta||!confirmado||abstencion){aviso('Prepara primero el tema sin datos personales.');return;}
- const campo=raiz.querySelector('[data-asistente-consulta]');consulta=limpiarTexto(campo.value,MAX_CONSULTA);campo.value=consulta;
+ if(!pregunta||!confirmado||!raiz.querySelector('[data-asistente-sin-datos]').checked||abstencion){aviso('Prepara primero el tema sin datos personales.');return;}
+ const campo=raiz.querySelector('[data-asistente-consulta]');
+ if(hayDatoNoPermitido(campo.value)){abstenerConsulta();return;}
+ consulta=limpiarTexto(campo.value,MAX_CONSULTA);campo.value=consulta;
  if(hayDatoNoPermitido(consulta)){abstenerConsulta();return;}
  if(consulta.length<3){aviso('La consulta debe tener al menos 3 caracteres.');return;}
  if(typeof window.euclidianBuscarTexto!=='function'){aviso('El buscador no está disponible. Copia las palabras al buscador cuando tengas acceso.');return;}
@@ -94,9 +98,10 @@ function buscar(){
 }
 function exportar(){
  if(abstencion){aviso('Prepara primero el tema sin datos personales.');return;}
+ if(hayDatoNoPermitido(raiz.querySelector('[data-asistente-consulta]').value)){abstenerConsulta();return;}
  consulta=limpiarTexto(raiz.querySelector('[data-asistente-consulta]').value,MAX_CONSULTA);
  if(hayDatoNoPermitido(consulta)){abstenerConsulta();return;}
- if(!pregunta||!confirmado){aviso('Prepara primero el tema sin datos personales.');return;}
+ if(!pregunta||!confirmado||!raiz.querySelector('[data-asistente-sin-datos]').checked){aviso('Prepara primero el tema sin datos personales.');return;}
  const blob=new Blob([hoja()],{type:'text/plain;charset=utf-8'}),url=URL.createObjectURL(blob),a=el('a',null,{href:url,download:'euclidian-investigacion-borrador.txt'});
  document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);aviso('Borrador descargado en tu dispositivo. No acredita verificación ni revisión profesional.');
 }
@@ -107,13 +112,15 @@ function montar(){
  panel.classList.add('eu-asistente');panel.replaceChildren();
  panel.append(el('h2','EUCLIDIAN · Contador de Evidencia'),el('p','Agente de investigación guiada: prepara una búsqueda DIAN y ordena evidencia sin modelo de IA, APIs, asesoría ni respuesta jurídica.'));
  const form=el('form',null),label=el('label','1. Describe el tema sin datos personales',{for:'asistentePregunta'}),input=el('textarea',null,{id:'asistentePregunta',rows:'3',maxlength:String(MAX_PREGUNTA),'data-asistente-pregunta':'',placeholder:'Ejemplo: retención en servicios prestados desde el exterior'});
- input.addEventListener('input',()=>{pregunta='';consulta='';confirmado=false;abstencion=false;checks.clear();evidencia.clear();const anterior=raiz.querySelector('[data-asistente-pasos]');if(anterior)anterior.hidden=true;actualizarEstadoEvidencia();aviso('Tema modificado. Prepara de nuevo la investigación para continuar.');});
+ input.addEventListener('input',()=>{const tema=input.value;limpiar();input.value=tema;aviso('Tema modificado. Prepara de nuevo la investigación para continuar.');});
  const ayuda=el('p','Omite nombres, identificación, NIT, correos, importes o documentos de clientes. El tema permanece en esta pestaña.',{id:'asistenteAyuda',class:'eu-asistente-ayuda'});input.setAttribute('aria-describedby','asistenteAyuda');
  const conf=el('label',null,{class:'eu-asistente-casilla'}),ck=el('input',null,{type:'checkbox','data-asistente-sin-datos':''});conf.append(ck,document.createTextNode('Confirmo que no he incluido datos personales ni confidenciales.'));
+ ck.addEventListener('change',()=>{if(!ck.checked){const tema=input.value;limpiar();input.value=tema;aviso('Confirmación retirada. Prepara de nuevo el tema antes de buscar o descargar.');}});
  form.append(label,input,ayuda,conf,el('button','Preparar investigación',{type:'submit'}));form.addEventListener('submit',e=>{e.preventDefault();generar();});panel.append(form);
  const pasos=el('div',null,{'data-asistente-pasos':''});pasos.hidden=true;
  const queryLabel=el('label','2. Revisa las palabras para el buscador',{for:'asistenteConsulta'}),query=el('input',null,{id:'asistenteConsulta',type:'text',maxlength:String(MAX_CONSULTA),'data-asistente-consulta':''});
  query.addEventListener('input',()=>{
+  if(hayDatoNoPermitido(query.value)){abstenerConsulta();return;}
   consulta=limpiarTexto(query.value,MAX_CONSULTA);
   if(hayDatoNoPermitido(consulta)){abstenerConsulta();return;}
   checks.clear();evidencia.clear();
@@ -129,7 +136,7 @@ function montar(){
  const estados=el('ul',null,{class:'eu-contador-estados','aria-label':'Estados documentales posibles'});
  for(const[codigo,texto]of Object.entries(ESTADOS_CONTADOR)){const item=el('li',codigo.replaceAll('_',' ')+' · '+texto,{'data-contador-estado':codigo});estados.append(item);}
  const actual=el('p',ESTADOS_CONTADOR.pendiente_de_cotejo,{'data-contador-evidencia-actual':'','data-estado-contador':'pendiente_de_cotejo',role:'status','aria-live':'polite'});
- pasos.append(fieldset,el('p','',{'data-asistente-pendientes':'','aria-live':'polite'}),evidenciaFieldset,el('h3','Estado documental'),estados,actual,el('p','El estado documentado es un registro de evidencia declarado por quien investiga; no sustituye la revisión humana ni autoriza una conclusión para un caso concreto.',{class:'eu-asistente-ayuda'}));const descarga=el('button','Descargar hoja de investigación · borrador',{type:'button'});descarga.addEventListener('click',exportar);pasos.append(descarga);panel.append(pasos);
+ pasos.append(fieldset,el('p','',{'data-asistente-pendientes':'','aria-live':'polite'}),evidenciaFieldset,el('h3','Estado documental'),estados,actual,el('p','Marcar todas las casillas mantiene el estado requiere revisor. Solicitar una revisión no acredita que haya sido realizada. El filtro local de datos es preventivo y no garantiza detectar toda información confidencial.',{class:'eu-asistente-ayuda'}));const descarga=el('button','Descargar hoja de investigación · borrador',{type:'button'});descarga.addEventListener('click',exportar);pasos.append(descarga);panel.append(pasos);
  const limpiarBtn=el('button','Limpiar guía',{type:'button',class:'eu-asistente-limpiar'});limpiarBtn.addEventListener('click',()=>{limpiar();input.focus();});panel.append(limpiarBtn,el('p','Todavía no se ha consultado ninguna fuente.',{'data-asistente-estado':'',role:'status','aria-live':'polite'}));resumen();return true;
 }
 window.EuclidianAsistente=Object.freeze({montar,limpiar,palabras,hoja,estadoEvidencia});

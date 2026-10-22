@@ -30,7 +30,7 @@ field().value='IVA';confirmation().checked=true;submit();assert.equal(steps().hi
 field().value='Cómo aplica la retención sobre servicios';confirmation().checked=false;submit();assert.match(status(),/Confirma/);assert.equal(steps().hidden,true);
 confirmation().checked=true;submit();assert.equal(steps().hidden,false);assert.equal(panel.querySelector('[data-asistente-consulta]').value,'retención servicios');
 const contadorChecks=panel.querySelectorAll('[data-contador-evidencia-check]');assert.equal(contadorChecks.length,3);assert.equal(api.estadoEvidencia(),'pendiente_de_cotejo');contadorChecks.forEach(n=>{n.checked=true;n.emit('change');});assert.equal(api.estadoEvidencia(),'requiere_revisor');
-const revision=panel.querySelectorAll('[data-asistente-check]').find(n=>n.attrs['data-asistente-check']==='revision');revision.checked=true;revision.emit('change');assert.equal(api.estadoEvidencia(),'documentado');
+const revision=panel.querySelectorAll('[data-asistente-check]').find(n=>n.attrs['data-asistente-check']==='revision');revision.checked=true;revision.emit('change');assert.equal(api.estadoEvidencia(),'requiere_revisor','Pedir revisión no equivale a una revisión aprobada');
 assert.match(status(),/no se ha consultado/);buttons().find(n=>n.textContent==='Buscar estas palabras').click();assert.match(status(),/no está disponible/);
 let sent='';ctx.window.euclidianBuscarTexto=q=>{sent=q;return true;};buttons().find(n=>n.textContent==='Buscar estas palabras').click();assert.equal(sent,'retención servicios');assert.match(status(),/no se ha verificado/);
 ctx.window.euclidianBuscarTexto=()=>false;buttons().find(n=>n.textContent==='Buscar estas palabras').click();assert.match(status(),/no confirmó/);
@@ -41,10 +41,14 @@ assert(contadorChecks.every(n=>!n.checked));assert.equal(api.estadoEvidencia(),'
 const query=panel.querySelector('[data-asistente-consulta]');
 query.value='NIT 123456789';query.emit('input');assert.equal(query.value,'');assert.equal(steps().hidden,true);assert.equal(api.estadoEvidencia(),'abstencion');
 sent='';ctx.window.euclidianBuscarTexto=q=>{sent=q;return true;};buttons().find(n=>n.textContent==='Buscar estas palabras').click();assert.equal(sent,'');
-submit();assert.equal(steps().hidden,false);
+confirmation().checked=true;submit();assert.equal(steps().hidden,false);
 query.value='cliente@example.com';buttons().find(n=>n.textContent==='Buscar estas palabras').click();assert.equal(sent,'');assert.equal(query.value,'');assert.equal(api.estadoEvidencia(),'abstencion');
-submit();assert.equal(steps().hidden,false);
+confirmation().checked=true;submit();assert.equal(steps().hidden,false);
 query.value='cliente@example.com';buttons().find(n=>n.textContent==='Descargar hoja de investigación · borrador').click();assert.equal(query.value,'');assert.equal(api.estadoEvidencia(),'abstencion');
+confirmation().checked=true;submit();
+query.value='retención '+ 'x'.repeat(170)+' cliente@example.com';sent='';buttons().find(n=>n.textContent==='Buscar estas palabras').click();assert.equal(sent,'');assert.equal(api.estadoEvidencia(),'abstencion','El filtro se aplica antes del truncamiento');
+confirmation().checked=true;submit();query.value='consultar 900.123.456-7';query.emit('input');assert.equal(query.value,'');assert.equal(api.estadoEvidencia(),'abstencion');
+confirmation().checked=true;submit();confirmation().checked=false;confirmation().emit('change');assert.equal(steps().hidden,true);sent='';buttons().find(n=>n.textContent==='Buscar estas palabras').click();assert.equal(sent,'');assert.equal(query.value,'');
 field().value='<img src=x onerror=alert(1)> https://evil.invalid <script>hack</script> '+ 'x'.repeat(700);confirmation().checked=true;submit();assert.equal(field().value.length,600);assert.equal(panel.querySelectorAll('img').length,0);assert.equal(panel.querySelectorAll('script').length,0);assert(api.palabras(field().value).length<=180);assert.match(api.hoja(),/BORRADOR/);assert.doesNotMatch(api.palabras(field().value),/[<>]/);
 field().value='tema cambiado';field().emit('input');assert.equal(steps().hidden,true);assert.match(status(),/Prepara de nuevo/);assert.doesNotMatch(api.hoja(),/evil/);
 field().value='NIT 123456789';confirmation().checked=true;submit();assert.equal(api.estadoEvidencia(),'abstencion');assert.equal(field().value,'');assert.equal(steps().hidden,true);

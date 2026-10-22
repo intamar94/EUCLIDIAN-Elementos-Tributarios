@@ -42,6 +42,21 @@ assert.equal(render('impressum',{...synthetic,EUCLIDIAN_LEGAL_NAME:'<script>aler
 assert.equal(render('impressum',{...synthetic,EUCLIDIAN_LEGAL_EMAIL:'not-an-email'}).code,503);
 const privacy=render('datenschutz',synthetic);
 assert.equal(privacy.code,200);
+const explicitVercel=render('datenschutz',{...synthetic,EUCLIDIAN_HOSTING_PROVIDER:'vercel'});
+assert.equal(explicitVercel.body,privacy.body,'Existing Vercel deployments preserve their default provider');
+const cloudflarePrivacy=render('datenschutz',{...synthetic,EUCLIDIAN_HOSTING_PROVIDER:'cloudflare'});
+assert.equal(cloudflarePrivacy.code,200);
+assert.match(cloudflarePrivacy.body,/Cloudflare<\/strong> proporciona alojamiento mediante Workers/);
+assert.match(cloudflarePrivacy.body,/https:\/\/www.cloudflare.com\/privacypolicy\//);
+assert.doesNotMatch(cloudflarePrivacy.body,/Vercel|vercel\.com/,'Cloudflare production must not claim Vercel is its host');
+assert.match(cloudflarePrivacy.body,/registro, el acceso de usuarios externos/);
+assert.match(cloudflarePrivacy.body,/suscripciones, los cobros y el envío de aportes están desactivados/);
+for(const invalid of ['another-host','<script>alert(1)</script>']){
+ const result=render('datenschutz',{...synthetic,EUCLIDIAN_HOSTING_PROVIDER:invalid});
+ assert.equal(result.code,503,'Unknown hosting must not silently publish inaccurate privacy');
+ assert.equal(result.headers['X-Robots-Tag'],'noindex, nofollow');
+ assert.doesNotMatch(result.body,/script|another-host/);
+}
 for(const v of ['Supabase','Vercel','Brasil','Google Fonts','localStorage','sessionStorage','Reglamento','Privacidad']){
   if(v==='Reglamento')continue;
   assert.ok(privacy.body.includes(v),'Privacy section missing: '+v);

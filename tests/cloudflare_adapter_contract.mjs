@@ -18,6 +18,18 @@ for(const path of ['/','/app.html','/assets/a.webp','/api/auth','/api/payment-we
  const r=await worker.fetch(new Request('https://preview.example'+path),env);assert.equal(r.status,503);assert.equal(r.headers.get('X-Robots-Tag'),'noindex, nofollow');
 }
 assert.equal(assetCalls,0);
+// Public canonical routing preserves path/query and method with 308. It must
+// not apply to private previews, arbitrary hosts or forwarded host spoofing.
+const production={...env,EUCLIDIAN_CLOUDFLARE_MODE:'production'};
+for(const original of ['https://www.euclidianet.com/impressum?q=1','http://euclidianet.com/impressum?q=1']){
+ const redirect=await worker.fetch(new Request(original),production);
+ assert.equal(redirect.status,308);assert.equal(redirect.headers.get('Location'),'https://euclidianet.com/impressum?q=1');
+}
+const postRedirect=await worker.fetch(new Request('https://www.euclidianet.com/api/auth',{method:'POST'}),production);
+assert.equal(postRedirect.status,308);
+assert.equal((await worker.fetch(new Request('https://euclidianet.com/'),production)).status,200);
+assert.equal((await worker.fetch(new Request('https://other.example/',{headers:{'x-forwarded-host':'www.euclidianet.com'}}),production)).status,200);
+assert.equal((await worker.fetch(new Request('https://www.euclidianet.com/'),env)).status,503);
 assert.equal((await worker.fetch(req('/app'),env)).status,200);
 assert.equal(await (await worker.fetch(req('/'),env)).text(),'/index.html');
 assert.equal((await worker.fetch(req('/api/missing'),env)).status,404);
