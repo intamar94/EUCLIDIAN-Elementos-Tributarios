@@ -1,0 +1,6 @@
+# EUCLIDIAN — integración de Cloudflare para Codex.
+# Archivo de proyecto. Codex lo carga únicamente cuando se confía en este repositorio.
+# El servidor solicita autorización OAuth al utilizarse; NO guardar tokens aquí.
+# Fuente: https://developers.cloudflare.com/agent-setup/prompt.md
+[mcp_servers.cloudflare]
+url = "https://mcp.cloudflare.com/mcp"
