@@ -24,7 +24,15 @@ export default {
   async fetch(request,env){
     const preview=env.EUCLIDIAN_CLOUDFLARE_MODE!=='production';
     if(privatePreview(request,env))return secure(new Response('Entorno privado de preparación.',{status:503}),true);
-    const url=new URL(request.url),route=aliases[url.pathname]||url.pathname;
+    const url=new URL(request.url);
+    // The public Worker owns canonical routing; never redirect an authenticated
+    // private preview to the public site or trust a forwarded Host header.
+    if(!preview&&['euclidianet.com','www.euclidianet.com'].includes(url.hostname)&&
+       (url.hostname==='www.euclidianet.com'||url.protocol!=='https:')){
+      url.protocol='https:';url.hostname='euclidianet.com';url.port='';
+      return secure(new Response(null,{status:308,headers:{Location:url.href}}),false);
+    }
+    const route=aliases[url.pathname]||url.pathname;
     if(Object.hasOwn(handlers,route))return secure(await invokeHandler(handlers[route],request),preview);
     if(url.pathname.startsWith('/api/'))return secure(Response.json({error:'ruta_no_encontrada'},{status:404}),preview);
     if(!['GET','HEAD'].includes(request.method))return secure(new Response(null,{status:405}),preview);
