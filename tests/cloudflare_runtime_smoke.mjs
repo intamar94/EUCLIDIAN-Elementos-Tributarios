@@ -18,3 +18,24 @@ try{
  assert.equal(r.status,200,await r.text());
  console.log('workerd passed: static assets, private gate, hidden source, closed signup, Stripe signature.');
 }finally{await mf.dispose();}
+
+// Production-mode fixture uses fictitious identity only. This checks Worker
+// process.env compatibility, not legal approval or a live production deployment.
+const publicMf=new Miniflare(convertV4MiniflareOptions({cf:false,workers:[{modules:true,scriptPath:'.wrangler/cloudflare-bundle/worker.js',compatibilityDate:'2026-10-19',compatibilityFlags:['nodejs_compat'],
+ bindings:{EUCLIDIAN_CLOUDFLARE_MODE:'production',EUCLIDIAN_PUBLIC_ACCESS_ENABLED:'0',EUCLIDIAN_SIGNUP_ENABLED:'false',EUCLIDIAN_APORTES_ENABLED:'0',EUCLIDIAN_BILLING_ENABLED:'false',EUCLIDIAN_LEGAL_APPROVED:'1',EUCLIDIAN_HOSTING_PROVIDER:'cloudflare',EUCLIDIAN_LEGAL_NAME:'Persona de prueba',EUCLIDIAN_LEGAL_ADDRESS:'Calle de prueba 123, 00000 Ejemplo, Deutschland',EUCLIDIAN_LEGAL_EMAIL:'test@example.invalid'},
+ serviceBindings:{ASSETS:async request=>{try{return new Response(await readFile('dist-cloudflare/public'+new URL(request.url).pathname));}catch{return new Response(null,{status:404});}}}}]}));
+try{
+ const send=(path,options={})=>publicMf.dispatchFetch('https://euclidianet.com'+path,options);
+ assert.equal((await send('/')).status,200);
+ const redirect=await publicMf.dispatchFetch('https://www.euclidianet.com/datenschutz?test=1',{redirect:'manual'});
+ assert.equal(redirect.status,308);assert.equal(redirect.headers.get('location'),'https://euclidianet.com/datenschutz?test=1');
+ for(const p of ['/impressum','/datenschutz']){
+  const r=await send(p);assert.equal(r.status,200,p);assert.match(r.headers.get('cache-control'),/no-store/);
+  const body=await r.text();assert.match(body,/Persona de prueba/);
+  if(p==='/datenschutz'){assert.match(body,/Cloudflare/);assert.doesNotMatch(body,/>Vercel</);}
+ }
+ const denied=await send('/api/auth',{method:'POST',headers:{'content-type':'application/json'},body:'{"action":"signup"}'});
+ assert.equal(denied.status,503);
+ assert.equal((await send('/api/checkout',{method:'POST'})).status,503);
+ console.log('workerd production fixture passed: canonical routing, legal bindings, Cloudflare privacy and closed registration/billing.');
+}finally{await publicMf.dispose();}
